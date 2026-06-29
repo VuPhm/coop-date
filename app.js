@@ -5,6 +5,67 @@ let isPrioritySort = false;
 let nsxFlatpickr, hsdFlatpickr;
 let isSyncing = false; // Cờ hiệu ngăn vòng lặp đồng bộ vô hạn
 
+// --- HỆ THỐNG KIỂM SOÁT PHIÊN BẢN NỘI BỘ (CLIENT-SIDE ONLY) ---
+const APP_VERSION_CONFIG = {
+    currentVersion: "2.0.0",       // Thay đổi số này thủ công khi bạn cập nhật code
+    lastUpdated: "30/06/2026"     // Ngày cập nhật tương ứng
+};
+
+let isFirstCalculation = true;
+
+function checkAppVersionLocal() {
+    // Đọc phiên bản đã lưu ở lần truy cập trước từ LocalStorage
+    const savedVersion = localStorage.getItem('app_local_version');
+
+    // Nếu không có mạng, hiển thị trạng thái ngoại tuyến dựa trên thông số cấu hình cứng
+    if (!navigator.onLine) {
+        updateVersionUI(APP_VERSION_CONFIG.currentVersion, APP_VERSION_CONFIG.lastUpdated, "Ngoại tuyến");
+        return;
+    }
+
+    // Trường hợp phát hiện phiên bản cấu hình trong app.js mới hơn bản lưu ở máy người dùng
+    if (savedVersion && savedVersion !== APP_VERSION_CONFIG.currentVersion) {
+        updateVersionUI(APP_VERSION_CONFIG.currentVersion, APP_VERSION_CONFIG.lastUpdated, "Đang làm mới...");
+
+        // Cập nhật dấu vết phiên bản mới vào bộ nhớ
+        localStorage.setItem('app_local_version', APP_VERSION_CONFIG.currentVersion);
+
+        // Thực hiện Hard Reload cưỡng bức trình duyệt xóa cache cũ của GitHub Pages
+        setTimeout(() => {
+            window.location.reload();
+        }, 500);
+        return;
+    }
+
+    // Nếu là lần đầu tiên truy cập hoặc phiên bản trùng khớp
+    if (!savedVersion) {
+        localStorage.setItem('app_local_version', APP_VERSION_CONFIG.currentVersion);
+    }
+
+    updateVersionUI(APP_VERSION_CONFIG.currentVersion, APP_VERSION_CONFIG.lastUpdated, "Mới nhất");
+}
+
+function updateVersionUI(version, date, status) {
+    const noteEl = document.getElementById('appVersionNote');
+    if (noteEl) {
+        noteEl.innerText = `v${version} (${date}) | ${status}`;
+    }
+}
+
+// Lắng nghe sự kiện khởi chạy ứng dụng
+window.addEventListener('DOMContentLoaded', () => {
+    checkAppVersionLocal();
+});
+
+// Can thiệp ngầm vào nút bấm Tra cứu lần đầu
+const originalExecuteCalculation = executeCalculation;
+executeCalculation = function (...args) {
+    if (isFirstCalculation) {
+        isFirstCalculation = false;
+        checkAppVersionLocal();
+    }
+    return originalExecuteCalculation.apply(this, args);
+};
 // --- MASK ĐỊNH DẠNG TEXT INPUT CHO DI ĐỘNG ---
 document.querySelectorAll('.auto-date').forEach(input => {
     input.addEventListener('keydown', (e) => {
@@ -53,7 +114,7 @@ function syncFromDateToDays() {
     } else {
         hsdDaysInput.value = "";
     }
-    
+
     isSyncing = false;
 }
 
@@ -64,6 +125,8 @@ function syncFromDaysToDate() {
     const nsxVal = document.getElementById('nsx').value.trim();
     const hsdDaysVal = document.getElementById('hsdDays').value.trim();
     const hsdDateInput = document.getElementById('hsdDate');
+
+    document.getElementById('hsdMonths').value = "";
 
     if (isValidDateStr(nsxVal) && hsdDaysVal !== "" && !isNaN(hsdDaysVal)) {
         const nsxDate = parseLocalDate(nsxVal);
@@ -89,8 +152,12 @@ function syncFromDaysToDate() {
 // Đăng ký sự kiện đồng bộ trực tiếp từ hành vi người dùng gõ tay
 document.getElementById('hsdDate').addEventListener('input', () => {
     const hsdDateVal = document.getElementById('hsdDate').value.trim();
+    
+    // XÓA SỐ THÁNG: Thay đổi ngày trực tiếp bằng tay -> xóa ô số tháng
+    document.getElementById('hsdMonths').value = "";
+    
     if (isValidDateStr(hsdDateVal) && hsdFlatpickr) {
-        hsdFlatpickr.setDate(parseLocalDate(hsdDateVal), false); // Cập nhật lịch nhưng không kích hoạt onChange của lịch
+        hsdFlatpickr.setDate(parseLocalDate(hsdDateVal), false);
     }
     syncFromDateToDays();
 });
@@ -116,19 +183,91 @@ function syncFromDateToDays() {
     } else {
         hsdDaysInput.value = "";
     }
-    
+
+    isSyncing = false;
+}
+// --- BỔ SUNG TRÌNH LẮNG NGHE CHO Ô SỐ THÁNG ---
+document.getElementById('hsdMonths').addEventListener('input', syncFromMonthsToDate);
+document.getElementById('hsdMonths').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); executeCalculation(); }
+});
+
+function syncFromMonthsToDate() {
+    if (isSyncing) return;
+    isSyncing = true;
+
+    const nsxVal = document.getElementById('nsx').value.trim();
+    const hsdMonthsVal = document.getElementById('hsdMonths').value.trim();
+    const hsdDateInput = document.getElementById('hsdDate');
+    const hsdDaysInput = document.getElementById('hsdDays');
+
+    if (isValidDateStr(nsxVal) && hsdMonthsVal !== "" && !isNaN(hsdMonthsVal)) {
+        const nsxDate = parseLocalDate(nsxVal);
+        const months = parseInt(hsdMonthsVal, 10);
+
+        if (months > 0) {
+            // Tính toán logic: "Ngày này X tháng sau"
+            const computedHsdDate = new Date(nsxDate.getFullYear(), nsxDate.getMonth() + months, nsxDate.getDate(), 0, 0, 0, 0);
+
+            // Xử lý lỗi tràn ngày của tháng (Ví dụ: 31/8 tịnh tiến 1 tháng thành 31/9 -> bị đẩy thành 1/10)
+            // Apple HIG quy chuẩn ép về ngày cuối cùng của tháng đó nếu bị tràn biên
+            const testDate = new Date(nsxDate.getFullYear(), nsxDate.getMonth() + months + 1, 0);
+            let finalHsdDate = computedHsdDate;
+            if (computedHsdDate.getMonth() !== (nsxDate.getMonth() + months) % 12) {
+                finalHsdDate = testDate;
+            }
+
+            const formatted = formatLocalDate(finalHsdDate);
+            hsdDateInput.value = formatted;
+            if (hsdFlatpickr) hsdFlatpickr.setDate(finalHsdDate, false);
+
+            // Đồng bộ luôn sang ô Số ngày (Bao gồm cả ngày đầu và cuối +1)
+            const diffDays = Math.round((finalHsdDate - nsxDate) / MS_PER_DAY) + 1;
+            hsdDaysInput.value = diffDays > 0 ? diffDays : "";
+        } else {
+            hsdDateInput.value = "";
+            hsdDaysInput.value = "";
+            if (hsdFlatpickr) hsdFlatpickr.clear();
+        }
+    } else {
+        hsdDateInput.value = "";
+        hsdDaysInput.value = "";
+        if (hsdFlatpickr) hsdFlatpickr.clear();
+    }
+
     isSyncing = false;
 }
 
+// CẬP NHẬT: Xóa sạch ô Số tháng nếu người dùng chủ động gõ tay vào ô Số ngày
+const originalSyncFromDaysToDate = syncFromDaysToDate;
+syncFromDaysToDate = function () {
+    if (!isSyncing) {
+        document.getElementById('hsdMonths').value = ""; // Ngắt liên kết cũ để ưu tiên số ngày vừa nhập
+    }
+    return originalSyncFromDaysToDate();
+};
+
+// CẬP NHẬT: Tự động tính toán lại ô Số tháng nếu người dùng chọn ngày qua lịch hoặc gõ ô Date
+const originalSyncFromDateToDays = syncFromDateToDays;
+syncFromDateToDays = function () {
+    if (isSyncing) return;
+    originalSyncFromDateToDays(); // Chạy hàm tính số ngày gốc trước
+
+    // Xóa ô số tháng vì khoảng cách ngày tùy biến không phải lúc nào cũng quy đổi chẵn ra tháng
+    document.getElementById('hsdMonths').value = "";
+};
 // --- KHỞI TẠO FLATPICKR NEO DƯỚI KHỐI ĐIỀU HƯỚNG ---
 window.addEventListener('DOMContentLoaded', () => {
-    nsxFlatpickr = flatpickr("#nsxHidden", {
+nsxFlatpickr = flatpickr("#nsxHidden", {
         dateFormat: "d/m/Y",
         position: "below",
         appendTo: document.getElementById('nsxGroup'),
         onChange: function(selectedDates, dateStr) {
             document.getElementById('nsx').value = dateStr;
-            // Khi NSX đổi, ưu tiên tính lại dựa trên số ngày có sẵn trước, nếu không có mới tính theo ô date
+            
+            // XÓA SỐ THÁNG: Khi đổi NSX, làm sạch trường số tháng ngay lập tức để tính toán lại
+            document.getElementById('hsdMonths').value = "";
+            
             const hsdDaysVal = document.getElementById('hsdDays').value.trim();
             if (hsdDaysVal !== "") {
                 syncFromDaysToDate();
@@ -137,20 +276,24 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
+    
     hsdFlatpickr = flatpickr("#hsdHidden", {
         dateFormat: "d/m/Y",
         position: "below",
         appendTo: document.getElementById('hsdGroup'),
         onChange: function(selectedDates, dateStr) {
             document.getElementById('hsdDate').value = dateStr;
+            
+            // XÓA SỐ THÁNG: Khi chọn ngày HSD mới từ lịch, số tháng cũ không còn giá trị
+            document.getElementById('hsdMonths').value = "";
+            
             syncFromDateToDays();
         }
     });
-// Đặt đoạn này vào cuối hàm xử lý window.addEventListener('DOMContentLoaded', () => { ... })
     (function initAppleChronometer() {
         const now = new Date();
         const daysOfWeek = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
-        
+
         const dayOfWeekStr = daysOfWeek[now.getDay()];
         const dayOfMonthStr = String(now.getDate()).padStart(2, '0');
         const monthStr = String(now.getMonth() + 1).padStart(2, '0');
@@ -191,16 +334,16 @@ function processReturnBusinessLogic(nsxStr, hsdDateStr) {
     const hsdDate = parseLocalDate(hsdDateStr);
     const shelfLifeDays = Math.round((hsdDate - nsxDate) / MS_PER_DAY) + 1;
     if (shelfLifeDays <= 0) throw new Error("Hạn sử dụng không thể nhỏ hơn ngày sản xuất.");
-    
+
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const daysRemainingShelfLife = Math.round((hsdDate - today) / MS_PER_DAY) + 1;
-    
+
     // TRẠNG THÁI TỐI THƯỢNG: Kiểm tra Quá hạn sử dụng trước tiên cho TẤT CẢ các loại sản phẩm
     if (daysRemainingShelfLife <= 0) {
         // Cách tính ngày lùi vẫn giữ nguyên như cũ không đổi
         const dayThreshold20 = Math.round(shelfLifeDays * 0.2);
         let returnDate = shelfLifeDays < 10 ? hsdDate : new Date(hsdDate.getTime() - (dayThreshold20 - 1) * MS_PER_DAY - 1 * MS_PER_DAY);
-        
+
         return {
             isExpiredProduct: true, // Cờ hiệu quá hạn sử dụng
             isShortProduct: shelfLifeDays < 10,
@@ -210,7 +353,7 @@ function processReturnBusinessLogic(nsxStr, hsdDateStr) {
             alert: { class: 'state-expired', label: 'Đã hết HSD', weight: 0, type: 'expired' }
         };
     }
-    
+
     // Luồng hàng ngắn ngày (< 10 ngày) còn hạn
     if (shelfLifeDays < 10) {
         return {
@@ -222,13 +365,13 @@ function processReturnBusinessLogic(nsxStr, hsdDateStr) {
             alert: { class: 'state-safe', label: 'An toàn', weight: 3, type: 'safe' }
         };
     }
-    
+
     // Luồng hàng dài ngày (>= 10 ngày) còn hạn
     const dayThreshold20 = Math.round(shelfLifeDays * 0.2);
     const dayThreshold40 = Math.round(shelfLifeDays * 0.4);
     let returnDate = new Date(hsdDate.getTime() - (dayThreshold20 - 1) * MS_PER_DAY - 1 * MS_PER_DAY);
     const daysToReturnDate = Math.round((returnDate - today) / MS_PER_DAY);
-    
+
     let alertState;
     if (daysToReturnDate < 0) {
         alertState = { class: 'state-danger', label: 'Đã qua hạn lùi', weight: 1, type: 'danger' };
@@ -239,7 +382,7 @@ function processReturnBusinessLogic(nsxStr, hsdDateStr) {
     } else {
         alertState = { class: 'state-safe', label: 'An toàn', weight: 3, type: 'safe' };
     }
-    
+
     return {
         isExpiredProduct: false,
         isShortProduct: false,
@@ -270,21 +413,21 @@ function togglePrioritySort() {
 function updateHistoryUI() {
     const container = document.getElementById('historyList');
     let displayData = [...historyData];
-    
+
     if (currentFilter !== 'all') displayData = displayData.filter(item => item.alertType === currentFilter);
     if (isPrioritySort) displayData.sort((a, b) => a.alertWeight - b.alertWeight);
-    
+
     if (displayData.length === 0) {
         container.innerHTML = '<li class="history-empty">Không có dữ liệu phù hợp</li>';
         return;
     }
     container.innerHTML = displayData.map(item => {
         const labelPrefix = item.isShortProduct ? 'HSD' : 'Ngày lùi';
-        
+
         // NỘI DUNG BOX HISTORY: Kiểm tra nếu đã hết HSD thì gán chuỗi đặc biệt theo yêu cầu
         const remainingText = item.isExpiredProduct ? 'Đã hết HSD' : formatRemainingText(item.daysRemaining);
         const alertLabelText = item.isExpiredProduct ? 'Đã qua hạn lùi' : item.alertLabel;
-        
+
         return `
             <li class="history-item ${item.alertClass}" onclick="loadHistoryItem('${item.nsx}', '${item.formattedHsd}', '${item.rawHsdDays}')">
                 <div class="history-item__meta">NSX: ${item.nsx} | HSD: ${item.formattedHsd}</div>
@@ -297,12 +440,12 @@ function updateHistoryUI() {
 function loadHistoryItem(nsx, hsdDate, hsdDays) {
     document.getElementById('nsx').value = nsx;
     if (nsxFlatpickr) nsxFlatpickr.setDate(nsx, false);
-    
+
     document.getElementById('hsdDate').value = hsdDate;
     if (hsdFlatpickr) hsdFlatpickr.setDate(hsdDate, false);
-    
+
     document.getElementById('hsdDays').value = hsdDays;
-    executeCalculation(false); 
+    executeCalculation(false);
 }
 
 function executeCalculation(saveToHistory = true) {
@@ -311,18 +454,18 @@ function executeCalculation(saveToHistory = true) {
     const hsdDaysVal = document.getElementById('hsdDays').value.trim();
     const wrapper = document.getElementById('resultWrapper');
     const text = document.getElementById('resultText');
-    
+
     text.classList.remove('calc-board__result-text--visible');
     setTimeout(() => {
         try {
             if (!nsxVal) throw new Error("Chưa nhập ngày sản xuất.");
             if (!hsdDateVal) throw new Error("Chưa xác định được ngày hạn sử dụng.");
-            
+
             const output = processReturnBusinessLogic(nsxVal, hsdDateVal);
             drawTimelineDiagram(nsxVal, hsdDateVal, output.dateStr);
 
             wrapper.className = `calc-board__result-wrapper ${output.alert.class}`;
-            
+
             // NỘI DUNG BOX KẾT QUẢ CHÍNH
             if (output.isExpiredProduct) {
                 const labelTitle = output.isShortProduct ? 'Hạn sử dụng' : 'Ngày lùi hàng';
@@ -335,13 +478,13 @@ function executeCalculation(saveToHistory = true) {
                 text.innerHTML = `Ngày lùi hàng: ${output.dateStr}<br>
                                   <small style="font-weight:500; opacity:0.9;">[${output.alert.label}] — HSD còn ${output.daysRemaining} ngày</small>`;
             }
-            
+
             if (saveToHistory) {
                 const existingIndex = historyData.findIndex(h => h.nsx === nsxVal && h.formattedHsd === output.formattedHsd);
                 if (existingIndex !== -1) historyData.splice(existingIndex, 1);
-                
-                historyData.unshift({ 
-                    nsx: nsxVal, 
+
+                historyData.unshift({
+                    nsx: nsxVal,
                     rawHsdDate: hsdDateVal,
                     rawHsdDays: hsdDaysVal || Math.round((parseLocalDate(hsdDateVal) - parseLocalDate(nsxVal)) / MS_PER_DAY),
                     formattedHsd: output.formattedHsd,
@@ -363,25 +506,25 @@ function executeCalculation(saveToHistory = true) {
         text.classList.add('calc-board__result-text--visible');
     }, 150);
 }
-    function drawTimelineDiagram(nsxStr, hsdStr, returnStr) {
+function drawTimelineDiagram(nsxStr, hsdStr, returnStr) {
     const board = document.getElementById('diagramBoard');
     const container = document.getElementById('svgContainer');
     board.style.display = 'block';
 
     const nsx = parseLocalDate(nsxStr);
     const hsd = parseLocalDate(hsdStr);
-    const today = new Date(); today.setHours(0,0,0,0);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
 
     const totalDays = Math.round((hsd - nsx) / MS_PER_DAY) + 1;
     const todayIndex = Math.round((today - nsx) / MS_PER_DAY) + 1;
-    
+
     // Tọa độ biên biên phẳng
     const startX = 40;
     const endX = 560;
     const widthX = endX - startX;
-    
+
     // Nâng trục Y xuống tâm thấp hơn để nhường không gian cho chữ cỡ lớn phía trên
-    const y = 55; 
+    const y = 55;
 
     const getX = (dayIndex) => {
         if (totalDays <= 0) return startX;
@@ -391,9 +534,9 @@ function executeCalculation(saveToHistory = true) {
     };
 
     const todayX = getX(todayIndex);
-    const colorSafe = '#006633';    
-    const colorDanger = '#e20514';  
-    const colorPast = '#86868b';    
+    const colorSafe = '#006633';
+    const colorDanger = '#e20514';
+    const colorPast = '#86868b';
 
     // NHÁNH 1: Sản phẩm ngắn ngày (< 10 ngày)
     if (totalDays < 10) {
@@ -410,11 +553,11 @@ function executeCalculation(saveToHistory = true) {
 
                 <circle cx="${startX}" cy="${y}" r="7" fill="#ffffff" stroke="${colorSafe}" stroke-width="3.5" />
                 <text x="${startX}" y="${y + 26}" style="font-size: 13px; font-weight: 600;" fill="#1c261c" text-anchor="middle">NSX</text>
-                <text x="${startX}" y="${y + 42}" style="font-size: 13px; font-weight: 700;" fill="#667366" text-anchor="middle">${nsxStr.slice(0,5)}</text>
+                <text x="${startX}" y="${y + 42}" style="font-size: 13px; font-weight: 700;" fill="#667366" text-anchor="middle">${nsxStr.slice(0, 5)}</text>
 
                 <circle cx="${endX}" cy="${y}" r="7" fill="#ffffff" stroke="${mainColor}" stroke-width="3.5" />
                 <text x="${endX}" y="${y + 26}" style="font-size: 13px; font-weight: 800;" fill="${mainColor}" text-anchor="middle">HSD</text>
-                <text x="${endX}" y="${y + 42}" style="font-size: 13px; font-weight: 700;" fill="#667366" text-anchor="middle">${hsdStr.slice(0,5)}</text>
+                <text x="${endX}" y="${y + 42}" style="font-size: 13px; font-weight: 700;" fill="#667366" text-anchor="middle">${hsdStr.slice(0, 5)}</text>
 
                 ${todayIndex >= 0 && todayIndex <= totalDays ? `
                     <g>
@@ -433,10 +576,10 @@ function executeCalculation(saveToHistory = true) {
     const dayThreshold40 = Math.round(totalDays * 0.4);
     const mốc_40 = totalDays - dayThreshold40;
     const mốc_20 = totalDays - dayThreshold20;
-    
+
     const x_40 = getX(mốc_40);
     const x_20 = getX(mốc_20);
-    const colorWarning = '#f29200'; 
+    const colorWarning = '#f29200';
 
     container.innerHTML = `
         <svg class="timeline-svg" viewBox="0 0 600 130" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
@@ -455,18 +598,18 @@ function executeCalculation(saveToHistory = true) {
 
             <circle cx="${startX}" cy="${y}" r="7" fill="#ffffff" stroke="${colorSafe}" stroke-width="3.5" />
             <text x="${startX}" y="${y + 26}" style="font-size: 13px; font-weight: 600;" fill="#1c261c" text-anchor="middle">NSX</text>
-            <text x="${startX}" y="${y + 42}" style="font-size: 13px; font-weight: 700;" fill="#667366" text-anchor="middle">${nsxStr.slice(0,5)}</text>
+            <text x="${startX}" y="${y + 42}" style="font-size: 13px; font-weight: 700;" fill="#667366" text-anchor="middle">${nsxStr.slice(0, 5)}</text>
 
             <circle cx="${x_40}" cy="${y}" r="5" fill="#ffffff" stroke="${colorWarning}" stroke-width="2.5" />
             <text x="${x_40}" y="${y + 26}" style="font-size: 12px; font-weight: 700;" fill="${colorWarning}" text-anchor="middle">Mốc 40%</text>
 
             <circle cx="${x_20}" cy="${y}" r="7" fill="#ffffff" stroke="${colorDanger}" stroke-width="3.5" />
             <text x="${x_20}" y="${y + 26}" style="font-size: 14px; font-weight: 800;" fill="${colorDanger}" text-anchor="middle">Hạn lùi</text>
-            <text x="${x_20}" y="${y + 42}" style="font-size: 13px; font-weight: 700;" fill="#667366" text-anchor="middle">${returnStr.slice(0,5)}</text>
+            <text x="${x_20}" y="${y + 42}" style="font-size: 13px; font-weight: 700;" fill="#667366" text-anchor="middle">${returnStr.slice(0, 5)}</text>
 
             <circle cx="${endX}" cy="${y}" r="7" fill="#ffffff" stroke="#667366" stroke-width="3.5" />
             <text x="${endX}" y="${y + 26}" style="font-size: 13px; font-weight: 600;" fill="#1c261c" text-anchor="middle">HSD</text>
-            <text x="${endX}" y="${y + 42}" style="font-size: 13px; font-weight: 700;" fill="#667366" text-anchor="middle">${hsdStr.slice(0,5)}</text>
+            <text x="${endX}" y="${y + 42}" style="font-size: 13px; font-weight: 700;" fill="#667366" text-anchor="middle">${hsdStr.slice(0, 5)}</text>
 
             ${todayIndex >= 0 && todayIndex <= totalDays ? `
                 <g>
@@ -478,64 +621,3 @@ function executeCalculation(saveToHistory = true) {
         </svg>
     `;
 }
-// --- HỆ THỐNG KIỂM SOÁT PHIÊN BẢN NỘI BỘ (CLIENT-SIDE ONLY) ---
-const APP_VERSION_CONFIG = {
-    currentVersion: "1.0.2",       // Thay đổi số này thủ công khi bạn cập nhật code
-    lastUpdated: "30/06/2026"     // Ngày cập nhật tương ứng
-};
-
-let isFirstCalculation = true;
-
-function checkAppVersionLocal() {
-    // Đọc phiên bản đã lưu ở lần truy cập trước từ LocalStorage
-    const savedVersion = localStorage.getItem('app_local_version');
-    
-    // Nếu không có mạng, hiển thị trạng thái ngoại tuyến dựa trên thông số cấu hình cứng
-    if (!navigator.onLine) {
-        updateVersionUI(APP_VERSION_CONFIG.currentVersion, APP_VERSION_CONFIG.lastUpdated, "Ngoại tuyến");
-        return;
-    }
-
-    // Trường hợp phát hiện phiên bản cấu hình trong app.js mới hơn bản lưu ở máy người dùng
-    if (savedVersion && savedVersion !== APP_VERSION_CONFIG.currentVersion) {
-        updateVersionUI(APP_VERSION_CONFIG.currentVersion, APP_VERSION_CONFIG.lastUpdated, "Đang làm mới...");
-        
-        // Cập nhật dấu vết phiên bản mới vào bộ nhớ
-        localStorage.setItem('app_local_version', APP_VERSION_CONFIG.currentVersion);
-        
-        // Thực hiện Hard Reload cưỡng bức trình duyệt xóa cache cũ của GitHub Pages
-        setTimeout(() => {
-            window.location.reload();
-        }, 500);
-        return;
-    }
-
-    // Nếu là lần đầu tiên truy cập hoặc phiên bản trùng khớp
-    if (!savedVersion) {
-        localStorage.setItem('app_local_version', APP_VERSION_CONFIG.currentVersion);
-    }
-    
-    updateVersionUI(APP_VERSION_CONFIG.currentVersion, APP_VERSION_CONFIG.lastUpdated, "Mới nhất");
-}
-
-function updateVersionUI(version, date, status) {
-    const noteEl = document.getElementById('appVersionNote');
-    if (noteEl) {
-        noteEl.innerText = `v${version} (${date}) | ${status}`;
-    }
-}
-
-// Lắng nghe sự kiện khởi chạy ứng dụng
-window.addEventListener('DOMContentLoaded', () => {
-    checkAppVersionLocal();
-});
-
-// Can thiệp ngầm vào nút bấm Tra cứu lần đầu
-const originalExecuteCalculation = executeCalculation;
-executeCalculation = function(...args) {
-    if (isFirstCalculation) {
-        isFirstCalculation = false;
-        checkAppVersionLocal();
-    }
-    return originalExecuteCalculation.apply(this, args);
-};

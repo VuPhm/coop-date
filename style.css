@@ -1,575 +1,507 @@
 :root {
-  /* Hệ màu Brand 5-3-1-1 */
-  --brand-primary: #006633; /* Xanh lá đậm - Main Action/Bg */
-  --brand-secondary: #93c11f; /* Xanh lá sáng - Sub/Focus */
-  --brand-accent-red: #e20514; /* Đỏ - Nguy hiểm */
-  --brand-accent-orange: #f29200; /* Cam - Cảnh báo */
-
-  /* Cấu trúc nền tảng */
-  --bg-base: #f4f6f4;
-  --surface: #ffffff;
-  --text-main: #1c261c;
-  --text-sub: #667366;
-
-  /* Trạng thái phản hồi trực quan */
-  --status-green-bg: #eff7f2;
-  --status-green-border: rgba(0, 102, 51, 0.2);
-  --status-green-text: var(--brand-primary);
-
-  --status-yellow-bg: #fdf8f0;
-  --status-yellow-border: rgba(242, 146, 0, 0.2);
-  --status-yellow-text: var(--brand-accent-orange);
-
-  --status-red-bg: #fdf3f3;
-  --status-red-border: rgba(226, 5, 20, 0.15);
-  --status-red-text: var(--brand-accent-red);
-
-  --radius-box: 20px;
-  --radius-item: 12px;
-  --shadow: 0 8px 24px rgba(0, 66, 33, 0.04);
+    /* Hệ màu Brand 5-3-1-1 */
+    --brand-primary: #006633;
+    --brand-secondary: #93c11f;
+    --brand-accent-red: #e20514;
+    --brand-accent-orange: #f29200;
+    
+    /* Cấu trúc nền tảng */
+    --bg-base: #f4f6f4;
+    --surface: #ffffff;
+    --text-main: #1c261c;
+    --text-sub: #667366;
+    
+    /* Trạng thái phản hồi trực quan */
+    --status-green-bg: #eff7f2;
+    --status-green-border: rgba(0, 102, 51, 0.2);
+    --status-green-text: var(--brand-primary);
+    
+    --status-yellow-bg: #fdf8f0;
+    --status-yellow-border: rgba(242, 146, 0, 0.2);
+    --status-yellow-text: var(--brand-accent-orange);
+    
+    --status-red-bg: #fdf3f3;
+    --status-red-border: rgba(226, 5, 20, 0.15);
+    --status-red-text: var(--brand-accent-red);
+    
+    --radius-box: 20px;
+    --radius-item: 12px;
+    --shadow: 0 8px 24px rgba(0, 66, 33, 0.04);
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background-color: var(--bg-base);
-  color: var(--text-main);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  margin: 0;
-  padding: 16px;
-  box-sizing: border-box;
-  -webkit-font-smoothing: antialiased;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--bg-base);
+    color: var(--text-main);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 16px;
+    box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
 }
 
+/* Hệ lưới co giãn không gian */
 .workspace {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 24px;
-  width: 100%;
-  max-width: 850px;
-  /* Cấu hình mặc định cho Mobile: Sơ đồ chèn giữa */
-  grid-template-areas:
-    "calc"
-    "diagram"
-    "history";
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    width: 100%;
+    max-width: 850px;
+    grid-template-areas: 
+        "calc"
+        "diagram"
+        "history";
 }
+
 @media (min-width: 768px) {
-  .workspace {
-    grid-template-columns: 1.1fr 1fr;
-    /* Cấu hình cho PC: Sơ đồ trải dài chiếm hết hàng dưới */
-    grid-template-areas:
-      "calc history"
-      "diagram diagram";
-  }
+    .workspace {
+        grid-template-columns: 1.1fr 1fr;
+        grid-template-areas: 
+            "calc history"
+            "diagram diagram";
+    }
 }
-.calc-board,
-.history-board {
-  background: var(--surface);
-  padding: 32px 24px;
-  border-radius: var(--radius-box);
-  box-shadow: var(--shadow);
-  box-sizing: border-box;
+
+.calc-board, .history-board {
+    background: var(--surface);
+    padding: 32px 24px;
+    border-radius: var(--radius-box);
+    box-shadow: var(--shadow);
+    box-sizing: border-box;
 }
-.calc-board {
-  grid-area: calc;
-}
-.history-board {
-  grid-area: history;
-}
+
+.calc-board { grid-area: calc; }
+.history-board { grid-area: history; }
 
 /* Khung chứa sơ đồ trục thời gian */
 .diagram-board {
-  grid-area: diagram;
-  background: var(--surface);
-  padding: 24px;
-  border-radius: var(--radius-box);
-  box-shadow: var(--shadow);
-  box-sizing: border-box;
-  display: none; /* Chỉ hiển thị khi có dữ liệu tra cứu */
+    grid-area: diagram;
+    background: var(--surface);
+    padding: 24px;
+    border-radius: var(--radius-box);
+    box-shadow: var(--shadow);
+    box-sizing: border-box;
+    display: none;
 }
 
 .diagram-board__title {
-  margin: 0 0 16px 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-main);
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-main);
 }
 
-/* SVG Typography & Styling */
+/* SVG Typography & Trục Vector */
 .timeline-svg text {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  fill: var(--text-main);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    fill: var(--text-main);
 }
 .timeline-svg .sub-text {
-  fill: var(--text-sub);
-  font-size: 11px;
-  font-weight: 500;
+    fill: var(--text-sub);
 }
 .timeline-svg .main-text {
-  font-size: 12px;
-  font-weight: 700;
-}
-.calc-board__title,
-.history-board__title {
-  margin: 0 0 20px 0;
-  font-size: 20px;
-  font-weight: 600;
+    font-weight: 700;
 }
 
+.calc-board__title, .history-board__title {
+    margin: 0 0 20px 0;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+/* Hệ thống trường nhập đơn lẻ */
 .form-group {
-  margin-bottom: 16px;
-  position: relative; /* Tạo tầng chứa cho lịch */
+    margin-bottom: 16px;
+    position: relative;
 }
 
 .form-group__label {
-  display: block;
-  margin-bottom: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-sub);
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-sub);
 }
 
 .input-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  background-color: #fafafa;
-  border: 1.5px solid #e5e5ea;
-  border-radius: var(--radius-item);
-  transition: all 0.2s ease;
-  box-sizing: border-box;
-  z-index: 2;
+    position: relative;
+    display: flex;
+    align-items: center;
+    background-color: #fafafa;
+    border: 1.5px solid #e5e5ea;
+    border-radius: var(--radius-item);
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    z-index: 2;
 }
 
 .input-wrapper:focus-within {
-  border-color: var(--brand-primary);
-  background-color: var(--surface);
-  box-shadow: 0 0 0 4px rgba(0, 102, 51, 0.1);
+    border-color: var(--brand-primary);
+    background-color: var(--surface);
+    box-shadow: 0 0 0 4px rgba(0, 102, 51, 0.1);
 }
 
 .form-group__input {
-  flex: 1;
-  padding: 12px 14px;
-  font-size: 16px;
-  border: none;
-  background: transparent;
-  outline: none;
-  color: var(--text-main);
-  width: 100%;
-  box-sizing: border-box;
+    flex: 1;
+    padding: 12px 14px;
+    font-size: 16px;
+    border: none;
+    background: transparent;
+    outline: none;
+    color: var(--text-main);
+    width: 100%;
+    box-sizing: border-box;
 }
 
-.input-wrapper--has-suffix .form-group__input {
-  padding-right: 50px; /* Tạo khoảng trống an toàn cho hậu tố */
-}
-.input-suffix {
-  position: absolute;
-  right: 14px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-sub);
-  user-select: none;
-  pointer-events: none; /* Không cản trở hành vi click vào ô input */
-}
-
+/* Nút kích hoạt bộ chọn lịch Flatpickr */
 .btn-picker-trigger {
-  background: transparent;
-  border: none;
-  padding: 0 14px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
+    background: transparent;
+    border: none;
+    padding: 0 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .btn-picker-trigger svg {
-  width: 18px; /* Khóa cứng chiều rộng ngăn sập kích thước */
-  height: 18px; /* Khóa cứng chiều cao */
-  fill: none;
-  stroke: var(--brand-primary);
-  stroke-width: 2; /* Tái thiết lập độ dày nét vẽ */
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  transition: stroke 0.2s ease;
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: var(--brand-primary);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: stroke 0.2s ease;
 }
 
 .btn-picker-trigger:active svg {
-  stroke: var(--brand-secondary);
+    stroke: var(--brand-secondary);
 }
 
 .hidden-picker {
-  position: absolute;
-  width: 0;
-  height: 0;
-  opacity: 0;
-  border: none;
-  padding: 0;
-  margin: 0;
-  pointer-events: none;
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    border: none;
+    padding: 0;
+    margin: 0;
+    pointer-events: none;
 }
 
+/* Khối phân cách logic */
 .divider-or {
-  text-align: center;
-  margin: 14px 0;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-sub);
-  position: relative;
+    text-align: center;
+    margin: 14px 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-sub);
+    position: relative;
 }
 
-.divider-or::before,
-.divider-or::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  width: 40%;
-  height: 1px;
-  background-color: #e5e5ea;
+.divider-or::before, .divider-or::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 40%;
+    height: 1px;
+    background-color: #e5e5ea;
 }
 
-.divider-or::before {
-  left: 0;
-}
-.divider-or::after {
-  right: 0;
+.divider-or::before { left: 0; }
+.divider-or::after { right: 0; }
+
+/* Hệ thống dòng đôi nguyên khối chuẩn Apple HIG */
+.apple-input-row {
+    display: flex;
+    width: 100%;
+    gap: 12px;
+    margin-bottom: 16px;
 }
 
+.apple-input-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.apple-col-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-sub);
+}
+
+.apple-field-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    background-color: #fafafa;
+    border: 1.5px solid #e5e5ea;
+    border-radius: var(--radius-item);
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.apple-field-wrapper:focus-within {
+    border-color: var(--brand-primary);
+    background-color: var(--surface);
+    box-shadow: 0 0 0 4px rgba(0, 102, 51, 0.1);
+}
+
+.apple-core-input {
+    width: 100%;
+    padding: 12px 50px 12px 14px;
+    font-size: 16px;
+    border: none;
+    background: transparent;
+    outline: none;
+    color: var(--text-main);
+    box-sizing: border-box;
+}
+
+.apple-field-suffix {
+    position: absolute;
+    right: 14px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-sub);
+    pointer-events: none;
+    user-select: none;
+}
+
+/* Nút tác vụ chính */
 .btn-action {
-  width: 100%;
-  padding: 14px;
-  margin-top: 8px;
-  font-size: 16px;
-  font-weight: 600;
-  color: white;
-  background-color: var(--brand-primary);
-  border: none;
-  border-radius: var(--radius-item);
-  cursor: pointer;
-  transition: all 0.2s ease;
+    width: 100%;
+    padding: 14px;
+    margin-top: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    color: white;
+    background-color: var(--brand-primary);
+    border: none;
+    border-radius: var(--radius-item);
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
-.btn-action:hover {
-  background-color: #005229;
-}
-.btn-action:active {
-  transform: scale(0.97);
-}
+.btn-action:hover { background-color: #005229; }
+.btn-action:active { transform: scale(0.97); }
 
+/* Khối hiển thị kết quả tra cứu */
 .calc-board__result-wrapper {
-  margin-top: 24px;
-  min-height: 74px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-item);
-  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-  background-color: transparent;
-  box-sizing: border-box;
-  padding: 12px 16px;
-  border: 1px solid transparent;
-}
-
-.state-safe {
-  background-color: var(--status-green-bg);
-  border-color: var(--status-green-border);
-  color: var(--status-green-text) !important;
-}
-.state-warning {
-  background-color: var(--status-yellow-bg);
-  border-color: var(--status-yellow-border);
-  color: var(--status-yellow-text) !important;
-}
-.state-danger {
-  background-color: var(--status-red-bg);
-  border-color: var(--status-red-border);
-  color: var(--status-red-text) !important;
+    margin-top: 24px;
+    min-height: 74px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-item);
+    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    background-color: transparent;
+    box-sizing: border-box;
+    padding: 12px 16px;
+    border: 1px solid transparent;
 }
 
 .calc-board__result-text {
-  font-size: 15px;
-  font-weight: 600;
-  text-align: center;
-  opacity: 0;
-  transform: translateY(4px);
-  transition: all 0.3s ease;
-  line-height: 1.5;
+    font-size: 15px;
+    font-weight: 600;
+    text-align: center;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: all 0.3s ease;
+    line-height: 1.5;
 }
 
 .calc-board__result-text--visible {
-  opacity: 1;
-  transform: translateY(0);
+    opacity: 1;
+    transform: translateY(0);
 }
 
+/* Phân lớp màu sắc phản hồi (Đồng bộ Lịch sử & Kết quả) */
+.state-safe {
+    background-color: var(--status-green-bg) !important;
+    border-color: var(--status-green-border) !important;
+    color: var(--status-green-text) !important;
+}
+.state-warning {
+    background-color: var(--status-yellow-bg) !important;
+    border-color: var(--status-yellow-border) !important;
+    color: var(--status-yellow-text) !important;
+}
+.state-danger {
+    background-color: var(--status-red-bg) !important;
+    border-color: var(--status-red-border) !important;
+    color: var(--status-red-text) !important;
+}
+.state-expired {
+    background-color: #f5f5f5 !important;
+    border-color: rgba(85, 85, 85, 0.15) !important;
+    color: #555555 !important;
+}
+
+/* Thanh điều khiển lọc và sắp xếp */
 .controls {
-  margin-bottom: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
 .filter-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 
 .tag {
-  padding: 6px 12px;
-  font-size: 12px;
-  font-weight: 600;
-  border-radius: 20px;
-  cursor: pointer;
-  border: 1px solid #e5e5ea;
-  background-color: #fafafa;
-  color: var(--text-sub);
-  transition: all 0.2s ease;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 20px;
+    cursor: pointer;
+    border: 1px solid #e5e5ea;
+    background-color: #fafafa;
+    color: var(--text-sub);
+    transition: all 0.2s ease;
 }
 
-/* Đồng bộ phong cách Filled cho từng trạng thái Active */
-.tag--all.active {
-  color: white !important;
-  background-color: var(--brand-primary);
-  border-color: var(--brand-primary);
-}
+.tag--all.active { color: white !important; background-color: var(--brand-primary); border-color: var(--brand-primary); }
+.tag--safe.active { color: white !important; background-color: var(--brand-primary); border-color: var(--brand-primary); }
+.tag--warning.active { color: white !important; background-color: var(--brand-accent-orange); border-color: var(--brand-accent-orange); }
+.tag--danger.active { color: white !important; background-color: var(--brand-accent-red); border-color: var(--brand-accent-red); }
+.tag--short.active { color: white !important; background-color: #667366; border-color: #667366; }
+.tag--expired.active { color: white !important; background-color: #555555; border-color: #555555; }
 
-.tag--safe.active {
-  color: white !important;
-  background-color: var(--brand-primary);
-  border-color: var(--brand-primary);
-}
-
-.tag--warning.active {
-  color: white !important;
-  background-color: var(--brand-accent-orange);
-  border-color: var(--brand-accent-orange);
-}
-
-.tag--danger.active {
-  color: white !important;
-  background-color: var(--brand-accent-red);
-  border-color: var(--brand-accent-red);
-}
-
-.tag--short.active {
-  color: white !important;
-  background-color: #667366; /* Màu xám rêu trung tính phân tách hoàn toàn với 3 màu cốt lõi */
-  border-color: #667366;
-}
-/* Nút Sort khi active cũng được fill màu theo ngôn ngữ chung */
 .sort-toggle-box {
-  width: 100%;
-  padding: 10px 14px;
-  font-size: 13px;
-  font-weight: 600;
-  border: 1px solid #e5e5ea;
-  border-radius: var(--radius-item);
-  background-color: #fafafa;
-  color: var(--text-main);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid #e5e5ea;
+    border-radius: var(--radius-item);
+    background-color: #fafafa;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 
 .sort-toggle-box.active {
-  background-color: var(--brand-primary);
-  border-color: var(--brand-primary);
-  color: white;
+    background-color: var(--brand-primary);
+    border-color: var(--brand-primary);
+    color: white;
 }
 
 .sort-toggle-box svg {
-  width: 14px;
-  height: 14px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
+/* Danh sách lịch sử tra cứu */
 .history-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  max-height: 320px;
-  overflow-y: auto;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 320px;
+    overflow-y: auto;
 }
+
 .history-item {
-  padding: 12px;
-  border-radius: var(--radius-item);
-  margin-bottom: 10px;
-  cursor: pointer;
-  border: 1px solid transparent;
-  transition: all 0.2s ease;
+    padding: 14px;
+    border-radius: var(--radius-item);
+    margin-bottom: 10px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
 }
+
 .history-item:hover {
-  opacity: 0.85;
-  transform: translateX(2px);
+    opacity: 0.85;
+    transform: translateX(2px);
 }
+
 .history-item__meta {
-  font-size: 12px;
-  opacity: 0.85;
-  margin-bottom: 4px;
+    font-size: 12px;
+    opacity: 0.85;
+    margin-bottom: 4px;
 }
+
 .history-item__result {
-  font-size: 14px;
-  font-weight: 600;
+    font-size: 14px;
+    font-weight: 600;
 }
+
 .history-empty {
-  font-size: 14px;
-  color: var(--text-sub);
-  text-align: center;
-  padding: 40px 0;
+    font-size: 14px;
+    color: var(--text-sub);
+    text-align: center;
+    padding: 40px 0;
 }
 
-/* KHỐI SỬA ĐỔI ĐỊNH VỊ CHUẨN XÁC DƯỚI INPUT TRƯỜNG */
-.flatpickr-calendar {
-  position: absolute !important;
-  top: 100% !important;
-  left: 0 !important;
-  transform: none !important;
-  border-radius: 12px !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
-  border: 1px solid #e5e5ea !important;
-  margin-top: 6px !important;
-  z-index: 9999 !important;
-}
-
-/* Loại bỏ mũi tên nhọn thừa thãi gây lệch bố cục */
-.flatpickr-calendar.arrowTop:before,
-.flatpickr-calendar.arrowTop:after {
-  display: none !important;
-}
-
-/* Tái định dạng khối chứa Brand Header */
-.brand-header--asymmetric {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  height: 80px; /* Khóa cứng chiều cao để kiểm soát gradient */
-  margin-bottom: 24px;
-  border-radius: var(--radius-box); /* Khung bo tròn bên ngoài */
-  background: linear-gradient(135deg, #ffffff 30%, #ecf1ed 100%); /* Gradient nền nhẹ tổng thể */
-  overflow: hidden; /* Cắt các phần thừa ra ngoài khung bo tròn */
-  box-shadow: 0 4px 12px rgba(0, 66, 33, 0.03); /* Bóng đổ mờ nhẹ */
-}
-
-.brand-header--asymmetric {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  height: 80px;
-  margin-bottom: 24px;
-  background: transparent; /* Loại bỏ nền tổng thể */
-}
-
-.brand-side--logo {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding-right: 12px;
-}
-
-.brand-logo {
-  width: 56px;
-  height: 56px;
-  object-fit: cover;
-  border-radius: 50%;
-  border: 2px solid var(--surface);
-  box-shadow: 0 4px 12px rgba(0, 66, 33, 0.08);
-}
-
-/* Định hình khối chứa Brand theo chuẩn Apple Container */
+/* Thành phần cấu trúc phụ trợ Apple HIG */
 .brand-header-apple {
-  display: flex;
-  align-items: center;
-  gap: 16px; /* Khoảng cách chuẩn giữa glyph và text theo iOS HIG */
-  padding: 14px 18px;
-  margin-bottom: 24px;
-  border-radius: var(--radius-box); /* Bo tròn đồng điệu với calc-board */
-  background: radial-gradient(circle at 50% 50%, #f9fbf9 0%, #f1f6f2 100%);
-  border: 1px solid rgba(0, 102, 51, 0.06);
-  box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    border-radius: var(--radius-box);
+    background: radial-gradient(circle at 50% 50%, #f9fbf9 0%, #f1f6f2 100%);
+    border: 1px solid rgba(0, 102, 51, 0.06);
+    box-sizing: border-box;
 }
 
-/* Khóa cứng kích thước Avatar/Logo dạng hình học phẳng */
 .brand-apple-logo {
-  width: 48px; /* Kích thước tap target lý tưởng tối thiểu của Apple */
-  height: 48px;
-  object-fit: cover;
-  border-radius: 12px; /* Bo góc squircle nhẹ theo tỷ lệ bo phần cứng */
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  flex-shrink: 0; /* Tuyệt đối không cho phép bóp méo logo khi co giãn màn hình */
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    flex-shrink: 0;
 }
 
-/* Tiêu đề co giãn linh hoạt tự do */
 .brand-apple-title {
-  flex: 1; /* Chiếm trọn không gian còn lại */
-  margin: 0;
-  font-size: 18px;
-  font-weight: 650; /* Cân bằng giữa Bold và Semibold của font SF Pro */
-  color: var(--brand-primary);
-  letter-spacing: -0.4px; /* Khít ký tự đặc trưng của Typography iOS */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+    flex: 1;
+    margin: 0;
+    font-size: 18px;
+    font-weight: 650;
+    color: var(--brand-primary);
+    letter-spacing: -0.4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-/* Khối Widget Lịch iOS */
-.apple-chrono-widget {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 12px 16px;
-  margin-bottom: 20px;
-  background-color: var(--surface);
-  border: 1px solid rgba(0, 102, 51, 0.08);
-  border-radius: var(--radius-item);
-  box-shadow: 0 2px 8px rgba(0, 66, 33, 0.02);
-}
-
-/* Dòng trạng thái lịch tối giản */
 .apple-chrono-line {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: -4px 0 16px 4px; /* Sử dụng margin âm để kéo sát khoảng cách giữa Brand và Field */
-  font-size: 13px;
-  font-weight: 500;
-  user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: -4px 0 16px 4px;
+    font-size: 13px;
+    font-weight: 500;
+    user-select: none;
 }
 
-.chrono-line__label {
-  color: var(--brand-primary);
-  font-weight: 600;
-}
+.chrono-line__label { color: var(--brand-primary); font-weight: 600; }
+.chrono-line__value { color: var(--text-main); }
 
-.chrono-line__value {
-  color: var(--text-main);
-}
-
-/* Tag Đã hết HSD khi active */
-.tag--expired.active {
-  color: white !important;
-  background-color: #555555 !important;
-  border-color: #555555 !important;
-}
-
-/* Hộp kết quả và Thẻ lịch sử khi ở trạng thái Quá Hạn HSD */
-.state-expired {
-  background-color: #f5f5f5 !important;
-  border-color: rgba(85, 85, 85, 0.2) !important;
-  color: #555555 !important;
-}
-/* Dòng ghi chú phiên bản ở góc dưới màn hình */
 .app-version-note {
     position: fixed;
     bottom: 8px;
@@ -581,5 +513,21 @@ body {
     z-index: 999;
     pointer-events: none;
     user-select: none;
-    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Ghi đè định vị Flatpickr triệt tiêu lỗi tràn hộp */
+.flatpickr-calendar {
+    position: absolute !important;
+    top: 100% !important;
+    left: 0 !important;
+    transform: none !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+    border: 1px solid #e5e5ea !important;
+    margin-top: 6px !important;
+    z-index: 9999 !important;
+}
+
+.flatpickr-calendar.arrowTop:before, .flatpickr-calendar.arrowTop:after {
+    display: none !important;
 }
