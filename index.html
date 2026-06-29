@@ -70,14 +70,23 @@
 
       <div class="divider-or">hoặc</div>
 
-      <div class="form-group">
-        <label class="form-group__label" for="hsdDays">Hạn sử dụng (Số ngày tính từ NSX)</label>
-        <div class="input-wrapper input-wrapper--has-suffix">
-          <input class="form-group__input" type="number" id="hsdDays" placeholder="Ví dụ: 30" inputmode="numeric"
-            min="1">
-          <span class="input-suffix">ngày</span>
-        </div>
-      </div>
+            <div class="apple-input-row">
+                <div class="apple-input-col">
+                    <label class="apple-col-label" for="hsdDays">Hạn sử dụng (Số ngày)</label>
+                    <div class="apple-field-wrapper">
+                        <input class="apple-core-input" type="number" id="hsdDays" placeholder="Ví dụ: 30" inputmode="numeric" min="1">
+                        <span class="apple-field-suffix">ngày</span>
+                    </div>
+                </div>
+                
+                <div class="apple-input-col">
+                    <label class="apple-col-label" for="hsdMonths">Hạn sử dụng (Số tháng)</label>
+                    <div class="apple-field-wrapper">
+                        <input class="apple-core-input" type="number" id="hsdMonths" placeholder="Ví dụ: 3" inputmode="numeric" min="1">
+                        <span class="apple-field-suffix">tháng</span>
+                    </div>
+                </div>
+            </div>
 
       <button class="btn-action" id="btnSubmit" onclick="executeCalculation()">Tra cứu</button>
 
