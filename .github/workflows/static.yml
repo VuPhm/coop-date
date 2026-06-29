@@ -2,7 +2,7 @@ name: Deploy static content to Pages
 
 on:
   push:
-    branches: ["main"] # Hoặc master tùy theo nhánh của bạn
+    branches: ["main"]
 
 permissions:
   contents: read
@@ -22,17 +22,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      # BƯỚC TỰ ĐỘNG PHÁ CACHE: Chèn mã băm thời gian vào index.html trước khi deploy
-      - name: Inject Cache Buster Version
-        run: |
-          VERSION=$(date +%s)
-          echo "Injecting version $VERSION into index.html"
-          sed -i "s/href=\"style.css\"/href=\"style.css?v=$VERSION\"/g" index.html
-          sed -i "s/src=\"app.js\"/src=\"app.js?v=$VERSION\"/g" index.html
-          
-          # Tự động tạo luôn file version.json dựa trên thời gian deploy
-          echo "{\"version\": \"$VERSION\", \"lastUpdated\": \"$(date +'%d\/%m\/%Y')\"}" > version.json
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

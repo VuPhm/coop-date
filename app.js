@@ -478,49 +478,44 @@ function executeCalculation(saveToHistory = true) {
         </svg>
     `;
 }
-// --- HỆ THỐNG QUẢN LÝ VÀ KIỂM TRA PHIÊN BẢN PWA ---
+// --- HỆ THỐNG KIỂM SOÁT PHIÊN BẢN NỘI BỘ (CLIENT-SIDE ONLY) ---
 const APP_VERSION_CONFIG = {
-    currentVersion: "1.0.0",
-    lastUpdated: "30/06/2026",
-    versionUrl: "/version.json", // Tệp tin tĩnh nhỏ gọn lưu cấu hình phiên bản trên server
-    checkTimeoutMs: 3000
+    currentVersion: "1.0.2",       // Thay đổi số này thủ công khi bạn cập nhật code
+    lastUpdated: "30/06/2026"     // Ngày cập nhật tương ứng
 };
 
 let isFirstCalculation = true;
 
-// Hàm kiểm tra phiên bản từ server có giới hạn thời gian chờ
-async function checkAppVersionOnline() {
+function checkAppVersionLocal() {
+    // Đọc phiên bản đã lưu ở lần truy cập trước từ LocalStorage
+    const savedVersion = localStorage.getItem('app_local_version');
+    
+    // Nếu không có mạng, hiển thị trạng thái ngoại tuyến dựa trên thông số cấu hình cứng
     if (!navigator.onLine) {
         updateVersionUI(APP_VERSION_CONFIG.currentVersion, APP_VERSION_CONFIG.lastUpdated, "Ngoại tuyến");
         return;
     }
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), APP_VERSION_CONFIG.checkTimeoutMs);
-
-    try {
-        const response = await fetch(`${APP_VERSION_CONFIG.versionUrl}?t=${Date.now()}`, {
-            signal: controller.signal,
-            cache: "no-store"
-        });
-        clearTimeout(timeoutId);
-
-        if (response.ok) {
-            const data = await response.json();
-            
-            // Nếu phát hiện phiên bản băm thời gian của GitHub Actions mới hơn bản đang chạy
-            if (data.version !== APP_VERSION_CONFIG.currentVersion) {
-                updateVersionUI(data.version, data.lastUpdated, "Đang làm mới...");
-                // Không cần qua Service Worker, ép trình duyệt xóa cache nạp lại trực tiếp từ CDN
-                window.location.reload();
-                return;
-            }
-            updateVersionUI(APP_VERSION_CONFIG.currentVersion, APP_VERSION_CONFIG.lastUpdated, "Mới nhất");
-        }
-    } catch (error) {
-        clearTimeout(timeoutId);
-        updateVersionUI(APP_VERSION_CONFIG.currentVersion, APP_VERSION_CONFIG.lastUpdated, "Dùng tạm thời");
+    // Trường hợp phát hiện phiên bản cấu hình trong app.js mới hơn bản lưu ở máy người dùng
+    if (savedVersion && savedVersion !== APP_VERSION_CONFIG.currentVersion) {
+        updateVersionUI(APP_VERSION_CONFIG.currentVersion, APP_VERSION_CONFIG.lastUpdated, "Đang làm mới...");
+        
+        // Cập nhật dấu vết phiên bản mới vào bộ nhớ
+        localStorage.setItem('app_local_version', APP_VERSION_CONFIG.currentVersion);
+        
+        // Thực hiện Hard Reload cưỡng bức trình duyệt xóa cache cũ của GitHub Pages
+        setTimeout(() => {
+            window.location.reload();
+        }, 500);
+        return;
     }
+
+    // Nếu là lần đầu tiên truy cập hoặc phiên bản trùng khớp
+    if (!savedVersion) {
+        localStorage.setItem('app_local_version', APP_VERSION_CONFIG.currentVersion);
+    }
+    
+    updateVersionUI(APP_VERSION_CONFIG.currentVersion, APP_VERSION_CONFIG.lastUpdated, "Mới nhất");
 }
 
 function updateVersionUI(version, date, status) {
@@ -530,22 +525,17 @@ function updateVersionUI(version, date, status) {
     }
 }
 
-// Lắng nghe mốc khởi chạy ứng dụng PWA
+// Lắng nghe sự kiện khởi chạy ứng dụng
 window.addEventListener('DOMContentLoaded', () => {
-    updateVersionUI(APP_VERSION_CONFIG.currentVersion, APP_VERSION_CONFIG.lastUpdated, "Đang kiểm tra...");
-    checkAppVersionOnline();
+    checkAppVersionLocal();
 });
 
-// Cấu hình can thiệp vào hàm Tra cứu có sẵn của đối tác
+// Can thiệp ngầm vào nút bấm Tra cứu lần đầu
 const originalExecuteCalculation = executeCalculation;
 executeCalculation = function(...args) {
     if (isFirstCalculation) {
         isFirstCalculation = false;
-        // Chạy ngầm kiểm tra phiên bản lần đầu bấm tra cứu nếu có mạng
-        if (navigator.onLine) {
-            checkAppVersionOnline();
-        }
+        checkAppVersionLocal();
     }
-    // Chuyển tiếp thực thi logic tính toán gốc mà không gây trễ giao diện
     return originalExecuteCalculation.apply(this, args);
 };
