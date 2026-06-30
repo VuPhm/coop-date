@@ -1,6 +1,6 @@
 // --- HỆ THỐNG KIỂM SOÁT PHIÊN BẢN NỘI BỘ (CLIENT-SIDE ONLY) --- 
 const APP_VERSION_CONFIG = { 
-    currentVersion: "2.1.0",       
+    currentVersion: "2.1.1",       
     lastUpdated: "30/06/2026"     
 }; 
 
@@ -394,141 +394,223 @@ function loadHistoryItem(nsx, hsdDate, hsdDays) {
     executeCalculation(false); 
 } 
 
-function executeCalculation(saveToHistory = true) { 
-    const nsxVal = document.getElementById('nsx').value.trim(); 
-    const hsdDateVal = document.getElementById('hsdDate').value.trim(); 
-    const hsdDaysVal = document.getElementById('hsdDays').value.trim(); 
-    const wrapper = document.getElementById('resultWrapper'); 
-    const text = document.getElementById('resultText'); 
-    text.classList.remove('calc-board__result-text--visible'); 
-    setTimeout(() => { 
-        try { 
-            if (!nsxVal) throw new Error("Chưa nhập ngày sản xuất."); 
-            if (!hsdDateVal) throw new Error("Chưa xác định được ngày hạn sử dụng."); 
-            const output = processReturnBusinessLogic(nsxVal, hsdDateVal); 
-            drawTimelineDiagram(nsxVal, hsdDateVal, output.dateStr); 
-            wrapper.className = `calc-board__result-wrapper ${output.alert.class}`; 
-            if (output.isExpiredProduct) { 
-                const labelTitle = output.isShortProduct ? 'Hạn sử dụng' : 'Ngày lùi hàng'; 
-                text.innerHTML = `${labelTitle}: ${output.dateStr}<br><small style="font-weight:700; color:#555555;">[${output.alert.label}]</small>`; 
-            } else if (output.isShortProduct) { 
-                text.innerHTML = `Hạn sử dụng: ${output.dateStr}<br><small style="font-weight:500; opacity:0.9;">[${output.alert.label}] — Sử dụng đến hết ngày ${output.dateStr}</small>`; 
-            } else { 
-                text.innerHTML = `Ngày lùi hàng: ${output.dateStr}<br><small style="font-weight:500; opacity:0.9;">[${output.alert.label}] — HSD còn ${output.daysRemaining} ngày</small>`; 
-            } 
-            if (saveToHistory) { 
-                const existingIndex = historyData.findIndex(h => h.nsx === nsxVal && h.formattedHsd === output.formattedHsd); 
-                if (existingIndex !== -1) historyData.splice(existingIndex, 1); 
+function executeCalculation(saveToHistory = true) {
+    const nsxVal = document.getElementById('nsx').value.trim();
+    const hsdDateVal = document.getElementById('hsdDate').value.trim();
+    const hsdDaysVal = document.getElementById('hsdDays').value.trim();
+    const hsdMonthsVal = document.getElementById('hsdMonths').value.trim();
+    
+    const wrapper = document.getElementById('resultWrapper');
+    const text = document.getElementById('resultText');
+    
+    // 1. KHỞI ĐỘNG MƯỢT MÀ: Hạ opacity ruột chữ về 0 trước, giữ nguyên hộp nền để không bị sụt lún giao diện
+    text.classList.remove('calc-board__result-text--visible');
+
+    setTimeout(() => {
+        try {
+            // --- HỆ THỐNG VALIDATE THEO TỪNG CHẾ ĐỘ ---
+            if (calcMode === 'forward') {
+                if (!nsxVal) throw new Error("Vui lòng nhập Ngày sản xuất (NSX).");
+                if (!isValidDateStr(nsxVal)) throw new Error("Ngày sản xuất không đúng định dạng (dd/mm/yyyy).");
+                if (!hsdDateVal && !hsdDaysVal && !hsdMonthsVal) throw new Error("Vui lòng nhập Hạn sử dụng (chọn Ngày, điền Số ngày hoặc Số tháng).");
+                if (hsdDateVal && !isValidDateStr(hsdDateVal)) throw new Error("Hạn sử dụng không đúng định dạng ngày (dd/mm/yyyy).");
+            } else {
+                if (!hsdDateVal && !hsdDaysVal && !hsdMonthsVal) throw new Error("Vui lòng nhập dữ liệu Hạn sử dụng để tra ngược về NSX.");
+                if (hsdDateVal && !isValidDateStr(hsdDateVal)) throw new Error("Hạn sử dụng đã nhập không đúng định dạng ngày (dd/mm/yyyy).");
+                if (!nsxVal) throw new Error("Hệ thống chưa thể tính ngược ra Ngày sản xuất. Vui lòng kiểm tra lại số liệu.");
+            }
+
+            if (isValidDateStr(nsxVal) && isValidDateStr(hsdDateVal)) {
+                const d1 = parseLocalDate(nsxVal);
+                const d2 = parseLocalDate(hsdDateVal);
+                if (d2 <= d1) throw new Error("Hạn sử dụng phải lớn hơn Ngày sản xuất ít nhất 1 ngày.");
+            }
+
+            // --- THỰC THI LOGIC NGHIỆP VỤ ---
+            const output = processReturnBusinessLogic(nsxVal, hsdDateVal);
+            drawTimelineDiagram(nsxVal, hsdDateVal, output.dateStr);
+
+            // Cập nhật class màu nền cho hộp bảo vệ
+            wrapper.className = `calc-board__result-wrapper ${output.alert.class}`;
+            
+            if (output.isExpiredProduct) {
+                const labelTitle = output.isShortProduct ? 'Hạn sử dụng' : 'Ngày lùi hàng';
+                text.innerHTML = `<span style="font-size: 15px; font-weight: 700;">${labelTitle}: ${output.dateStr}</span><br>
+                                  <small style="font-weight: 800; color: #555555; display: inline-block; margin-top: 4px;">[${output.alert.label}]</small>`;
+            } else if (output.isShortProduct) {
+                text.innerHTML = `<span style="font-size: 15px; font-weight: 700;">Hạn sử dụng: ${output.dateStr}</span><br>
+                                  <small style="font-weight: 600; display: inline-block; margin-top: 4px; opacity: 0.9;">[${output.alert.label}] — Sử dụng đến hết ngày ${output.dateStr}</small>`;
+            } else {
+                text.innerHTML = `<span style="font-size: 15px; font-weight: 700;">Ngày lùi hàng: ${output.dateStr}</span><br>
+                                  <small style="font-weight: 600; display: inline-block; margin-top: 4px; opacity: 0.9;">[${output.alert.label}] — HSD còn ${output.daysRemaining} ngày</small>`;
+            }
+            
+            if (saveToHistory) {
+                const existingIndex = historyData.findIndex(h => h.nsx === nsxVal && h.formattedHsd === output.formattedHsd);
+                if (existingIndex !== -1) historyData.splice(existingIndex, 1);
+                
                 historyData.unshift({ 
                     nsx: nsxVal, 
-                    rawHsdDate: hsdDateVal, 
-                    rawHsdDays: hsdDaysVal || Math.round((parseLocalDate(hsdDateVal) - parseLocalDate(nsxVal)) / MS_PER_DAY), 
-                    formattedHsd: output.formattedHsd, 
-                    result: output.dateStr, 
-                    daysRemaining: output.daysRemaining, 
-                    alertClass: output.alert.class, 
-                    alertLabel: output.alert.label, 
-                    alertType: output.isShortProduct ? 'short' : output.alert.type, 
-                    alertWeight: output.alert.weight, 
-                    isShortProduct: output.isShortProduct, 
-                    isExpiredProduct: output.isExpiredProduct 
-                }); 
-                updateHistoryUI(); 
-            } 
-        } catch (error) { 
-            wrapper.className = 'calc-board__result-wrapper state-danger'; 
-            text.innerHTML = error.message; 
-        } 
-        text.classList.add('calc-board__result-text--visible'); 
-    }, 150); 
+                    rawHsdDate: hsdDateVal,
+                    rawHsdDays: hsdDaysVal || Math.round((parseLocalDate(hsdDateVal) - parseLocalDate(nsxVal)) / MS_PER_DAY) + 1,
+                    formattedHsd: output.formattedHsd,
+                    result: output.dateStr,
+                    daysRemaining: output.daysRemaining,
+                    alertClass: output.alert.class,
+                    alertLabel: output.alert.label,
+                    alertType: output.isShortProduct ? 'short' : output.alert.type,
+                    alertWeight: output.alert.weight,
+                    isShortProduct: output.isShortProduct,
+                    isExpiredProduct: output.isExpiredProduct
+                });
+                updateHistoryUI();
+            }
+        } catch (error) {
+            // Cập nhật class đỏ nhạt cho hộp nền lỗi
+            wrapper.className = 'calc-board__result-wrapper state-danger';
+            
+            let userFriendlyMessage = error.message;
+            if (error.message.includes("Vui lòng nhập Ngày sản xuất")) {
+                userFriendlyMessage = "⚠️ <b>Thiếu Ngày sản xuất:</b> Vui lòng điền ngày in trên bao bì (hoặc bật lịch chọn) trước khi tra cứu.";
+            } else if (error.message.includes("Ngày sản xuất không đúng định dạng")) {
+                userFriendlyMessage = "⚠️ <b>Sai Ngày sản xuất:</b> Định dạng chuẩn là Ngày/Tháng/Năm (Ví dụ: 10/06/2026).";
+            } else if (error.message.includes("Vui lòng nhập Hạn sử dụng")) {
+                userFriendlyMessage = "⚠️ <b>Thiếu Hạn sử dụng:</b> Hãy nhập 1 trong 3 ô: Chọn Ngày cụ thể, điền Số ngày, hoặc điền Số tháng.";
+            } else if (error.message.includes("Hạn sử dụng không đúng định dạng")) {
+                userFriendlyMessage = "⚠️ <b>Sai định dạng Ngày HSD:</b> Vui lòng kiểm tra lại ô Ngày HSD (Ví dụ: 25/06/2026).";
+            } else if (error.message.includes("Hạn sử dụng phải lớn hơn")) {
+                userFriendlyMessage = "⚠️ <b>Lỗi biên ngày:</b> Hạn sử dụng bắt buộc phải nằm sau Ngày sản xuất. Vui lòng kiểm tra lại năm hoặc tháng.";
+            } else if (error.message.includes("chưa thể tính ngược")) {
+                userFriendlyMessage = "⚠️ <b>Thiếu dữ liệu tra ngược:</b> Hãy nhập Ngày HSD kèm theo Số ngày (hoặc Số tháng) để hệ thống tìm ra Ngày sản xuất.";
+            }
+
+            text.innerHTML = `<div style="line-height: 1.6; font-size: 13px; color: #e20514; font-weight: 600;">${userFriendlyMessage}</div>`;
+            
+            const container = document.getElementById('svgContainer');
+            if (container) container.innerHTML = '';
+            const board = document.getElementById('diagramBoard');
+            if (board) board.style.display = 'none';
+        }
+        
+        // 2. PHỤC HỒI HIỆU ỨNG MƯỢT: Ép trình duyệt kích hoạt Reflow giải phóng trạng thái kẹt chữ
+        text.offsetHeight; 
+        
+        // Đẩy class visible lên để thực hiện hiệu ứng transition cự ly từ tệp CSS độc lập
+        text.classList.add('calc-board__result-text--visible');
+    }, 150);
 } 
 
-function drawTimelineDiagram(nsxStr, hsdStr, returnStr) { 
-    const board = document.getElementById('diagramBoard'); 
-    const container = document.getElementById('svgContainer'); 
-    board.style.display = 'block'; 
-    const nsx = parseLocalDate(nsxStr); 
-    const hsd = parseLocalDate(hsdStr); 
-    const today = new Date(); today.setHours(0,0,0,0); 
-    const totalDays = Math.round((hsd - nsx) / MS_PER_DAY) + 1; 
-    const todayIndex = Math.round((today - nsx) / MS_PER_DAY) + 1; 
-    const startX = 40; 
-    const endX = 560; 
-    const widthX = endX - startX; 
-    const y = 55; 
+function drawTimelineDiagram(nsxStr, hsdStr, returnStr) {
+    const board = document.getElementById('diagramBoard');
+    const container = document.getElementById('svgContainer');
+    board.style.display = 'block';
 
-    const getX = (dayIndex) => { 
-        if (totalDays <= 0) return startX; 
-        const pct = dayIndex / totalDays; 
-        return startX + Math.max(0, Math.min(1, pct)) * widthX; 
-    }; 
+    const nsx = parseLocalDate(nsxStr);
+    const hsd = parseLocalDate(hsdStr);
+    const today = new Date(); today.setHours(0,0,0,0);
 
-    const todayX = getX(todayIndex); 
-    const colorSafe = '#006633';    
-    const colorDanger = '#e20514';  
-    const colorPast = '#86868b';    
+    const totalDays = Math.round((hsd - nsx) / MS_PER_DAY) + 1;
+    const todayIndex = Math.round((today - nsx) / MS_PER_DAY) + 1;
+    
+    const startX = 35; // Thu hẹp nhẹ 5px để bảo vệ text 5 ký tự đầu/cuối không chạm viền màn hình
+    const endX = 565;
+    const widthX = endX - startX;
+    const y = 65; 
 
-    if (totalDays < 10) { 
-        const isExpired = (totalDays - todayIndex) < 0; 
-        const mainColor = isExpired ? colorDanger : colorSafe; 
-        container.innerHTML = ` 
-            <svg class="timeline-svg" viewBox="0 0 600 130" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+    const getX = (dayIndex) => {
+        if (totalDays <= 0) return startX;
+        const pct = dayIndex / totalDays;
+        return startX + Math.max(0, Math.min(1, pct)) * widthX;
+    };
+
+    const todayX = getX(todayIndex);
+    const colorSafe = '#006633';
+    const colorDanger = '#e20514';
+    const colorPast = '#86868b';
+
+    // NHÁNH 1: Sản phẩm ngắn ngày (< 10 ngày)
+    if (totalDays < 10) {
+        const isExpired = (totalDays - todayIndex) < 0;
+        const mainColor = isExpired ? colorDanger : colorSafe;
+
+        container.innerHTML = `
+            <svg class="timeline-svg" viewBox="0 0 600 145" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
                 <line x1="${startX}" y1="${y}" x2="${endX}" y2="${y}" stroke="${mainColor}" stroke-width="8" stroke-linecap="round"/>
-                ${todayIndex > 0 ? `<line x1="${startX}" y1="${y}" x2="${Math.min(endX, todayX)}" y2="${y}" stroke="${colorPast}" stroke-width="8" stroke-opacity="0.85"/>` : ''} 
+                ${todayIndex > 0 ? `<line x1="${startX}" y1="${y}" x2="${Math.min(endX, todayX)}" y2="${y}" stroke="${colorPast}" stroke-width="8" stroke-linecap="round" stroke-opacity="0.85"/>` : ''}
+                
+                ${todayIndex >= 0 && todayIndex <= totalDays ? `
+                    <line x1="${todayX}" y1="${y - 22}" x2="${todayX}" y2="${y + 22}" stroke="#1c261c" stroke-width="2" stroke-dasharray="3,3"/>
+                ` : ''}
+
                 <text x="${(startX + endX) / 2}" y="${y - 16}" style="font-size: 14px; font-weight: 800;" fill="${mainColor}" text-anchor="middle">Tổng HSD: ${totalDays} ngày</text>
+
                 <circle cx="${startX}" cy="${y}" r="7" fill="#ffffff" stroke="${colorSafe}" stroke-width="3.5" />
                 <text x="${startX}" y="${y + 26}" style="font-size: 13px; font-weight: 600;" fill="#1c261c" text-anchor="middle">NSX</text>
                 <text x="${startX}" y="${y + 42}" style="font-size: 13px; font-weight: 700;" fill="#667366" text-anchor="middle">${nsxStr.slice(0,5)}</text>
+
                 <circle cx="${endX}" cy="${y}" r="7" fill="#ffffff" stroke="${mainColor}" stroke-width="3.5" />
                 <text x="${endX}" y="${y + 26}" style="font-size: 13px; font-weight: 800;" fill="${mainColor}" text-anchor="middle">HSD</text>
                 <text x="${endX}" y="${y + 42}" style="font-size: 13px; font-weight: 700;" fill="#667366" text-anchor="middle">${hsdStr.slice(0,5)}</text>
-                ${todayIndex >= 0 && todayIndex <= totalDays ? ` 
+
+                ${todayIndex >= 0 && todayIndex <= totalDays ? `
                     <g>
-                        <line x1="${todayX}" y1="${y - 22}" x2="${todayX}" y2="${y + 22}" stroke="#1c261c" stroke-width="2" stroke-dasharray="3,3"/>
                         <circle cx="${todayX}" cy="${y}" r="5" fill="#1c261c"/>
                         <text x="${todayX}" y="${y - 28}" style="font-size: 13px; font-weight: 800;" text-anchor="middle" fill="#1c261c">Hôm nay (${today.getDate()}/${today.getMonth() + 1})</text>
-                    </g> 
+                    </g>
                 ` : ''}
-            </svg> `; 
-        return; 
-    } 
+            </svg>
+        `;
+        return;
+    }
 
-    const dayThreshold20 = Math.round(totalDays * 0.2); 
-    const dayThreshold40 = Math.round(totalDays * 0.4); 
-    const mốc_40 = totalDays - dayThreshold40; 
-    const mốc_20 = totalDays - dayThreshold20; 
-    const x_40 = getX(mốc_40); 
-    const x_20 = getX(mốc_20); 
+    // NHÁNH 2: Sản phẩm dài ngày (>= 10 ngày)
+    const dayThreshold20 = Math.round(totalDays * 0.2);
+    const dayThreshold40 = Math.round(totalDays * 0.4);
+    const mốc_40 = totalDays - dayThreshold40;
+    const mốc_20 = totalDays - dayThreshold20;
+    const x_40 = getX(mốc_40);
+    const x_20 = getX(mốc_20);
     const colorWarning = '#f29200'; 
 
-    container.innerHTML = ` 
-        <svg class="timeline-svg" viewBox="0 0 600 130" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+    container.innerHTML = `
+        <svg class="timeline-svg" viewBox="0 0 600 145" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
             <line x1="${startX}" y1="${y}" x2="${x_40}" y2="${y}" stroke="${colorSafe}" stroke-width="8" stroke-linecap="butt"/>
             <line x1="${x_40}" y1="${y}" x2="${x_20}" y2="${y}" stroke="${colorWarning}" stroke-width="14" stroke-linecap="butt"/>
             <line x1="${x_20}" y1="${y}" x2="${endX}" y2="${y}" stroke="${colorDanger}" stroke-width="14" stroke-linecap="butt"/>
-            ${todayIndex > 0 ? `<line x1="${startX}" y1="${y}" x2="${Math.min(x_40, todayX)}" y2="${y}" stroke="${colorPast}" stroke-width="8" stroke-opacity="0.85"/>` : ''} 
-            ${todayIndex > mốc_40 ? `<line x1="${x_40}" y1="${y}" x2="${Math.min(x_20, todayX)}" y2="${y}" stroke="${colorPast}" stroke-width="14" stroke-opacity="0.85"/>` : ''} 
-            ${todayIndex > mốc_20 ? `<line x1="${x_20}" y1="${y}" x2="${Math.min(endX, todayX)}" y2="${y}" stroke="${colorPast}" stroke-width="14" stroke-opacity="0.85"/>` : ''} 
+            
+            ${todayIndex > 0 ? `<line x1="${startX}" y1="${y}" x2="${Math.min(x_40, todayX)}" y2="${y}" stroke="${colorPast}" stroke-width="8" stroke-opacity="0.85"/>` : ''}
+            ${todayIndex > mốc_40 ? `<line x1="${x_40}" y1="${y}" x2="${Math.min(x_20, todayX)}" y2="${y}" stroke="${colorPast}" stroke-width="14" stroke-opacity="0.85"/>` : ''}
+            ${todayIndex > mốc_20 ? `<line x1="${x_20}" y1="${y}" x2="${Math.min(endX, todayX)}" y2="${y}" stroke="${colorPast}" stroke-width="14" stroke-opacity="0.85"/>` : ''}
+            
+            ${todayIndex >= 0 && todayIndex <= totalDays ? `
+                <line x1="${todayX}" y1="${y - 22}" x2="${todayX}" y2="${y + 22}" stroke="#1c261c" stroke-width="2" stroke-dasharray="3,3"/>
+            ` : ''}
+
             <text x="${(startX + x_40) / 2}" y="${y - 16}" style="font-size: 13px; font-weight: 800;" fill="${colorSafe}" text-anchor="middle">${mốc_40} ngày</text>
             <text x="${(x_40 + x_20) / 2}" y="${y - 18}" style="font-size: 13px; font-weight: 800;" fill="${colorWarning}" text-anchor="middle">${dayThreshold40 - dayThreshold20} ngày</text>
             <text x="${(x_20 + endX) / 2}" y="${y - 18}" style="font-size: 13px; font-weight: 800;" fill="${colorDanger}" text-anchor="middle">${dayThreshold20} ngày</text>
+
             <circle cx="${startX}" cy="${y}" r="7" fill="#ffffff" stroke="${colorSafe}" stroke-width="3.5" />
             <text x="${startX}" y="${y + 26}" style="font-size: 13px; font-weight: 600;" fill="#1c261c" text-anchor="middle">NSX</text>
             <text x="${startX}" y="${y + 42}" style="font-size: 13px; font-weight: 700;" fill="#667366" text-anchor="middle">${nsxStr.slice(0,5)}</text>
-            <circle cx="${x_40}" cy="${y}" r="5" fill="#ffffff" stroke="${colorWarning}" stroke-width="2.5" />
+
+            <circle cx="${x_40}" cy="${y}" r="5" fill="#ffffff" stroke="${colorWarning}" stroke-width="3.5" />
             <text x="${x_40}" y="${y + 26}" style="font-size: 12px; font-weight: 700;" fill="${colorWarning}" text-anchor="middle">Mốc 40%</text>
+
             <circle cx="${x_20}" cy="${y}" r="7" fill="#ffffff" stroke="${colorDanger}" stroke-width="3.5" />
             <text x="${x_20}" y="${y + 26}" style="font-size: 14px; font-weight: 800;" fill="${colorDanger}" text-anchor="middle">Hạn lùi</text>
             <text x="${x_20}" y="${y + 42}" style="font-size: 13px; font-weight: 700;" fill="#667366" text-anchor="middle">${returnStr.slice(0,5)}</text>
+
             <circle cx="${endX}" cy="${y}" r="7" fill="#ffffff" stroke="#667366" stroke-width="3.5" />
             <text x="${endX}" y="${y + 26}" style="font-size: 13px; font-weight: 600;" fill="#1c261c" text-anchor="middle">HSD</text>
             <text x="${endX}" y="${y + 42}" style="font-size: 13px; font-weight: 700;" fill="#667366" text-anchor="middle">${hsdStr.slice(0,5)}</text>
-            ${todayIndex >= 0 && todayIndex <= totalDays ? ` 
+
+            ${todayIndex >= 0 && todayIndex <= totalDays ? `
                 <g>
-                    <line x1="${todayX}" y1="${y - 22}" x2="${todayX}" y2="${y + 22}" stroke="#1c261c" stroke-width="2" stroke-dasharray="3,3"/>
                     <circle cx="${todayX}" cy="${y}" r="5" fill="#1c261c"/>
                     <text x="${todayX}" y="${y - 28}" style="font-size: 13px; font-weight: 800;" text-anchor="middle" fill="#1c261c">Hôm nay (${today.getDate()}/${today.getMonth() + 1})</text>
-                </g> 
+                </g>
             ` : ''}
-        </svg> `; 
+        </svg>
+    `;
 }
