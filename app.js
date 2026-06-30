@@ -1,6 +1,6 @@
 // --- HỆ THỐNG KIỂM SOÁT PHIÊN BẢN NỘI BỘ (CLIENT-SIDE ONLY) --- 
 const APP_VERSION_CONFIG = { 
-    currentVersion: "2.1.1",       
+    currentVersion: "2.1.2",       
     lastUpdated: "30/06/2026"     
 }; 
 
@@ -13,6 +13,10 @@ let nsxFlatpickr, hsdFlatpickr;
 let isSyncing = false; 
 let calcMode = 'forward'; 
 
+function getCleanToday() {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+}
 function checkAppVersionLocal() { 
     const savedVersion = localStorage.getItem('app_local_version'); 
     if (!navigator.onLine) { 
@@ -248,58 +252,63 @@ function formatRemainingText(days) {
     return `HSD còn ${days} ngày`; 
 } 
 
-function processReturnBusinessLogic(nsxStr, hsdDateStr) { 
-    const nsxDate = parseLocalDate(nsxStr); 
-    const hsdDate = parseLocalDate(hsdDateStr); 
-    const shelfLifeDays = Math.round((hsdDate - nsxDate) / MS_PER_DAY) + 1; 
-    if (shelfLifeDays <= 0) throw new Error("Hạn sử dụng không thể nhỏ hơn ngày sản xuất."); 
-    const today = new Date(); today.setHours(0, 0, 0, 0); 
-    const daysRemainingShelfLife = Math.round((hsdDate - today) / MS_PER_DAY) + 1; 
-
-    if (daysRemainingShelfLife <= 0) { 
-        const dayThreshold20 = Math.round(shelfLifeDays * 0.2); 
-        let returnDate = shelfLifeDays < 10 ? hsdDate : new Date(hsdDate.getTime() - (dayThreshold20 - 1) * MS_PER_DAY - 1 * MS_PER_DAY); 
-        return { 
-            isExpiredProduct: true, 
-            isShortProduct: shelfLifeDays < 10, 
-            formattedHsd: formatLocalDate(hsdDate), 
-            dateStr: formatLocalDate(returnDate), 
-            daysRemaining: daysRemainingShelfLife, 
-            alert: { class: 'state-expired', label: 'Đã hết HSD', weight: 0, type: 'expired' } 
-        }; 
-    } 
-    if (shelfLifeDays < 10) { 
-        return { 
-            isExpiredProduct: false, 
-            isShortProduct: true, 
-            formattedHsd: formatLocalDate(hsdDate), 
-            dateStr: formatLocalDate(hsdDate), 
-            daysRemaining: daysRemainingShelfLife, 
-            alert: { class: 'state-safe', label: 'An toàn', weight: 3, type: 'safe' } 
-        }; 
-    } 
-    const dayThreshold20 = Math.round(shelfLifeDays * 0.2); 
-    const dayThreshold40 = Math.round(shelfLifeDays * 0.4); 
-    let returnDate = new Date(hsdDate.getTime() - (dayThreshold20 - 1) * MS_PER_DAY - 1 * MS_PER_DAY); 
-    const daysToReturnDate = Math.round((returnDate - today) / MS_PER_DAY); 
-    let alertState; 
-    if (daysToReturnDate < 0) { 
-        alertState = { class: 'state-danger', label: 'Đã qua hạn lùi', weight: 1, type: 'danger' }; 
-    } else if (daysToReturnDate === 0) { 
-        alertState = { class: 'state-danger', label: 'Đến hạn lùi hàng', weight: 1, type: 'danger' }; 
-    } else if (daysToReturnDate <= (dayThreshold40 - dayThreshold20)) { 
-        alertState = { class: 'state-warning', label: 'Sắp tới hạn lùi', weight: 2, type: 'warning' }; 
-    } else { 
-        alertState = { class: 'state-safe', label: 'An toàn', weight: 3, type: 'safe' }; 
-    } 
-    return { 
-        isExpiredProduct: false, 
-        isShortProduct: false, 
-        formattedHsd: formatLocalDate(hsdDate), 
-        dateStr: formatLocalDate(returnDate), 
-        daysRemaining: daysRemainingShelfLife, 
-        alert: alertState 
-    }; 
+function processReturnBusinessLogic(nsxStr, hsdDateStr) {
+    const nsxDate = parseLocalDate(nsxStr);
+    const hsdDate = parseLocalDate(hsdDateStr);
+    const shelfLifeDays = Math.round((hsdDate - nsxDate) / MS_PER_DAY) + 1;
+    if (shelfLifeDays <= 0) throw new Error("Hạn sử dụng không thể nhỏ hơn ngày sản xuất.");
+    
+    // ĐÃ SỬA: Ép WebView quét thời gian thực tế của thiết bị phần cứng
+    const today = getCleanToday(); 
+    const daysRemainingShelfLife = Math.round((hsdDate - today) / MS_PER_DAY) + 1;
+    
+    if (daysRemainingShelfLife <= 0) {
+        const dayThreshold20 = Math.round(shelfLifeDays * 0.2);
+        let returnDate = shelfLifeDays < 10 ? hsdDate : new Date(hsdDate.getTime() - (dayThreshold20 - 1) * MS_PER_DAY - 1 * MS_PER_DAY);
+        return {
+            isExpiredProduct: true,
+            isShortProduct: shelfLifeDays < 10,
+            formattedHsd: formatLocalDate(hsdDate),
+            dateStr: formatLocalDate(returnDate),
+            daysRemaining: daysRemainingShelfLife,
+            alert: { class: 'state-expired', label: 'Đã hết HSD', weight: 0, type: 'expired' }
+        };
+    }
+    
+    if (shelfLifeDays < 10) {
+        return {
+            isExpiredProduct: false,
+            isShortProduct: true,
+            formattedHsd: formatLocalDate(hsdDate),
+            dateStr: formatLocalDate(hsdDate),
+            daysRemaining: daysRemainingShelfLife,
+            alert: { class: 'state-safe', label: 'An toàn', weight: 3, type: 'safe' }
+        };
+    }
+    
+    const dayThreshold20 = Math.round(shelfLifeDays * 0.2);
+    const dayThreshold40 = Math.round(shelfLifeDays * 0.4);
+    let returnDate = new Date(hsdDate.getTime() - (dayThreshold20 - 1) * MS_PER_DAY - 1 * MS_PER_DAY);
+    const daysToReturnDate = Math.round((returnDate - today) / MS_PER_DAY);
+    
+    let alertState;
+    if (daysToReturnDate < 0) {
+        alertState = { class: 'state-danger', label: 'Đã qua hạn lùi', weight: 1, type: 'danger' };
+    } else if (daysToReturnDate === 0) {
+        alertState = { class: 'state-danger', label: 'Đến hạn lùi hàng', weight: 1, type: 'danger' };
+    } else if (daysToReturnDate <= (dayThreshold40 - dayThreshold20)) {
+        alertState = { class: 'state-warning', label: 'Sắp tới hạn lùi', weight: 2, type: 'warning' };
+    } else {
+        alertState = { class: 'state-safe', label: 'An toàn', weight: 3, type: 'safe' };
+    }
+    return {
+        isExpiredProduct: false,
+        isShortProduct: false,
+        formattedHsd: formatLocalDate(hsdDate),
+        dateStr: formatLocalDate(returnDate),
+        daysRemaining: daysRemainingShelfLife,
+        alert: alertState
+    };
 } 
 
 // --- ĐIỀU HƯỚNG CHẾ ĐỘ QUA CÔNG TẮC GẠT TRƯỢT APPLE ---
@@ -507,15 +516,17 @@ function drawTimelineDiagram(nsxStr, hsdStr, returnStr) {
 
     const nsx = parseLocalDate(nsxStr);
     const hsd = parseLocalDate(hsdStr);
-    const today = new Date(); today.setHours(0,0,0,0);
+    
+    // ĐÃ SỬA: Ngăn chặn lỗi kẹt lệch ngày trên Mobile App nhúng WebView
+    const today = getCleanToday(); 
 
     const totalDays = Math.round((hsd - nsx) / MS_PER_DAY) + 1;
     const todayIndex = Math.round((today - nsx) / MS_PER_DAY) + 1;
     
-    const startX = 35; // Thu hẹp nhẹ 5px để bảo vệ text 5 ký tự đầu/cuối không chạm viền màn hình
+    const startX = 35; 
     const endX = 565;
     const widthX = endX - startX;
-    const y = 65; 
+    const y = 65; // Đưa trục Y về tọa độ tâm vàng 65px để nhãn chữ 13px thở tự do không bị kích biên
 
     const getX = (dayIndex) => {
         if (totalDays <= 0) return startX;
@@ -537,25 +548,22 @@ function drawTimelineDiagram(nsxStr, hsdStr, returnStr) {
             <svg class="timeline-svg" viewBox="0 0 600 145" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
                 <line x1="${startX}" y1="${y}" x2="${endX}" y2="${y}" stroke="${mainColor}" stroke-width="8" stroke-linecap="round"/>
                 ${todayIndex > 0 ? `<line x1="${startX}" y1="${y}" x2="${Math.min(endX, todayX)}" y2="${y}" stroke="${colorPast}" stroke-width="8" stroke-linecap="round" stroke-opacity="0.85"/>` : ''}
+                ${todayIndex >= 0 && todayIndex <= totalDays ? `<line x1="${todayX}" y1="${y - 22}" x2="${todayX}" y2="${y + 22}" stroke="#1c261c" stroke-width="2" stroke-dasharray="3,3"/>` : ''}
                 
-                ${todayIndex >= 0 && todayIndex <= totalDays ? `
-                    <line x1="${todayX}" y1="${y - 22}" x2="${todayX}" y2="${y + 22}" stroke="#1c261c" stroke-width="2" stroke-dasharray="3,3"/>
-                ` : ''}
-
-                <text x="${(startX + endX) / 2}" y="${y - 16}" style="font-size: 14px; font-weight: 800;" fill="${mainColor}" text-anchor="middle">Tổng HSD: ${totalDays} ngày</text>
-
+                <text x="${(startX + endX) / 2}" y="${y - 18}" style="font-size: 14px; font-weight: 800;" fill="${mainColor}" text-anchor="middle">Tổng HSD: ${totalDays} ngày</text>
+                
                 <circle cx="${startX}" cy="${y}" r="7" fill="#ffffff" stroke="${colorSafe}" stroke-width="3.5" />
                 <text x="${startX}" y="${y + 26}" style="font-size: 13px; font-weight: 600;" fill="#1c261c" text-anchor="middle">NSX</text>
                 <text x="${startX}" y="${y + 42}" style="font-size: 13px; font-weight: 700;" fill="#667366" text-anchor="middle">${nsxStr.slice(0,5)}</text>
-
+                
                 <circle cx="${endX}" cy="${y}" r="7" fill="#ffffff" stroke="${mainColor}" stroke-width="3.5" />
                 <text x="${endX}" y="${y + 26}" style="font-size: 13px; font-weight: 800;" fill="${mainColor}" text-anchor="middle">HSD</text>
                 <text x="${endX}" y="${y + 42}" style="font-size: 13px; font-weight: 700;" fill="#667366" text-anchor="middle">${hsdStr.slice(0,5)}</text>
-
+                
                 ${todayIndex >= 0 && todayIndex <= totalDays ? `
                     <g>
                         <circle cx="${todayX}" cy="${y}" r="5" fill="#1c261c"/>
-                        <text x="${todayX}" y="${y - 28}" style="font-size: 13px; font-weight: 800;" text-anchor="middle" fill="#1c261c">Hôm nay (${today.getDate()}/${today.getMonth() + 1})</text>
+                        <text x="${todayX}" y="${y - 30}" style="font-size: 13px; font-weight: 800;" text-anchor="middle" fill="#1c261c">Hôm nay (${today.getDate()}/${today.getMonth() + 1})</text>
                     </g>
                 ` : ''}
             </svg>
@@ -570,7 +578,7 @@ function drawTimelineDiagram(nsxStr, hsdStr, returnStr) {
     const mốc_20 = totalDays - dayThreshold20;
     const x_40 = getX(mốc_40);
     const x_20 = getX(mốc_20);
-    const colorWarning = '#f29200'; 
+    const colorWarning = '#f29200';
 
     container.innerHTML = `
         <svg class="timeline-svg" viewBox="0 0 600 145" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
@@ -581,34 +589,31 @@ function drawTimelineDiagram(nsxStr, hsdStr, returnStr) {
             ${todayIndex > 0 ? `<line x1="${startX}" y1="${y}" x2="${Math.min(x_40, todayX)}" y2="${y}" stroke="${colorPast}" stroke-width="8" stroke-opacity="0.85"/>` : ''}
             ${todayIndex > mốc_40 ? `<line x1="${x_40}" y1="${y}" x2="${Math.min(x_20, todayX)}" y2="${y}" stroke="${colorPast}" stroke-width="14" stroke-opacity="0.85"/>` : ''}
             ${todayIndex > mốc_20 ? `<line x1="${x_20}" y1="${y}" x2="${Math.min(endX, todayX)}" y2="${y}" stroke="${colorPast}" stroke-width="14" stroke-opacity="0.85"/>` : ''}
+            ${todayIndex >= 0 && todayIndex <= totalDays ? `<line x1="${todayX}" y1="${y - 22}" x2="${todayX}" y2="${y + 22}" stroke="#1c261c" stroke-width="2" stroke-dasharray="3,3"/>` : ''}
+
+            <text x="${(startX + x_40) / 2}" y="${y - 18}" style="font-size: 13px; font-weight: 800;" fill="${colorSafe}" text-anchor="middle">${mốc_40} ngày</text>
+            <text x="${(x_40 + x_20) / 2}" y="${y - 20}" style="font-size: 13px; font-weight: 800;" fill="${colorWarning}" text-anchor="middle">${dayThreshold40 - dayThreshold20} ngày</text>
+            <text x="${(x_20 + endX) / 2}" y="${y - 20}" style="font-size: 13px; font-weight: 800;" fill="${colorDanger}" text-anchor="middle">${dayThreshold20} ngày</text>
             
-            ${todayIndex >= 0 && todayIndex <= totalDays ? `
-                <line x1="${todayX}" y1="${y - 22}" x2="${todayX}" y2="${y + 22}" stroke="#1c261c" stroke-width="2" stroke-dasharray="3,3"/>
-            ` : ''}
-
-            <text x="${(startX + x_40) / 2}" y="${y - 16}" style="font-size: 13px; font-weight: 800;" fill="${colorSafe}" text-anchor="middle">${mốc_40} ngày</text>
-            <text x="${(x_40 + x_20) / 2}" y="${y - 18}" style="font-size: 13px; font-weight: 800;" fill="${colorWarning}" text-anchor="middle">${dayThreshold40 - dayThreshold20} ngày</text>
-            <text x="${(x_20 + endX) / 2}" y="${y - 18}" style="font-size: 13px; font-weight: 800;" fill="${colorDanger}" text-anchor="middle">${dayThreshold20} ngày</text>
-
             <circle cx="${startX}" cy="${y}" r="7" fill="#ffffff" stroke="${colorSafe}" stroke-width="3.5" />
             <text x="${startX}" y="${y + 26}" style="font-size: 13px; font-weight: 600;" fill="#1c261c" text-anchor="middle">NSX</text>
             <text x="${startX}" y="${y + 42}" style="font-size: 13px; font-weight: 700;" fill="#667366" text-anchor="middle">${nsxStr.slice(0,5)}</text>
-
+            
             <circle cx="${x_40}" cy="${y}" r="5" fill="#ffffff" stroke="${colorWarning}" stroke-width="3.5" />
             <text x="${x_40}" y="${y + 26}" style="font-size: 12px; font-weight: 700;" fill="${colorWarning}" text-anchor="middle">Mốc 40%</text>
-
+            
             <circle cx="${x_20}" cy="${y}" r="7" fill="#ffffff" stroke="${colorDanger}" stroke-width="3.5" />
             <text x="${x_20}" y="${y + 26}" style="font-size: 14px; font-weight: 800;" fill="${colorDanger}" text-anchor="middle">Hạn lùi</text>
             <text x="${x_20}" y="${y + 42}" style="font-size: 13px; font-weight: 700;" fill="#667366" text-anchor="middle">${returnStr.slice(0,5)}</text>
-
+            
             <circle cx="${endX}" cy="${y}" r="7" fill="#ffffff" stroke="#667366" stroke-width="3.5" />
             <text x="${endX}" y="${y + 26}" style="font-size: 13px; font-weight: 600;" fill="#1c261c" text-anchor="middle">HSD</text>
             <text x="${endX}" y="${y + 42}" style="font-size: 13px; font-weight: 700;" fill="#667366" text-anchor="middle">${hsdStr.slice(0,5)}</text>
-
+            
             ${todayIndex >= 0 && todayIndex <= totalDays ? `
                 <g>
                     <circle cx="${todayX}" cy="${y}" r="5" fill="#1c261c"/>
-                    <text x="${todayX}" y="${y - 28}" style="font-size: 13px; font-weight: 800;" text-anchor="middle" fill="#1c261c">Hôm nay (${today.getDate()}/${today.getMonth() + 1})</text>
+                    <text x="${todayX}" y="${y - 30}" style="font-size: 13px; font-weight: 800;" text-anchor="middle" fill="#1c261c">Hôm nay (${today.getDate()}/${today.getMonth() + 1})</text>
                 </g>
             ` : ''}
         </svg>
