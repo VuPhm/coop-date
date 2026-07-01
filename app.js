@@ -1,6 +1,6 @@
 // --- HỆ THỐNG KIỂM SOÁT PHIÊN BẢN VÀ GIAO THỨC CHUYỂN GIAO PWA ---
 const APP_VERSION_CONFIG = { 
-    currentVersion: "2.1.5",       
+    currentVersion: "2.1.6",       
     lastUpdated: "02/07/2026"     
 };
 
@@ -73,19 +73,14 @@ function showUpdateModal() {
 
     const modal = document.createElement('div');
     modal.id = 'updateVersionModal';
-    modal.style = `
-        position: fixed; bottom: 20px; right: 20px; left: 20px; max-width: 400px; margin: 0 auto;
-        background: #ffffff; color: #1c261c; padding: 16px; border-radius: 12px; z-index: 9999;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.15); border: 1px solid #e5e5ea;
-        font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-    `;
+    modal.className = 'apple-update-modal'; // Gọi trực tiếp class CSS ngoại vi
     
     modal.innerHTML = `
-        <div style="font-weight: 700; font-size: 15px; margin-bottom: 6px; color: #1c1c1e;">Hệ thống đã tối ưu</div>
-        <div style="font-size: 13px; color: #86868b; margin-bottom: 12px;">Phiên bản mới v${APP_VERSION_CONFIG.currentVersion} đã sẵn sàng hoạt động.</div>
-        <div style="display: flex; gap: 8px; justify-content: flex-end;">
-            <button onclick="document.getElementById('updateVersionModal').remove()" style="background: transparent; border: none; color: #86868b; font-size: 13px; font-weight: 600; padding: 8px 12px; cursor: pointer;">Để sau</button>
-            <button onclick="forceRefreshApp()" style="background: #0071e3; border: none; color: #ffffff; font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Làm mới ngay</button>
+        <div class="apple-update-modal__title">Hiệu năng được tối ưu</div>
+        <div class="apple-update-modal__desc">Phiên bản mới v${APP_VERSION_CONFIG.currentVersion} đã sẵn sàng hoạt động ổn định.</div>
+        <div class="apple-update-modal__actions">
+            <button class="apple-update-btn apple-update-btn--cancel" onclick="document.getElementById('updateVersionModal').remove()">Để sau</button>
+            <button class="apple-update-btn apple-update-btn--confirm" onclick="forceRefreshApp()">Làm mới ngay</button>
         </div>
     `;
     document.body.appendChild(modal);

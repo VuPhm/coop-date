@@ -605,3 +605,99 @@ input:checked + .apple-switch-slider:before {
     cursor: not-allowed;
     border-color: #d1d1d6 !important;
 }
+
+/* --- HỘP THOẠI CẬP NHẬT PHIÊN BẢN CHUẨN APPLE HIG --- */
+.apple-update-modal {
+    position: fixed;
+    bottom: 24px;
+    right: 16px;
+    left: 16px;
+    max-width: 360px;
+    margin: 0 auto;
+    background: rgba(255, 255, 255, 0.85); /* Nền mờ trắng tinh khiết */
+    backdrop-filter: blur(20px) saturate(190%); /* Hiệu ứng kính mờ đặc trưng iOS */
+    -webkit-backdrop-filter: blur(20px) saturate(190%);
+    color: var(--text-main);
+    padding: 18px 20px;
+    border-radius: var(--radius-box); /* Đồng bộ bán kính bo hộp */
+    z-index: 99999;
+    box-shadow: 0 12px 38px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-sizing: border-box;
+    
+    /* Hiệu ứng trượt lò xò xuất hiện sinh động */
+    animation: appleSpringSlide 0.45s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes appleSpringSlide {
+    from {
+        transform: translateY(30px) scale(0.96);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+.apple-update-modal__title {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    margin-bottom: 4px;
+    color: #000000;
+}
+
+.apple-update-modal__desc {
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--text-sub);
+    margin-bottom: 16px;
+}
+
+.apple-update-modal__actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.apple-update-btn {
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: var(--radius-item);
+    cursor: pointer;
+    border: none;
+    outline: none;
+    transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Nút từ chối - Thuần khiết, ẩn dật */
+.apple-update-btn--cancel {
+    background: transparent;
+    color: var(--brand-primary); /* Sử dụng màu xanh primary của bạn làm điểm nhấn chữ */
+}
+.apple-update-btn--cancel:active {
+    background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* Nút chấp nhận - Đậm màu đặc, nổi bật */
+.apple-update-btn--confirm {
+    background-color: var(--brand-primary);
+    color: #ffffff;
+}
+.apple-update-btn--confirm:active {
+    transform: scale(0.96);
+    background-color: #005229; /* Đậm hơn khi nhấn chìm */
+}
+
+/* Giao diện thích ứng trên màn hình lớn Desktop */
+@media (min-width: 768px) {
+    .apple-update-modal {
+        right: 24px;
+        left: auto; /* Đẩy hẳn về góc phải như thông báo macOS */
+        margin: 0;
+    }
+}
