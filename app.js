@@ -17,16 +17,13 @@ function getCleanToday() {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
 }
-function updateVersionUI(version, date, status) {
-    const noteEl = document.getElementById('appVersionNote');
-    if (noteEl) noteEl.innerText = `v${version} (${date}) | ${status}`;
-}
-
 function checkAppVersionLocal() {
     const localSaved = localStorage.getItem('app_local_version');
     
     if (!navigator.onLine) {
-        updateVersionUI(APP_VERSION_CONFIG.currentVersion, APP_VERSION_CONFIG.lastUpdated, "Ngoại tuyến");
+        // Nếu mất mạng, hiển thị phiên bản lưu trong máy hoặc bản cứng config nếu chưa có
+        const displayVer = localSaved || APP_VERSION_CONFIG.currentVersion;
+        updateVersionUI(displayVer, APP_VERSION_CONFIG.lastUpdated, "Ngoại tuyến");
         return;
     }
 
@@ -38,9 +35,10 @@ function checkAppVersionLocal() {
         return;
     }
 
-    // Trường hợp 2: PHÁT HIỆN LỆCH PHIÊN BẢN (Cầu nối cho người dùng cũ)
+    // Trường hợp 2: PHÁT HIỆN LỆCH PHIÊN BẢN (Hiển thị bản cũ + thông báo)
     if (localSaved !== APP_VERSION_CONFIG.currentVersion) {
-        updateVersionUI(APP_VERSION_CONFIG.currentVersion, APP_VERSION_CONFIG.lastUpdated, "Có bản cập nhật");
+        // ĐÃ SỬA: Hiển thị đúng số phiên bản thực tế máy đang chạy (localSaved) để tránh loạn thông tin
+        updateVersionUI(localSaved, APP_VERSION_CONFIG.lastUpdated, "Có bản cập nhật mới");
         showUpdateModal();
         return;
     }
