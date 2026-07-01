@@ -1,8 +1,8 @@
-// --- HỆ THỐNG KIỂM SOÁT PHIÊN BẢN NỘI BỘ (CLIENT-SIDE ONLY) --- 
+// --- HỆ THỐNG KIỂM SOÁT PHIÊN BẢN VÀ GIAO THỨC CHUYỂN GIAO PWA ---
 const APP_VERSION_CONFIG = { 
-    currentVersion: "2.1.4",       
+    currentVersion: "2.1.5",       
     lastUpdated: "02/07/2026"     
-}; 
+};
 
 let isFirstCalculation = true; 
 const MS_PER_DAY = 1000 * 60 * 60 * 24; 
@@ -17,68 +17,98 @@ function getCleanToday() {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
 }
-// --- 2. HỆ THỐNG KIỂM SOÁT PHIÊN BẢN (CHỐNG VÒNG LẶP XOAY VÒNG CACHE) ---
-function checkAppVersionLocal() {
-    const localSaved = localStorage.getItem('app_local_version');
-    
-    // Trạng thái Ngoại tuyến: Không làm gì cả, giữ nguyên trạng thái dùng tạm
-    if (!navigator.onLine) {
-        updateVersionUI(APP_VERSION_CONFIG.currentVersion, APP_VERSION_CONFIG.lastUpdated, "Ngoại tuyến");
-        return;
-    }
-
-    // Nếu lần đầu tiên khởi chạy ứng dụng (chưa có biến lưu trữ)
-    if (!localSaved) {
-        localStorage.setItem('app_local_version', APP_VERSION_CONFIG.currentVersion);
-        updateVersionUI(APP_VERSION_CONFIG.currentVersion, APP_VERSION_CONFIG.lastUpdated, "Mới nhất");
-        return;
-    }
-
-    // PHÁT HIỆN LỆCH PHIÊN BẢN: Bản trên Server (Config) mới hơn bản Máy khách (Local)
-    if (localSaved !== APP_VERSION_CONFIG.currentVersion) {
-        updateVersionUI(APP_VERSION_CONFIG.currentVersion, APP_VERSION_CONFIG.lastUpdated, "Đang tối ưu...");
-        
-        // Bước 1: Ra lệnh cho Service Worker dọn sạch bộ lưu trữ bộ đệm cũ (nếu có)
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(registrations => {
-                for (let registration of registrations) {
-                    registration.update(); // Ép cập nhật ngầm luồng Service Worker
-                }
-            });
-        }
-
-        // Bước 2: Chỉ cập nhật localStorage SAU KHI đã chuẩn bị hạ tầng dọn cache
-        localStorage.setItem('app_local_version', APP_VERSION_CONFIG.currentVersion);
-        
-        // Bước 3: Trễ 800ms để luồng ngầm xử lý rồi mới reload cứng để nạp tệp JS mới từ GitHub CDN
-        setTimeout(() => { 
-            window.location.reload(true); // Ép buộc trình duyệt Bypass Cache
-        }, 800);
-        return;
-    }
-
-    updateVersionUI(APP_VERSION_CONFIG.currentVersion, APP_VERSION_CONFIG.lastUpdated, "Mới nhất");
-} 
-
 function updateVersionUI(version, date, status) {
     const noteEl = document.getElementById('appVersionNote');
     if (noteEl) noteEl.innerText = `v${version} (${date}) | ${status}`;
 }
 
-// Lắng nghe duy nhất tại thời điểm DomReady để kiểm tra ngầm, tuyệt đối không can thiệp vào executeCalculation
-window.addEventListener('DOMContentLoaded', () => {
-    checkAppVersionLocal();
-});
+function checkAppVersionLocal() {
+    const localSaved = localStorage.getItem('app_local_version');
+    
+    if (!navigator.onLine) {
+        updateVersionUI(APP_VERSION_CONFIG.currentVersion, APP_VERSION_CONFIG.lastUpdated, "Ngoại tuyến");
+        return;
+    }
 
-// Can thiệp ngầm vào nút bấm Tra cứu lần đầu
-const originalExecuteCalculation = executeCalculation; 
-executeCalculation = function (...args) { 
-    if (isFirstCalculation) { 
-        isFirstCalculation = false; 
-        checkAppVersionLocal(); 
-    } 
-    return originalExecuteCalculation.apply(this, args); 
-}; 
+    // Trường hợp 1: Người dùng mới hoặc lần đầu tiếp cận hệ thống mới
+    if (!localSaved) {
+        localStorage.setItem('app_local_version', APP_VERSION_CONFIG.currentVersion);
+        updateVersionUI(APP_VERSION_CONFIG.currentVersion, APP_VERSION_CONFIG.lastUpdated, "Mới nhất");
+        registerServiceWorker();
+        return;
+    }
+
+    // Trường hợp 2: PHÁT HIỆN LỆCH PHIÊN BẢN (Cầu nối cho người dùng cũ)
+    if (localSaved !== APP_VERSION_CONFIG.currentVersion) {
+        updateVersionUI(APP_VERSION_CONFIG.currentVersion, APP_VERSION_CONFIG.lastUpdated, "Có bản cập nhật");
+        showUpdateModal();
+        return;
+    }
+
+    // Trường hợp 3: Trạng thái bình thường, tiếp tục duy trì đăng ký SW
+    updateVersionUI(APP_VERSION_CONFIG.currentVersion, APP_VERSION_CONFIG.lastUpdated, "Mới nhất");
+    registerServiceWorker();
+}
+
+function registerServiceWorker() {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js')
+            .then((reg) => {
+                // Đón đầu luồng cập nhật ngầm của phiên bản kế tiếp trong tương lai
+                reg.addEventListener('updatefound', () => {
+                    const newWorker = reg.installing;
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            showUpdateModal();
+                        }
+                    });
+                });
+            })
+            .catch((err) => console.error("SW Register Error:", err));
+    }
+}
+
+function showUpdateModal() {
+    if (document.getElementById('updateVersionModal')) return;
+
+    const modal = document.createElement('div');
+    modal.id = 'updateVersionModal';
+    modal.style = `
+        position: fixed; bottom: 20px; right: 20px; left: 20px; max-width: 400px; margin: 0 auto;
+        background: #ffffff; color: #1c261c; padding: 16px; border-radius: 12px; z-index: 9999;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15); border: 1px solid #e5e5ea;
+        font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    `;
+    
+    modal.innerHTML = `
+        <div style="font-weight: 700; font-size: 15px; margin-bottom: 6px; color: #1c1c1e;">Hệ thống đã tối ưu</div>
+        <div style="font-size: 13px; color: #86868b; margin-bottom: 12px;">Phiên bản mới v${APP_VERSION_CONFIG.currentVersion} đã sẵn sàng hoạt động.</div>
+        <div style="display: flex; gap: 8px; justify-content: flex-end;">
+            <button onclick="document.getElementById('updateVersionModal').remove()" style="background: transparent; border: none; color: #86868b; font-size: 13px; font-weight: 600; padding: 8px 12px; cursor: pointer;">Để sau</button>
+            <button onclick="forceRefreshApp()" style="background: #0071e3; border: none; color: #ffffff; font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Làm mới ngay</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function forceRefreshApp() {
+    localStorage.setItem('app_local_version', APP_VERSION_CONFIG.currentVersion);
+    
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+            for (let registration of registrations) {
+                if (registration.waiting) {
+                    registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                }
+            }
+        });
+    }
+    // Bẻ gãy cache bằng chuỗi thời gian, ép trình duyệt nạp tài nguyên thực tế
+    window.location.href = window.location.origin + window.location.pathname + '?v=' + new Date().getTime();
+}
+
+// Lắng nghe duy nhất tại thời điểm cấu trúc DOM đã sẵn sàng
+window.addEventListener('DOMContentLoaded', checkAppVersionLocal);
 
 // --- MASK ĐỊNH DẠNG TEXT INPUT CHO DI ĐỘNG --- 
 document.querySelectorAll('.auto-date').forEach(input => { 
