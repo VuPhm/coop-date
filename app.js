@@ -1,7 +1,7 @@
 // --- HỆ THỐNG KIỂM SOÁT PHIÊN BẢN NỘI BỘ (CLIENT-SIDE ONLY) --- 
 const APP_VERSION_CONFIG = { 
-    currentVersion: "2.1.2",       
-    lastUpdated: "30/06/2026"     
+    currentVersion: "2.1.4",       
+    lastUpdated: "02/07/2026"     
 }; 
 
 let isFirstCalculation = true; 
@@ -17,32 +17,58 @@ function getCleanToday() {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
 }
-function checkAppVersionLocal() { 
-    const savedVersion = localStorage.getItem('app_local_version'); 
-    if (!navigator.onLine) { 
-        updateVersionUI(APP_VERSION_CONFIG.currentVersion, APP_VERSION_CONFIG.lastUpdated, "Ngoại tuyến"); 
-        return; 
-    } 
-    if (savedVersion && savedVersion !== APP_VERSION_CONFIG.currentVersion) { 
-        updateVersionUI(APP_VERSION_CONFIG.currentVersion, APP_VERSION_CONFIG.lastUpdated, "Đang làm mới..."); 
-        localStorage.setItem('app_local_version', APP_VERSION_CONFIG.currentVersion); 
-        setTimeout(() => { window.location.reload(); }, 500); 
-        return; 
-    } 
-    if (!savedVersion) { 
-        localStorage.setItem('app_local_version', APP_VERSION_CONFIG.currentVersion); 
-    } 
-    updateVersionUI(APP_VERSION_CONFIG.currentVersion, APP_VERSION_CONFIG.lastUpdated, "Mới nhất"); 
+// --- 2. HỆ THỐNG KIỂM SOÁT PHIÊN BẢN (CHỐNG VÒNG LẶP XOAY VÒNG CACHE) ---
+function checkAppVersionLocal() {
+    const localSaved = localStorage.getItem('app_local_version');
+    
+    // Trạng thái Ngoại tuyến: Không làm gì cả, giữ nguyên trạng thái dùng tạm
+    if (!navigator.onLine) {
+        updateVersionUI(APP_VERSION_CONFIG.currentVersion, APP_VERSION_CONFIG.lastUpdated, "Ngoại tuyến");
+        return;
+    }
+
+    // Nếu lần đầu tiên khởi chạy ứng dụng (chưa có biến lưu trữ)
+    if (!localSaved) {
+        localStorage.setItem('app_local_version', APP_VERSION_CONFIG.currentVersion);
+        updateVersionUI(APP_VERSION_CONFIG.currentVersion, APP_VERSION_CONFIG.lastUpdated, "Mới nhất");
+        return;
+    }
+
+    // PHÁT HIỆN LỆCH PHIÊN BẢN: Bản trên Server (Config) mới hơn bản Máy khách (Local)
+    if (localSaved !== APP_VERSION_CONFIG.currentVersion) {
+        updateVersionUI(APP_VERSION_CONFIG.currentVersion, APP_VERSION_CONFIG.lastUpdated, "Đang tối ưu...");
+        
+        // Bước 1: Ra lệnh cho Service Worker dọn sạch bộ lưu trữ bộ đệm cũ (nếu có)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+                for (let registration of registrations) {
+                    registration.update(); // Ép cập nhật ngầm luồng Service Worker
+                }
+            });
+        }
+
+        // Bước 2: Chỉ cập nhật localStorage SAU KHI đã chuẩn bị hạ tầng dọn cache
+        localStorage.setItem('app_local_version', APP_VERSION_CONFIG.currentVersion);
+        
+        // Bước 3: Trễ 800ms để luồng ngầm xử lý rồi mới reload cứng để nạp tệp JS mới từ GitHub CDN
+        setTimeout(() => { 
+            window.location.reload(true); // Ép buộc trình duyệt Bypass Cache
+        }, 800);
+        return;
+    }
+
+    updateVersionUI(APP_VERSION_CONFIG.currentVersion, APP_VERSION_CONFIG.lastUpdated, "Mới nhất");
 } 
 
-function updateVersionUI(version, date, status) { 
-    const noteEl = document.getElementById('appVersionNote'); 
-    if (noteEl) { noteEl.innerText = `v${version} (${date}) | ${status}`; } 
-} 
+function updateVersionUI(version, date, status) {
+    const noteEl = document.getElementById('appVersionNote');
+    if (noteEl) noteEl.innerText = `v${version} (${date}) | ${status}`;
+}
 
-window.addEventListener('DOMContentLoaded', () => { 
-    checkAppVersionLocal(); 
-}); 
+// Lắng nghe duy nhất tại thời điểm DomReady để kiểm tra ngầm, tuyệt đối không can thiệp vào executeCalculation
+window.addEventListener('DOMContentLoaded', () => {
+    checkAppVersionLocal();
+});
 
 // Can thiệp ngầm vào nút bấm Tra cứu lần đầu
 const originalExecuteCalculation = executeCalculation; 
@@ -516,8 +542,6 @@ function drawTimelineDiagram(nsxStr, hsdStr, returnStr) {
 
     const nsx = parseLocalDate(nsxStr);
     const hsd = parseLocalDate(hsdStr);
-    
-    // ĐÃ SỬA: Ngăn chặn lỗi kẹt lệch ngày trên Mobile App nhúng WebView
     const today = getCleanToday(); 
 
     const totalDays = Math.round((hsd - nsx) / MS_PER_DAY) + 1;
@@ -526,7 +550,7 @@ function drawTimelineDiagram(nsxStr, hsdStr, returnStr) {
     const startX = 35; 
     const endX = 565;
     const widthX = endX - startX;
-    const y = 65; // Đưa trục Y về tọa độ tâm vàng 65px để nhãn chữ 13px thở tự do không bị kích biên
+    const y = 65; 
 
     const getX = (dayIndex) => {
         if (totalDays <= 0) return startX;
@@ -539,7 +563,7 @@ function drawTimelineDiagram(nsxStr, hsdStr, returnStr) {
     const colorDanger = '#e20514';
     const colorPast = '#86868b';
 
-    // NHÁNH 1: Sản phẩm ngắn ngày (< 10 ngày)
+    // NHÁNH 1: Sản phẩm ngắn ngày (< 10 ngày) - Giữ nguyên logic tối giản
     if (totalDays < 10) {
         const isExpired = (totalDays - todayIndex) < 0;
         const mainColor = isExpired ? colorDanger : colorSafe;
@@ -571,7 +595,7 @@ function drawTimelineDiagram(nsxStr, hsdStr, returnStr) {
         return;
     }
 
-    // NHÁNH 2: Sản phẩm dài ngày (>= 10 ngày)
+    // NHÁNH 2: Sản phẩm dài ngày (>= 10 ngày) - ĐÃ CẬP NHẬT THEO YÊU CẦU
     const dayThreshold20 = Math.round(totalDays * 0.2);
     const dayThreshold40 = Math.round(totalDays * 0.4);
     const mốc_40 = totalDays - dayThreshold40;
@@ -580,7 +604,11 @@ function drawTimelineDiagram(nsxStr, hsdStr, returnStr) {
     const x_20 = getX(mốc_20);
     const colorWarning = '#f29200';
 
-    container.innerHTML = `
+    // ĐÃ THÊM: Tính toán chuỗi ngày cụ thể cho mốc 40% để in ra nhãn
+    const date40Obj = new Date(nsx.getTime() + (mốc_40 - 1) * MS_PER_DAY);
+    const date40Str = formatLocalDate(date40Obj);
+
+container.innerHTML = `
         <svg class="timeline-svg" viewBox="0 0 600 145" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
             <line x1="${startX}" y1="${y}" x2="${x_40}" y2="${y}" stroke="${colorSafe}" stroke-width="8" stroke-linecap="butt"/>
             <line x1="${x_40}" y1="${y}" x2="${x_20}" y2="${y}" stroke="${colorWarning}" stroke-width="14" stroke-linecap="butt"/>
@@ -591,9 +619,8 @@ function drawTimelineDiagram(nsxStr, hsdStr, returnStr) {
             ${todayIndex > mốc_20 ? `<line x1="${x_20}" y1="${y}" x2="${Math.min(endX, todayX)}" y2="${y}" stroke="${colorPast}" stroke-width="14" stroke-opacity="0.85"/>` : ''}
             ${todayIndex >= 0 && todayIndex <= totalDays ? `<line x1="${todayX}" y1="${y - 22}" x2="${todayX}" y2="${y + 22}" stroke="#1c261c" stroke-width="2" stroke-dasharray="3,3"/>` : ''}
 
-            <text x="${(startX + x_40) / 2}" y="${y - 18}" style="font-size: 13px; font-weight: 800;" fill="${colorSafe}" text-anchor="middle">${mốc_40} ngày</text>
-            <text x="${(x_40 + x_20) / 2}" y="${y - 20}" style="font-size: 13px; font-weight: 800;" fill="${colorWarning}" text-anchor="middle">${dayThreshold40 - dayThreshold20} ngày</text>
-            <text x="${(x_20 + endX) / 2}" y="${y - 20}" style="font-size: 13px; font-weight: 800;" fill="${colorDanger}" text-anchor="middle">${dayThreshold20} ngày</text>
+            <text x="${(x_40 + x_20) / 2}" y="${y - 10}" style="font-size: 11px; font-weight: 600;" fill="${colorWarning}" fill-opacity="0.75" text-anchor="middle">${dayThreshold40 - dayThreshold20} ngày</text>
+            <text x="${(x_20 + endX) / 2}" y="${y - 10}" style="font-size: 11px; font-weight: 600;" fill="${colorDanger}" fill-opacity="0.75" text-anchor="middle">${dayThreshold20} ngày</text>
             
             <circle cx="${startX}" cy="${y}" r="7" fill="#ffffff" stroke="${colorSafe}" stroke-width="3.5" />
             <text x="${startX}" y="${y + 26}" style="font-size: 13px; font-weight: 600;" fill="#1c261c" text-anchor="middle">NSX</text>
@@ -601,6 +628,7 @@ function drawTimelineDiagram(nsxStr, hsdStr, returnStr) {
             
             <circle cx="${x_40}" cy="${y}" r="5" fill="#ffffff" stroke="${colorWarning}" stroke-width="3.5" />
             <text x="${x_40}" y="${y + 26}" style="font-size: 12px; font-weight: 700;" fill="${colorWarning}" text-anchor="middle">Mốc 40%</text>
+            <text x="${x_40}" y="${y + 42}" style="font-size: 13px; font-weight: 700;" fill="#667366" text-anchor="middle">${date40Str.slice(0,5)}</text>
             
             <circle cx="${x_20}" cy="${y}" r="7" fill="#ffffff" stroke="${colorDanger}" stroke-width="3.5" />
             <text x="${x_20}" y="${y + 26}" style="font-size: 14px; font-weight: 800;" fill="${colorDanger}" text-anchor="middle">Hạn lùi</text>
