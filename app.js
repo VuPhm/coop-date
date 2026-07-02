@@ -1,6 +1,6 @@
 // --- HỆ THỐNG KIỂM SOÁT PHIÊN BẢN VÀ GIAO THỨC CHUYỂN GIAO PWA ---
 const APP_VERSION_CONFIG = { 
-    currentVersion: "2.1.8",       
+    currentVersion: "2.1.9",       
     lastUpdated: "02/07/2026"     
 };
 
