@@ -55,19 +55,9 @@ body {
         "diagram"
         "history";
 }
-
-@media (min-width: 768px) {
-    .workspace {
-        grid-template-columns: 1.1fr 1fr;
-        grid-template-areas: 
-            "calc history"
-            "diagram diagram";
-    }
-}
-
 .calc-board, .history-board {
     background: var(--surface);
-    padding: 32px 24px;
+    padding: 24px 20px;
     border-radius: var(--radius-box);
     box-shadow: var(--shadow);
     box-sizing: border-box;
@@ -199,7 +189,7 @@ body {
 /* Khối phân cách logic */
 .divider-or {
     text-align: center;
-    margin: 14px 0;
+    margin: 12px 0;
     font-size: 13px;
     font-weight: 600;
     color: var(--text-sub);
@@ -282,7 +272,7 @@ body {
 .btn-action {
     width: 100%;
     padding: 14px;
-    margin-top: 8px;
+    margin-top: 4px;
     font-size: 16px;
     font-weight: 600;
     color: white;
@@ -298,7 +288,7 @@ body {
 
 /* Khối hiển thị kết quả tra cứu */
 .calc-board__result-wrapper {
-    margin-top: 24px;
+    margin-top: 16px;
     min-height: 74px;
     display: flex;
     align-items: center;
@@ -379,10 +369,10 @@ body {
 
 /* Thanh điều khiển lọc và sắp xếp */
 .controls {
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
 }
 
 .filter-tags {
@@ -391,9 +381,24 @@ body {
     gap: 8px;
 }
 
+@media (max-width: 480px) {
+    .filter-tags {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 6px;
+        -webkit-overflow-scrolling: touch;
+    }
+    .filter-tags::-webkit-scrollbar {
+        display: none;
+    }
+    .tag {
+        flex-shrink: 0;
+    }
+}
+
 .tag {
-    padding: 6px 12px;
-    font-size: 12px;
+    padding: 5px 10px;
+    font-size: 11.5px;
     font-weight: 600;
     border-radius: 20px;
     cursor: pointer;
@@ -448,7 +453,7 @@ body {
     list-style: none;
     padding: 0;
     margin: 0;
-    max-height: 390px;
+    max-height: 420px; /* Tăng nhẹ chiều cao hiển thị trên điện thoại */
     overflow-y: auto;
     overflow-x: hidden; /* Chặn cứng tuyệt đối luồng cuộn ngang */
     padding-right: 4px; /* Tạo khoảng trống an toàn cho thanh cuộn hệ thống */
@@ -465,38 +470,150 @@ body {
     border-radius: 10px;
 }
 
+/* Giao diện thích ứng trên màn hình lớn Desktop cho Lịch sử và Workspace */
+@media (min-width: 768px) {
+    .workspace {
+        grid-template-columns: 1.1fr 1fr;
+        grid-template-areas: 
+            "calc history"
+            "diagram diagram";
+    }
+    .history-board {
+        display: flex;
+        flex-direction: column;
+        height: 0;
+        min-height: 100%;
+    }
+    .history-list {
+        flex: 1;
+        min-height: 0;
+        max-height: none;
+    }
+}
+
+.history-board__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.history-board__title {
+    margin: 0 !important;
+}
+
+.btn-clear-history {
+    background: transparent;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-sub);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border-radius: var(--radius-item);
+    transition: all 0.2s ease;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn-clear-history:hover {
+    color: var(--brand-accent-red);
+    background-color: var(--status-red-bg);
+}
+
+.btn-clear-history svg {
+    stroke: currentColor;
+}
+
 .history-item {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
+    align-items: center;
     width: 100%;
     box-sizing: border-box;
-    padding: 12px 14px;
-    margin-bottom: 8px;
+    padding: 8px 12px;
+    margin-bottom: 6px;
     border-radius: var(--radius-item);
     cursor: pointer;
-    border: 1px solid transparent; /* Sẽ được đè bởi border-color của state */
-    transition: filter 0.2s ease, box-shadow 0.2s ease;
-    word-break: break-word;
-    overflow-wrap: anywhere;
+    border: 1.5px solid transparent;
+    transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+    position: relative;
+    overflow: hidden;
 }
 
 .history-item:hover {
-    filter: brightness(0.97); /* Làm sẫm nhẹ hộp nền thay vì đổi màu opacity */
+    filter: brightness(0.97);
     box-shadow: 0 4px 12px rgba(0, 66, 33, 0.04);
 }
 
-.history-item__meta {
+/* Left vertical indicator line */
+.history-item__indicator {
+    width: 4px;
+    align-self: stretch;
+    border-radius: 2px;
+    margin-right: 10px;
+    flex-shrink: 0;
+}
+
+/* Base state colors for left indicator */
+.state-safe .history-item__indicator { background-color: var(--brand-primary); }
+.state-warning .history-item__indicator { background-color: var(--brand-accent-orange); }
+.state-danger .history-item__indicator { background-color: var(--brand-accent-red); }
+.state-expired .history-item__indicator { background-color: #8e8e93; }
+
+.history-item__content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    padding-right: 22px; /* space for delete button */
+}
+
+.history-item__main-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.history-item__sub-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 1px;
+}
+
+.history-item__title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.history-item__result-val {
+    font-size: 13px;
+    font-weight: 700;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.history-item__dates {
     font-size: 11px;
     color: var(--text-sub);
     font-weight: 500;
-    letter-spacing: -0.1px;
 }
 
-.history-item__result {
-    font-size: 13px;
-    font-weight: 600;
-    line-height: 1.4;
+.history-item__status-desc {
+    font-size: 11px;
+    text-align: right;
+    font-weight: 500;
+    opacity: 0.8;
 }
 
 .history-empty {
@@ -506,21 +623,56 @@ body {
     padding: 40px 0;
 }
 
-.history-item__status-line {
-    display: block; 
-    font-size: 12px;
-    font-weight: 500;
-    opacity: 0.8;
-    margin-top: 2px;
+/* Delete button styles */
+.history-item__delete-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%) scale(0.9);
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.04);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-sub);
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+    z-index: 5;
+}
+
+.history-item:hover .history-item__delete-btn {
+    opacity: 1;
+    transform: translateY(-50%) scale(1);
+}
+
+.history-item__delete-btn svg {
+    width: 12px;
+    height: 12px;
+}
+
+.history-item__delete-btn:hover {
+    background-color: var(--brand-accent-red);
+    color: white !important;
+}
+
+@media (hover: none) {
+    .history-item__delete-btn {
+        opacity: 0.6;
+        transform: translateY(-50%) scale(1);
+    }
 }
 
 /* Thành phần cấu trúc phụ trợ Apple HIG */
 .brand-header-apple {
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 14px 18px;
-    margin-bottom: 24px;
+    gap: 12px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
     border-radius: var(--radius-box);
     background: radial-gradient(circle at 50% 50%, #f9fbf9 0%, #f1f6f2 100%);
     border: 1px solid rgba(0, 102, 51, 0.06);
@@ -552,7 +704,7 @@ body {
     display: flex;
     align-items: center;
     gap: 6px;
-    margin: -4px 0 16px 4px;
+    margin: -4px 0 12px 4px;
     font-size: 13px;
     font-weight: 500;
     user-select: none;
@@ -597,7 +749,7 @@ body {
     align-items: center;
     background-color: var(--surface);
     padding: 12px 16px;
-    margin-bottom: 22px;
+    margin-bottom: 16px;
     border-radius: var(--radius-item);
     border: 1px solid rgba(0, 102, 51, 0.06);
     box-shadow: 0 1px 3px rgba(0,0,0,0.02);
@@ -766,7 +918,7 @@ input:checked + .apple-switch-slider:before {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    margin-bottom: 22px;
+    margin-bottom: 16px;
     background-color: var(--surface);
     padding: 12px 16px;
     border-radius: var(--radius-item);
