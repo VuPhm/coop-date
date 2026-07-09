@@ -1,4 +1,4 @@
-const CACHE_NAME = 'app-cache-v2.2.1';
+const CACHE_NAME = 'app-cache-v2.3.0';
 const ASSETS = [
     './',
     './index.html',
@@ -9,7 +9,10 @@ const ASSETS = [
     './favicon_io/android-chrome-512x512.png',
     './favicon_io/favicon-32x32.png',
     './favicon_io/favicon-16x16.png',
-    './favicon_io/apple-touch-icon.png'
+    './favicon_io/apple-touch-icon.png',
+    'https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css',
+    'https://cdn.jsdelivr.net/npm/flatpickr',
+    'https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js'
 ];
 
 // Cài đặt: Lưu trữ cứng tài nguyên

@@ -50,6 +50,40 @@
                 </label>
             </div>
             
+      <!-- BỔ SUNG: Mã Barcode & Số lượng -->
+      <div class="apple-input-row">
+        <div class="apple-input-col" style="flex: 2;">
+          <label class="apple-col-label" for="barcode">Mã Barcode</label>
+          <div class="apple-field-wrapper">
+            <input class="apple-core-input" type="text" id="barcode" placeholder="Nhập hoặc quét mã" inputmode="numeric">
+            <button type="button" class="btn-picker-trigger" id="btnScanBarcode" onclick="openScanner()" aria-label="Quét mã barcode" style="position: absolute; right: 0; top: 0; height: 100%;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--brand-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                <circle cx="12" cy="13" r="4"></circle>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="apple-input-col" style="flex: 1;">
+          <label class="apple-col-label" for="quantity">Số lượng</label>
+          <div class="apple-field-wrapper">
+            <input class="apple-core-input" type="number" id="quantity" value="1" min="1" placeholder="1" inputmode="numeric">
+            <span class="apple-field-suffix">cái</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="barcode-formats-container">
+        <span class="barcode-formats-label">Chuẩn quét:</span>
+        <div class="barcode-format-tags">
+          <span class="format-tag active" data-format="EAN_13">EAN-13</span>
+          <span class="format-tag active" data-format="EAN_8">EAN-8</span>
+          <span class="format-tag active" data-format="CODE_128">Code 128</span>
+          <span class="format-tag" data-format="CODE_39">Code 39</span>
+          <span class="format-tag" data-format="UPC_A">UPC-A</span>
+        </div>
+      </div>
+
       <div class="form-group" id="nsxGroup">
         <label class="form-group__label" for="nsx">Ngày sản xuất</label>
         <div class="input-wrapper">
@@ -145,8 +179,47 @@
     </section>
   </div>
   <div id="appVersionNote" class="app-version-note">Phiên bản: 1.0.0</div>
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
+  <!-- Modal Quét Barcode -->
+  <div id="scannerModal" class="apple-modal">
+    <div class="apple-modal-content">
+      <div class="apple-modal-header">
+        <h3 class="apple-modal-title">Quét mã Barcode</h3>
+        <button class="apple-modal-close-btn" onclick="closeScanner()">&times;</button>
+      </div>
+      
+      <div class="scanner-container">
+        <div id="scanner-preview"></div>
+        <div class="scanner-laser"></div>
+        <div class="scanner-bracket top-left"></div>
+        <div class="scanner-bracket top-right"></div>
+        <div class="scanner-bracket bottom-left"></div>
+        <div class="scanner-bracket bottom-right"></div>
+      </div>
+      
+      <div class="scanner-controls">
+        <div class="scanner-control-group">
+          <label for="cameraSelect" class="scanner-label">Camera:</label>
+          <select id="cameraSelect" class="scanner-select" onchange="switchCamera(this.value)">
+            <option value="">Đang tải camera...</option>
+          </select>
+        </div>
+        
+        <div class="scanner-buttons">
+          <button id="btnTorch" class="scanner-btn scanner-btn--secondary" onclick="toggleTorch()" style="display: none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
+              <path d="M15 17h6M15 12h6M15 7h6M4 5v14a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2z"></path>
+            </svg>
+            Bật Đèn Pin
+          </button>
+          <button class="scanner-btn scanner-btn--danger" onclick="closeScanner()">Hủy bỏ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="app.js" defer></script>
 </body>
 

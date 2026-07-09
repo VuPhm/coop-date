@@ -1,7 +1,7 @@
 // --- HỆ THỐNG KIỂM SOÁT PHIÊN BẢN VÀ GIAO THỨC CHUYỂN GIAO PWA ---
 const APP_VERSION_CONFIG = { 
-    currentVersion: "2.2.1",       
-    lastUpdated: "02/07/2026"     
+    currentVersion: "2.3.0",       
+    lastUpdated: "10/07/2026"     
 };
 
 let isFirstCalculation = true; 
@@ -12,6 +12,230 @@ let isPrioritySort = false;
 let nsxFlatpickr, hsdFlatpickr; 
 let isSyncing = false; 
 let calcMode = 'forward'; 
+
+// --- BỘ QUÉT MÃ BARCODE QUA CAMERA (HTML5-QRCODE) ---
+let html5QrCode = null;
+let currentCameraId = null;
+let isTorchOn = false;
+let isTorchSupported = false;
+
+// Trả về danh sách chuẩn quét được chọn
+function getSelectedBarcodeFormats() {
+    const activeFormats = [];
+    const formats = window.Html5QrcodeSupportedFormats || (typeof Html5QrcodeSupportedFormats !== 'undefined' ? Html5QrcodeSupportedFormats : {});
+    
+    document.querySelectorAll('.format-tag.active').forEach(tag => {
+        const formatName = tag.getAttribute('data-format');
+        if (formats[formatName] !== undefined) {
+            activeFormats.push(formats[formatName]);
+        }
+    });
+    
+    return activeFormats;
+}
+
+// Bíp bíp giả lập phần cứng
+function playBeep() {
+    try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.setValueAtTime(950, ctx.currentTime); // Âm bíp tần số 950Hz
+        gain.gain.setValueAtTime(0.12, ctx.currentTime);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.08); // Kéo dài 80ms
+    } catch (e) {
+        console.error("Audio beep error:", e);
+    }
+}
+
+// Mở modal quét camera
+async function openScanner() {
+    const modal = document.getElementById('scannerModal');
+    if (!modal) return;
+    
+    modal.classList.add('active');
+    
+    const formatsToSupport = getSelectedBarcodeFormats();
+    
+    try {
+        const configObj = { verbose: false };
+        if (formatsToSupport.length > 0) {
+            configObj.formatsToSupport = formatsToSupport;
+        }
+        
+        html5QrCode = new Html5Qrcode("scanner-preview", configObj);
+        
+        const cameras = await Html5Qrcode.getCameras();
+        const select = document.getElementById('cameraSelect');
+        select.innerHTML = '';
+        
+        if (cameras && cameras.length > 0) {
+            cameras.forEach((cam, idx) => {
+                const opt = document.createElement('option');
+                opt.value = cam.id;
+                const camLabel = cam.label.toLowerCase();
+                if (camLabel.includes('back') || camLabel.includes('sau') || camLabel.includes('environment')) {
+                    opt.selected = true;
+                    currentCameraId = cam.id;
+                }
+                opt.innerText = cam.label || `Camera ${idx + 1}`;
+                select.appendChild(opt);
+            });
+            
+            if (!currentCameraId) {
+                currentCameraId = cameras[cameras.length - 1].id;
+                select.value = currentCameraId;
+            }
+            
+            await startScanning(currentCameraId);
+        } else {
+            select.innerHTML = '<option value="">Không tìm thấy camera</option>';
+            alert("Thiết bị không có máy ảnh hoặc chưa cấp quyền truy cập máy ảnh.");
+        }
+    } catch (err) {
+        console.error("Scanner setup failed:", err);
+        alert("Không thể khởi động camera. Hãy kiểm tra lại quyền truy cập máy ảnh.");
+        closeScanner();
+    }
+}
+
+// Bắt đầu luồng camera
+async function startScanning(cameraId) {
+    if (!html5QrCode) return;
+    
+    const config = {
+        fps: 10,
+        qrbox: (width, height) => {
+            const widthBox = Math.round(width * 0.85);
+            const heightBox = Math.round(height * 0.45);
+            return { width: widthBox, height: heightBox };
+        }
+    };
+    
+    try {
+        await html5QrCode.start(
+            cameraId,
+            config,
+            (decodedText, decodedResult) => {
+                playBeep();
+                if (navigator.vibrate) {
+                    navigator.vibrate(100);
+                }
+                
+                document.getElementById('barcode').value = decodedText;
+                closeScanner();
+            },
+            (errorMessage) => {
+                // Lọc bỏ log để tối ưu hiệu năng
+            }
+        );
+        
+        setTimeout(() => {
+            try {
+                const capabilities = html5QrCode.getRunningTrackCapabilities();
+                const torchBtn = document.getElementById('btnTorch');
+                if (capabilities && capabilities.torch) {
+                    isTorchSupported = true;
+                    isTorchOn = false;
+                    if (torchBtn) {
+                        torchBtn.style.display = 'flex';
+                        torchBtn.innerHTML = `
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
+                              <path d="M15 17h6M15 12h6M15 7h6M4 5v14a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2z"></path>
+                            </svg> Bật Đèn Pin
+                        `;
+                    }
+                } else {
+                    isTorchSupported = false;
+                    if (torchBtn) torchBtn.style.display = 'none';
+                }
+            } catch (e) {
+                console.warn("Could not retrieve track capabilities:", e);
+                const torchBtn = document.getElementById('btnTorch');
+                if (torchBtn) torchBtn.style.display = 'none';
+            }
+        }, 500);
+        
+    } catch (err) {
+        console.error("Start scanning error:", err);
+    }
+}
+
+// Tắt camera và đóng modal
+function closeScanner() {
+    const modal = document.getElementById('scannerModal');
+    if (modal) modal.classList.remove('active');
+    
+    const torchBtn = document.getElementById('btnTorch');
+    if (torchBtn) torchBtn.style.display = 'none';
+    
+    isTorchOn = false;
+    isTorchSupported = false;
+    
+    if (html5QrCode) {
+        html5QrCode.stop().then(() => {
+            html5QrCode = null;
+        }).catch(err => {
+            console.error("Stop scanning failed:", err);
+            html5QrCode = null;
+        });
+    }
+}
+
+// Chuyển đổi camera
+async function switchCamera(cameraId) {
+    if (!cameraId || cameraId === currentCameraId) return;
+    currentCameraId = cameraId;
+    
+    if (html5QrCode) {
+        await html5QrCode.stop();
+        await startScanning(currentCameraId);
+    }
+}
+
+// Bật tắt đèn pin
+function toggleTorch() {
+    if (!html5QrCode || !isTorchSupported) return;
+    isTorchOn = !isTorchOn;
+    
+    html5QrCode.applyVideoConstraints({
+        advanced: [{ torch: isTorchOn }]
+    }).then(() => {
+        const btn = document.getElementById('btnTorch');
+        if (btn) {
+            btn.innerHTML = isTorchOn ? `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
+                  <path d="M15 17h6M15 12h6M15 7h6M4 5v14a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2z"></path>
+                </svg> Tắt Đèn Pin
+            ` : `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
+                  <path d="M15 17h6M15 12h6M15 7h6M4 5v14a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2z"></path>
+                </svg> Bật Đèn Pin
+            `;
+        }
+    }).catch(err => {
+        console.error("Toggle torch error:", err);
+        isTorchOn = !isTorchOn;
+    });
+}
+
+// Đăng ký hành vi cho thẻ badge chọn chuẩn quét
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.format-tag').forEach(tag => {
+        tag.addEventListener('click', () => {
+            tag.classList.toggle('active');
+            const active = document.querySelectorAll('.format-tag.active');
+            if (active.length === 0) {
+                tag.classList.add('active');
+            }
+        });
+    });
+}); 
 
 function getCleanToday() {
     const now = new Date();
@@ -340,14 +564,14 @@ function handleToggleMode(toggleElement) {
 
 // Đồng bộ trạng thái nạp dữ liệu từ Lịch sử (history-item click) lên công tắc gạt
 const originalLoadHistoryItem = loadHistoryItem;
-loadHistoryItem = function(nsx, hsdDate, hsdDays) {
+loadHistoryItem = function(nsx, hsdDate, hsdDays, barcode, quantity) {
     // Khi gọi lại phần tử lịch sử, hệ thống mặc định ép công tắc về trạng thái Tra Xuôi (forward)
     const toggleSwitch = document.getElementById('calcModeToggle');
     if (toggleSwitch && !toggleSwitch.checked) {
         toggleSwitch.checked = true;
         handleToggleMode(toggleSwitch);
     }
-    return originalLoadHistoryItem(nsx, hsdDate, hsdDays);
+    return originalLoadHistoryItem(nsx, hsdDate, hsdDays, barcode, quantity);
 };
 
 function setFilter(filterType) { 
@@ -380,10 +604,12 @@ function updateHistoryUI() {
         const remainingText = item.isExpiredProduct ? 'Đã hết HSD' : formatRemainingText(item.daysRemaining);
         const alertLabelText = item.isExpiredProduct ? 'Đã qua hạn lùi' : item.alertLabel;
         
-        // ĐÃ SỬA: Loại bỏ dấu '|', bọc phần chuỗi phía sau thành một dòng độc lập xuống dưới
+        // Hiển thị thêm barcode và số lượng nếu có trong bản ghi lịch sử
+        const barcodeText = item.barcode ? ` &bull; Barcode: ${item.barcode} (x${item.quantity})` : '';
+        
         return `
-            <li class="history-item ${item.alertClass}" onclick="loadHistoryItem('${item.nsx}', '${item.formattedHsd}', '${item.rawHsdDays}')">
-                <div class="history-item__meta">NSX: ${item.nsx} &bull; HSD: ${item.formattedHsd}</div>
+            <li class="history-item ${item.alertClass}" onclick="loadHistoryItem('${item.nsx}', '${item.formattedHsd}', '${item.rawHsdDays}', '${item.barcode || ''}', ${item.quantity || 1})">
+                <div class="history-item__meta">NSX: ${item.nsx} &bull; HSD: ${item.formattedHsd}${barcodeText}</div>
                 <div class="history-item__result">
                     ${labelPrefix}: ${item.result} (${alertLabelText})
                     <span class="history-item__status-line">${remainingText}</span>
@@ -393,12 +619,14 @@ function updateHistoryUI() {
     }).join('');
 } 
 
-function loadHistoryItem(nsx, hsdDate, hsdDays) { 
+function loadHistoryItem(nsx, hsdDate, hsdDays, barcode = "", quantity = 1) { 
     document.getElementById('nsx').value = nsx; 
     if (nsxFlatpickr) nsxFlatpickr.setDate(nsx, false); 
     document.getElementById('hsdDate').value = hsdDate; 
     if (hsdFlatpickr) hsdFlatpickr.setDate(hsdDate, false); 
     document.getElementById('hsdDays').value = hsdDays; 
+    document.getElementById('barcode').value = barcode;
+    document.getElementById('quantity').value = quantity;
     executeCalculation(false); 
 } 
 
@@ -407,6 +635,8 @@ function executeCalculation(saveToHistory = true) {
     const hsdDateVal = document.getElementById('hsdDate').value.trim();
     const hsdDaysVal = document.getElementById('hsdDays').value.trim();
     const hsdMonthsVal = document.getElementById('hsdMonths').value.trim();
+    const barcodeVal = document.getElementById('barcode').value.trim();
+    const quantityVal = parseInt(document.getElementById('quantity').value.trim() || "1", 10);
     
     const wrapper = document.getElementById('resultWrapper');
     const text = document.getElementById('resultText');
@@ -454,7 +684,7 @@ function executeCalculation(saveToHistory = true) {
             }
             
             if (saveToHistory) {
-                const existingIndex = historyData.findIndex(h => h.nsx === nsxVal && h.formattedHsd === output.formattedHsd);
+                const existingIndex = historyData.findIndex(h => h.nsx === nsxVal && h.formattedHsd === output.formattedHsd && h.barcode === barcodeVal);
                 if (existingIndex !== -1) historyData.splice(existingIndex, 1);
                 
                 historyData.unshift({ 
@@ -469,7 +699,9 @@ function executeCalculation(saveToHistory = true) {
                     alertType: output.isShortProduct ? 'short' : output.alert.type,
                     alertWeight: output.alert.weight,
                     isShortProduct: output.isShortProduct,
-                    isExpiredProduct: output.isExpiredProduct
+                    isExpiredProduct: output.isExpiredProduct,
+                    barcode: barcodeVal,
+                    quantity: quantityVal
                 });
                 updateHistoryUI();
             }
