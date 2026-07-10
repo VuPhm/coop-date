@@ -179,6 +179,25 @@ export function handleToggleMode(toggleElement) {
     document.getElementById('hsdMonths').value = "";
     if (nsxFlatpickr) nsxFlatpickr.clear();
     if (hsdFlatpickr) hsdFlatpickr.clear();
+
+    const wrapper = document.getElementById('resultWrapper');
+    const text = document.getElementById('resultText');
+    if (wrapper) {
+        wrapper.className = 'calc-board__result-wrapper';
+    }
+    if (text) {
+        text.innerHTML = '';
+        text.classList.remove('calc-board__result-text--visible');
+    }
+
+    const diagramBoard = document.getElementById('diagramBoard');
+    if (diagramBoard) {
+        diagramBoard.style.display = 'none';
+    }
+    const svgContainer = document.getElementById('svgContainer');
+    if (svgContainer) {
+        svgContainer.innerHTML = '';
+    }
     
     const nsxInput = document.getElementById('nsx');
     const btnNsx = document.getElementById('btnNsxPicker');

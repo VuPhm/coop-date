@@ -1727,8 +1727,11 @@
     }
 
     .calc-board { grid-area: calc; }
-    .diagram-board { grid-area: diagram; }
-    .history-board { grid-area: history; }
+    .diagram-board { 
+        grid-area: diagram; 
+        display: none; /* Hide by default so it doesn't show empty */
+    }
+    .history-wrapper { grid-area: history; }
 
     #tab-tracuu.active-tab {
         display: contents;
@@ -1807,25 +1810,38 @@
         grid-template-rows: auto auto;
         grid-template-areas: 
             "calc history"
-            "diagram history";
+            "diagram diagram";
         gap: 24px;
         width: 100%;
         box-sizing: border-box;
         grid-column: 1 / -1;
     }
 
-    .history-board {
+    #tab-tracuu .history-wrapper {
         grid-area: history;
+        position: relative;
+        width: 100%;
+        height: 100%;
+    }
+
+    #tab-tracuu .history-board {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
         display: flex;
         flex-direction: column;
         height: 100%;
-        min-height: 520px;
+        min-height: 0;
+        overflow: hidden;
     }
     
-    .history-list {
+    #tab-tracuu .history-list {
         flex: 1;
         min-height: 0;
         max-height: none;
+        overflow-y: auto;
     }
 
     .kph-form-board {
