@@ -66,13 +66,6 @@
       <!-- Tab 1: Tra cứu Hạn lùi -->
       <div id="tab-tracuu" class="tab-content active-tab">
         <main class="calc-board">
-          <div class="apple-toggle-switch-container">
-            <span class="apple-toggle-label">Đã biết ngày sản xuất (NSX)</span>
-            <label class="apple-switch">
-              <input type="checkbox" id="calcModeToggle" checked onchange="handleToggleMode(this)">
-              <span class="apple-switch-slider"></span>
-            </label>
-          </div>
           
           <div class="apple-input-row">
             <div class="form-field flex-2">
@@ -86,6 +79,26 @@
                   </svg>
                 </button>
               </div>
+              
+              <!-- Compact Barcode Formats wrapper -->
+              <div class="barcode-formats-wrapper">
+                <div class="barcode-formats-note" id="barcodeFormatsNote">
+                  <span class="note-text">Chuẩn quét: <strong id="activeFormatsText">EAN-13, EAN-8, Code 128</strong></span>
+                  <button type="button" class="btn-toggle-formats" id="btnToggleFormats" onclick="toggleBarcodeFormats()">
+                    Thiết lập
+                  </button>
+                </div>
+                
+                <div class="barcode-formats-container hidden" id="barcodeFormatsContainer">
+                  <div class="barcode-format-tags">
+                    <span class="format-tag active" data-format="EAN_13">EAN-13</span>
+                    <span class="format-tag active" data-format="EAN_8">EAN-8</span>
+                    <span class="format-tag active" data-format="CODE_128">Code 128</span>
+                    <span class="format-tag" data-format="CODE_39">Code 39</span>
+                    <span class="format-tag" data-format="UPC_A">UPC-A</span>
+                  </div>
+                </div>
+              </div>
             </div>
             <div class="form-field flex-1">
               <label class="form-label" for="quantity">Số lượng</label>
@@ -96,19 +109,17 @@
             </div>
           </div>
 
-          <div class="barcode-formats-container">
-            <span class="barcode-formats-label">Chuẩn quét:</span>
-            <div class="barcode-format-tags">
-              <span class="format-tag active" data-format="EAN_13">EAN-13</span>
-              <span class="format-tag active" data-format="EAN_8">EAN-8</span>
-              <span class="format-tag active" data-format="CODE_128">Code 128</span>
-              <span class="format-tag" data-format="CODE_39">Code 39</span>
-              <span class="format-tag" data-format="UPC_A">UPC-A</span>
-            </div>
-          </div>
-
           <div class="form-field" id="nsxGroup">
-            <label class="form-label" for="nsx">Ngày sản xuất</label>
+            <div class="form-label-row">
+              <label class="form-label" for="nsx">Ngày sản xuất</label>
+              <div class="nsx-toggle-container">
+                <span class="nsx-toggle-label">Chưa biết</span>
+                <label class="apple-switch compact-switch">
+                  <input type="checkbox" id="calcModeToggle" onchange="handleToggleMode(this)">
+                  <span class="apple-switch-slider"></span>
+                </label>
+              </div>
+            </div>
             <div class="form-input-wrapper">
               <input class="form-input auto-date" type="text" id="nsx" placeholder="dd/mm/yyyy" inputmode="numeric"
                 maxlength="10">

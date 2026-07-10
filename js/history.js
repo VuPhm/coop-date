@@ -139,8 +139,8 @@ export function updateHistoryUI() {
 
 export function loadHistoryItem(nsx, hsdDate, hsdDays, barcode = "", quantity = 1) { 
     const toggleSwitch = document.getElementById('calcModeToggle');
-    if (toggleSwitch && !toggleSwitch.checked) {
-        toggleSwitch.checked = true;
+    if (toggleSwitch && toggleSwitch.checked) {
+        toggleSwitch.checked = false;
         import('./main.js').then(module => {
             module.handleToggleMode(toggleSwitch);
             proceedLoading();

@@ -441,7 +441,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 6. Định dạng tag EAN
+    // 6. Định dạng tag EAN & Cập nhật note chuẩn quét
+    function updateActiveFormatsNote() {
+        const activeTags = [];
+        document.querySelectorAll('.format-tag.active').forEach(tag => {
+            activeTags.push(tag.textContent.trim());
+        });
+        const textEl = document.getElementById('activeFormatsText');
+        if (textEl) {
+            textEl.textContent = activeTags.join(', ');
+        }
+    }
+
     document.querySelectorAll('.format-tag').forEach(tag => {
         tag.addEventListener('click', () => {
             tag.classList.toggle('active');
@@ -449,6 +460,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (active.length === 0) {
                 tag.classList.add('active');
             }
+            updateActiveFormatsNote();
         });
     });
 
@@ -494,3 +506,16 @@ window.removeHistoryItem = removeHistoryItem;
 window.toggleSelectRowKph = toggleSelectRowKph;
 window.removeKphLog = removeKphLog;
 window.zoomImage = zoomImage;
+
+export function toggleBarcodeFormats() {
+    const container = document.getElementById('barcodeFormatsContainer');
+    const btn = document.getElementById('btnToggleFormats');
+    if (container) {
+        const isHidden = container.classList.toggle('hidden');
+        if (btn) {
+            btn.textContent = isHidden ? 'Thiết lập' : 'Đóng';
+        }
+    }
+}
+window.toggleBarcodeFormats = toggleBarcodeFormats;
+
