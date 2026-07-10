@@ -31,6 +31,10 @@ export function loadHistoryFromStorage() {
                 if (!item.id) {
                     item.id = 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
                 }
+                // Migrate legacy 'short' type to 'other'
+                if (item.alertType === 'short') {
+                    item.alertType = 'other';
+                }
             });
             historyData.push(...parsed);
             updateHistoryUI();
@@ -71,21 +75,21 @@ export function updateFilterCounts() {
     const safe = historyData.filter(item => item.alertType === 'safe').length;
     const warning = historyData.filter(item => item.alertType === 'warning').length;
     const danger = historyData.filter(item => item.alertType === 'danger').length;
-    const short = historyData.filter(item => item.alertType === 'short').length;
+    const other = historyData.filter(item => item.alertType === 'other').length;
     const expired = historyData.filter(item => item.alertType === 'expired').length;
     
     const tagAll = document.querySelector('.tag--all');
     const tagSafe = document.querySelector('.tag--safe');
     const tagWarning = document.querySelector('.tag--warning');
     const tagDanger = document.querySelector('.tag--danger');
-    const tagShort = document.querySelector('.tag--short');
+    const tagOther = document.querySelector('.tag--other');
     const tagExpired = document.querySelector('.tag--expired');
     
     if (tagAll) tagAll.innerText = `Tất cả (${total})`;
     if (tagSafe) tagSafe.innerText = `An toàn (${safe})`;
     if (tagWarning) tagWarning.innerText = `Sắp tới hạn (${warning})`;
     if (tagDanger) tagDanger.innerText = `Quá hạn lùi (${danger})`;
-    if (tagShort) tagShort.innerText = `Hàng ngắn ngày (${short})`;
+    if (tagOther) tagOther.innerText = `Khác (${other})`;
     if (tagExpired) tagExpired.innerText = `Đã hết HSD (${expired})`;
 }
 

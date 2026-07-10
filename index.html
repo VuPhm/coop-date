@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Check Date</title>
 
   <link rel="manifest" href="./manifest.json">
@@ -215,7 +215,7 @@
                 <span class="tag tag--safe" onclick="setFilter('safe')">An toàn</span>
                 <span class="tag tag--warning" onclick="setFilter('warning')">Sắp tới hạn</span>
                 <span class="tag tag--danger" onclick="setFilter('danger')">Quá hạn lùi</span>
-                <span class="tag tag--short" onclick="setFilter('short')">Hàng ngắn ngày</span>
+                <span class="tag tag--other" onclick="setFilter('other')">Khác</span>
                 <span class="tag tag--expired" onclick="setFilter('expired')">Đã hết HSD</span>
               </div>
               <button id="sortToggleBtn" class="sort-toggle-box" onclick="togglePrioritySort()">
@@ -770,6 +770,24 @@
           <button type="button" class="btn-secondary" onclick="clearKphForm()">Nhập lại</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Modal báo kết quả tra cứu -->
+  <div id="resultModal" class="apple-modal" onclick="closeResultModal()">
+    <div class="apple-modal-content result-modal-content" onclick="event.stopPropagation()">
+      <div class="result-modal-header" id="resultModalHeader">
+        <h3 class="apple-modal-title" style="color: white;" id="resultModalTitle">Kết quả tra cứu</h3>
+        <button class="apple-modal-close-btn" onclick="closeResultModal()" style="color: white; font-size: 24px; opacity: 0.85; border: none; background: transparent; cursor: pointer;">&times;</button>
+      </div>
+      <div class="result-modal-body" id="resultModalBody">
+        <div class="result-modal-icon-container" id="resultModalIcon"></div>
+        <div class="result-modal-main-text" id="resultModalMainText"></div>
+        <div class="result-modal-sub-text" id="resultModalSubText"></div>
+      </div>
+      <div class="result-modal-footer">
+        <button class="btn-action" onclick="closeResultModal()" id="btnResultModalClose" style="width: 100%; margin: 0;">Đồng ý</button>
+      </div>
     </div>
   </div>
 

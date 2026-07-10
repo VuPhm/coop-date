@@ -227,6 +227,36 @@ export function handleToggleMode(toggleElement) {
     }
 }
 
+export function openResultModal(theme, title, mainText, subText, iconHtml) {
+    const modal = document.getElementById('resultModal');
+    if (!modal) return;
+    const content = modal.querySelector('.result-modal-content');
+    const titleEl = document.getElementById('resultModalTitle');
+    const mainEl = document.getElementById('resultModalMainText');
+    const subEl = document.getElementById('resultModalSubText');
+    const iconEl = document.getElementById('resultModalIcon');
+
+    // Reset themes
+    if (content) {
+        content.className = 'apple-modal-content result-modal-content';
+        content.classList.add(`result-theme-${theme}`);
+    }
+
+    if (titleEl) titleEl.textContent = title;
+    if (mainEl) mainEl.innerHTML = mainText;
+    if (subEl) subEl.innerHTML = subText;
+    if (iconEl) iconEl.innerHTML = iconHtml;
+
+    modal.classList.add('active');
+}
+
+export function closeResultModal() {
+    const modal = document.getElementById('resultModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
 export function executeCalculation(saveToHistory = true) {
     const nsxVal = document.getElementById('nsx').value.trim();
     const hsdDateVal = document.getElementById('hsdDate').value.trim();
@@ -241,7 +271,9 @@ export function executeCalculation(saveToHistory = true) {
     const wrapper = document.getElementById('resultWrapper');
     const text = document.getElementById('resultText');
     
-    text.classList.remove('calc-board__result-text--visible');
+    if (text) {
+        text.classList.remove('calc-board__result-text--visible');
+    }
 
     setTimeout(() => {
         try {
@@ -265,19 +297,47 @@ export function executeCalculation(saveToHistory = true) {
             const output = processReturnBusinessLogic(nsxVal, hsdDateVal);
             drawTimelineDiagram(nsxVal, hsdDateVal, output.dateStr);
 
-            wrapper.className = `calc-board__result-wrapper ${output.alert.class}`;
+            if (wrapper) {
+                wrapper.className = `calc-board__result-wrapper ${output.alert.class}`;
+            }
+            
+            let mainText = "";
+            let subText = "";
+            let labelTitle = "";
             
             if (output.isExpiredProduct) {
-                const labelTitle = output.isShortProduct ? 'Hạn sử dụng' : 'Ngày lùi hàng';
-                text.innerHTML = `<span style="font-size: 15px; font-weight: 700;">${labelTitle}: ${output.dateStr}</span><br>
-                                  <small style="font-weight: 800; color: #555555; display: inline-block; margin-top: 4px;">[${output.alert.label}]</small>`;
+                labelTitle = output.isShortProduct ? 'Hạn sử dụng' : 'Ngày lùi hàng';
+                mainText = `${labelTitle}: <strong>${output.dateStr}</strong>`;
+                subText = `<span style="font-weight: 800;">[${output.alert.label}]</span>`;
             } else if (output.isShortProduct) {
-                text.innerHTML = `<span style="font-size: 15px; font-weight: 700;">Hạn sử dụng: ${output.dateStr}</span><br>
-                                  <small style="font-weight: 600; display: inline-block; margin-top: 4px; opacity: 0.9;">[${output.alert.label}] — Sử dụng đến hết ngày ${output.dateStr}</small>`;
+                mainText = `Hạn sử dụng: <strong>${output.dateStr}</strong>`;
+                subText = `<span style="font-weight: 600;">[${output.alert.label}]</span><br>Sử dụng đến hết ngày ${output.dateStr}`;
             } else {
-                text.innerHTML = `<span style="font-size: 15px; font-weight: 700;">Ngày lùi hàng: ${output.dateStr}</span><br>
-                                  <small style="font-weight: 600; display: inline-block; margin-top: 4px; opacity: 0.9;">[${output.alert.label}] — HSD còn ${output.daysRemaining} ngày</small>`;
+                mainText = `Ngày lùi hàng: <strong>${output.dateStr}</strong>`;
+                subText = `<span style="font-weight: 600;">[${output.alert.label}]</span><br>HSD còn ${output.daysRemaining} ngày`;
             }
+
+            if (text) {
+                text.innerHTML = mainText + "<br><small>" + subText + "</small>";
+            }
+
+            // Open popup result modal
+            const alertType = output.isShortProduct ? 'other' : output.alert.type;
+            const theme = alertType; // 'safe', 'warning', 'danger', 'other', 'expired'
+            let iconHtml = '';
+            if (theme === 'safe') {
+                iconHtml = `<svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`;
+            } else if (theme === 'warning') {
+                iconHtml = `<svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
+            } else if (theme === 'danger') {
+                iconHtml = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`;
+            } else if (theme === 'other') {
+                iconHtml = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`;
+            } else if (theme === 'expired') {
+                iconHtml = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
+            }
+
+            openResultModal(theme, 'Kết quả tra cứu', mainText, subText, iconHtml);
             
             if (saveToHistory) {
                 const existingIndex = historyData.findIndex(h => h.nsx === nsxVal && h.formattedHsd === output.formattedHsd && h.barcode === barcodeVal);
@@ -293,7 +353,7 @@ export function executeCalculation(saveToHistory = true) {
                     daysRemaining: output.daysRemaining,
                     alertClass: output.alert.class,
                     alertLabel: output.alert.label,
-                    alertType: output.isShortProduct ? 'short' : output.alert.type,
+                    alertType: alertType,
                     alertWeight: output.alert.weight,
                     isShortProduct: output.isShortProduct,
                     isExpiredProduct: output.isExpiredProduct,
@@ -306,7 +366,9 @@ export function executeCalculation(saveToHistory = true) {
                 updateHistoryUI();
             }
         } catch (error) {
-            wrapper.className = 'calc-board__result-wrapper state-danger';
+            if (wrapper) {
+                wrapper.className = 'calc-board__result-wrapper state-danger';
+            }
             
             let userFriendlyMessage = error.message;
             if (error.message.includes("Vui lòng nhập Ngày sản xuất")) {
@@ -323,7 +385,13 @@ export function executeCalculation(saveToHistory = true) {
                 userFriendlyMessage = "⚠️ <b>Thiếu dữ liệu tra ngược:</b> Hãy nhập Ngày HSD kèm theo Số ngày (hoặc Số tháng) để hệ thống tìm ra Ngày sản xuất.";
             }
 
-            text.innerHTML = `<div style="line-height: 1.6; font-size: 13px; color: #e20514; font-weight: 600;">${userFriendlyMessage}</div>`;
+            if (text) {
+                text.innerHTML = `<div style="line-height: 1.6; font-size: 13px; color: #e20514; font-weight: 600;">${userFriendlyMessage}</div>`;
+            }
+
+            // Open popup result modal for validation error
+            const errorIcon = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
+            openResultModal('danger', 'Lỗi tra cứu', 'Thông tin chưa đúng', userFriendlyMessage, errorIcon);
             
             const container = document.getElementById('svgContainer');
             if (container) container.innerHTML = '';
@@ -331,8 +399,10 @@ export function executeCalculation(saveToHistory = true) {
             if (board) board.style.display = 'none';
         }
         
-        text.offsetHeight; 
-        text.classList.add('calc-board__result-text--visible');
+        if (text) {
+            text.offsetHeight; 
+            text.classList.add('calc-board__result-text--visible');
+        }
     }, 150);
 }
 
@@ -552,6 +622,8 @@ window.showAppleConfirm = showAppleConfirm;
 window.openKphCreateModal = openKphCreateModal;
 window.closeKphCreateModal = closeKphCreateModal;
 window.toggleStoreSettingsEdit = toggleStoreSettingsEdit;
+window.closeResultModal = closeResultModal;
+window.openResultModal = openResultModal;
 
 export function toggleBarcodeFormats() {
     const container = document.getElementById('barcodeFormatsContainer');
