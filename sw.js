@@ -1,9 +1,21 @@
-const CACHE_NAME = 'app-cache-v2.4.0';
+const CACHE_NAME = 'app-cache-v2.12.0';
 const ASSETS = [
     './',
     './index.html',
-    './app.js',
     './style.css',
+    './css/variables.css',
+    './css/layout.css',
+    './css/components.css',
+    './css/tracuu.css',
+    './css/kph.css',
+    './css/responsive.css',
+    './js/helpers.js',
+    './js/scanner.js',
+    './js/business.js',
+    './js/timeline.js',
+    './js/history.js',
+    './js/kph.js',
+    './js/main.js',
     './manifest.json',
     './favicon_io/android-chrome-192x192.png',
     './favicon_io/android-chrome-512x512.png',
@@ -12,7 +24,9 @@ const ASSETS = [
     './favicon_io/apple-touch-icon.png',
     'https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css',
     'https://cdn.jsdelivr.net/npm/flatpickr',
-    'https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js'
+    'https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js'
 ];
 
 // Cài đặt: Lưu trữ cứng tài nguyên

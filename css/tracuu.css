@@ -1,0 +1,336 @@
+/* Khối hiển thị kết quả tra cứu */
+.calc-board__result-wrapper {
+    margin-top: 16px;
+    min-height: 74px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-item);
+    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    background-color: transparent;
+    box-sizing: border-box;
+    padding: 12px 16px;
+    border: 1px solid transparent;
+}
+
+.calc-board__result-text {
+    font-size: 15px;
+    font-weight: 600;
+    text-align: center;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: all 0.3s ease;
+    line-height: 1.5;
+}
+
+.calc-board__result-text--visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* --- HỆ THỐNG PHẢN HỒI TRỰC QUAN ĐỒNG BỘ TUYỆT ĐỐI KHỐI KẾT QUẢ & LỊCH SỬ --- */
+
+/* 1. Trạng thái An Toàn (Màu xanh thương hiệu) */
+.state-safe {
+    background-color: var(--status-green-bg) !important;
+    border-color: var(--status-green-border) !important;
+    color: var(--status-green-text) !important;
+}
+.state-safe .history-item__meta,
+.state-safe .history-item__status-line {
+    color: var(--brand-primary) !important;
+    opacity: 0.75;
+}
+
+/* 2. Trạng thái Cảnh Báo (Sắp tới hạn lùi - Màu cam) */
+.state-warning {
+    background-color: var(--status-yellow-bg) !important;
+    border-color: var(--status-yellow-border) !important;
+    color: var(--status-yellow-text) !important;
+}
+.state-warning .history-item__meta,
+.state-warning .history-item__status-line {
+    color: var(--brand-accent-orange) !important;
+    opacity: 0.75;
+}
+
+/* 3. Trạng thái Nguy Hiểm (Quá hạn lùi / Lỗi validate - Màu đỏ) */
+.state-danger {
+    background-color: var(--status-red-bg) !important;
+    border-color: var(--status-red-border) !important;
+    color: var(--status-red-text) !important;
+}
+.state-danger .history-item__meta,
+.state-danger .history-item__status-line,
+.state-danger div {
+    color: var(--brand-accent-red) !important;
+    opacity: 0.75;
+}
+
+/* 4. Trạng thái Hết Hạn Sử Dụng (Màu xám tối giản Apple) */
+.state-expired {
+    background-color: #f2f2f7 !important;
+    border-color: rgba(142, 142, 147, 0.2) !important;
+    color: #555555 !important;
+}
+.state-expired .history-item__meta,
+.state-expired .history-item__status-line {
+    color: #555555 !important;
+    opacity: 0.7;
+}
+
+/* Thanh điều khiển lọc và sắp xếp */
+.controls {
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.filter-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tag {
+    padding: 5px 10px;
+    font-size: 11.5px;
+    font-weight: 600;
+    border-radius: 20px;
+    cursor: pointer;
+    border: 1px solid #e5e5ea;
+    background-color: #fafafa;
+    color: var(--text-sub);
+    transition: all 0.2s ease;
+}
+
+.tag--all.active { color: white !important; background-color: var(--brand-primary); border-color: var(--brand-primary); }
+.tag--safe.active { color: white !important; background-color: var(--brand-primary); border-color: var(--brand-primary); }
+.tag--warning.active { color: white !important; background-color: var(--brand-accent-orange); border-color: var(--brand-accent-orange); }
+.tag--danger.active { color: white !important; background-color: var(--brand-accent-red); border-color: var(--brand-accent-red); }
+.tag--short.active { color: white !important; background-color: #667366; border-color: #667366; }
+.tag--expired.active { color: white !important; background-color: #555555; border-color: #555555; }
+
+.sort-toggle-box {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid #e5e5ea;
+    border-radius: var(--radius-item);
+    background-color: #fafafa;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.sort-toggle-box.active {
+    background-color: var(--brand-primary);
+    border-color: var(--brand-primary);
+    color: white;
+}
+
+.sort-toggle-box svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* Danh sách lịch sử tra cứu */
+.history-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 420px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 4px;
+}
+
+.history-list::-webkit-scrollbar {
+    width: 5px;
+}
+.history-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+.history-list::-webkit-scrollbar-thumb {
+    background: #d1d1d6;
+    border-radius: 10px;
+}
+
+.history-board__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.history-board__title {
+    margin: 0 !important;
+}
+
+.btn-clear-history {
+    background: transparent;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-sub);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border-radius: var(--radius-item);
+    transition: all 0.2s ease;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn-clear-history:hover {
+    color: var(--brand-accent-red);
+    background-color: var(--status-red-bg);
+}
+
+.btn-clear-history svg {
+    stroke: currentColor;
+}
+
+.history-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 12px;
+    margin-bottom: 6px;
+    border-radius: var(--radius-item);
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.history-item:hover {
+    filter: brightness(0.97);
+    box-shadow: 0 4px 12px rgba(0, 66, 33, 0.04);
+}
+
+/* Left vertical indicator line */
+.history-item__indicator {
+    width: 4px;
+    align-self: stretch;
+    border-radius: 2px;
+    margin-right: 10px;
+    flex-shrink: 0;
+}
+
+/* Base state colors for left indicator */
+.state-safe .history-item__indicator { background-color: var(--brand-primary); }
+.state-warning .history-item__indicator { background-color: var(--brand-accent-orange); }
+.state-danger .history-item__indicator { background-color: var(--brand-accent-red); }
+.state-expired .history-item__indicator { background-color: #8e8e93; }
+
+.history-item__content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    padding-right: 22px;
+}
+
+.history-item__main-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.history-item__sub-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 1px;
+}
+
+.history-item__title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.history-item__result-val {
+    font-size: 13px;
+    font-weight: 700;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.history-item__dates {
+    font-size: 11px;
+    color: var(--text-sub);
+    font-weight: 500;
+}
+
+.history-item__status-desc {
+    font-size: 11px;
+    text-align: right;
+    font-weight: 500;
+    opacity: 0.8;
+}
+
+.history-empty {
+    font-size: 14px;
+    color: var(--text-sub);
+    text-align: center;
+    padding: 40px 0;
+}
+
+/* Delete button styles */
+.history-item__delete-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%) scale(0.9);
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.04);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-sub);
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+    z-index: 5;
+}
+
+.history-item:hover .history-item__delete-btn {
+    opacity: 1;
+    transform: translateY(-50%) scale(1);
+}
+
+.history-item__delete-btn svg {
+    width: 12px;
+    height: 12px;
+}
+
+.history-item__delete-btn:hover {
+    background-color: var(--brand-accent-red);
+    color: white !important;
+}

@@ -1,0 +1,355 @@
+/* Cấu hình cửa hàng KPH */
+.kph-store-settings {
+    background: var(--surface);
+    padding: 16px 20px;
+    border-radius: var(--radius-box);
+    box-shadow: var(--shadow);
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+}
+
+/* Bộ tải ảnh minh chứng KPH */
+.kph-image-upload-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 48px;
+    box-sizing: border-box;
+    flex-wrap: wrap;
+}
+
+.kph-upload-btn {
+    background-color: var(--status-green-bg);
+    color: var(--brand-primary);
+    padding: 12px 16px;
+    border-radius: var(--radius-item);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    border: 1.5px dashed rgba(0, 102, 51, 0.25);
+    transition: all 0.2s ease;
+    user-select: none;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.kph-upload-btn:hover {
+    background-color: #e3efe7;
+}
+
+.kph-image-preview-container {
+    position: relative;
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #e5e5ea;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+.kph-image-preview-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.kph-delete-image-btn {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    background: rgba(226, 5, 20, 0.85);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    cursor: pointer;
+    font-weight: bold;
+    line-height: 1;
+}
+
+.kph-form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.kph-form-actions .btn-action {
+    flex: 2 1 auto;
+    width: auto;
+    margin-top: 0;
+}
+
+.kph-form-actions .btn-secondary {
+    flex: 1 1 auto;
+    width: auto;
+    margin-top: 0;
+}
+
+/* Bảng danh sách phiếu KPH */
+.kph-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-top: 16px;
+    border-radius: var(--radius-item);
+    border: 1.5px solid #e5e5ea;
+    background: #fafafa;
+    width: 100%;
+    box-sizing: border-box;
+    max-width: 100%;
+}
+
+.kph-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    text-align: left;
+    min-width: 900px;
+}
+
+.kph-table th {
+    background-color: #f2f2f7;
+    color: var(--text-main);
+    font-weight: 600;
+    padding: 12px 10px;
+    border-bottom: 2.5px solid #e5e5ea;
+    white-space: nowrap;
+}
+
+.kph-table td {
+    padding: 10px;
+    border-bottom: 1px solid #e5e5ea;
+    color: var(--text-main);
+    background-color: var(--surface);
+    vertical-align: middle;
+}
+
+.kph-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.kph-table tbody tr:hover td {
+    background-color: #f9f9fb;
+}
+
+.kph-empty-row {
+    text-align: center !important;
+    padding: 40px !important;
+    color: var(--text-sub);
+    font-style: italic;
+}
+
+.kph-thumbnail {
+    width: 44px;
+    height: 44px;
+    object-fit: cover;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    border: 1px solid #e5e5ea;
+    display: block;
+    margin: 0 auto;
+}
+
+.kph-thumbnail:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+.kph-cell-btn-delete {
+    background: transparent;
+    border: none;
+    color: var(--brand-accent-red);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.kph-cell-btn-delete:hover {
+    background-color: var(--status-red-bg);
+}
+
+.kph-cell-btn-delete svg {
+    width: 16px;
+    height: 16px;
+}
+
+.kph-list-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+.btn-export-excel {
+    background-color: var(--brand-primary) !important;
+    color: white !important;
+    padding: 8px 14px !important;
+    font-size: 13px !important;
+    margin-top: 0 !important;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-item);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.btn-export-excel:hover {
+    background-color: #004d26 !important;
+}
+
+/* KPH Required Star */
+.required-star {
+    color: var(--brand-accent-red);
+    font-weight: bold;
+    margin-left: 2px;
+}
+
+/* KPH Filter Row (Apple Compact Style) */
+.kph-filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: rgba(242, 242, 247, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: var(--radius-item);
+    margin-bottom: 16px;
+    box-sizing: border-box;
+    width: 100%;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+}
+
+.kph-filter-text {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-sub);
+    flex-shrink: 0;
+}
+
+.filter-input-wrapper {
+    background-color: var(--surface) !important;
+}
+
+/* Compact Wrapper Sizing */
+.compact-wrapper {
+    flex: 0 1 155px;
+    height: 36px;
+    min-width: 0;
+}
+
+.compact-input {
+    padding: 8px 10px !important;
+    font-size: 14px !important;
+    height: 100%;
+}
+
+.compact-trigger {
+    padding: 0 8px !important;
+}
+
+.compact-trigger svg {
+    width: 14px;
+    height: 14px;
+}
+
+.input-wrapper.compact-wrapper:has(.btn-picker-trigger) .form-group__input.compact-input {
+    padding-right: 32px;
+}
+
+.kph-filter-btn {
+    background-color: var(--brand-primary);
+    color: white;
+    border: none;
+    padding: 0 14px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: var(--radius-item);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+    height: 36px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+    flex-shrink: 0;
+}
+
+.kph-filter-btn:hover {
+    background-color: #005229;
+    transform: translateY(-1px);
+}
+
+.kph-filter-btn:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.kph-filter-btn--clear {
+    background-color: rgba(0,0,0,0.05);
+    color: var(--text-main);
+}
+
+.kph-filter-btn--clear:hover {
+    background-color: rgba(0,0,0,0.08);
+}
+
+.kph-checkbox {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--brand-primary);
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+/* Sortable Table Headers */
+.sortable-header {
+    user-select: none;
+    transition: background-color 0.2s ease;
+}
+
+.sortable-header:hover {
+    background-color: #e5e5ea !important;
+}
+
+.sort-icon {
+    margin-left: 4px;
+    font-size: 11px;
+    color: #8e8e93;
+    display: inline-block;
+    transition: color 0.2s;
+}
+
+.sort-icon.active-sort {
+    color: var(--brand-primary);
+    font-weight: bold;
+}
+
+/* Row Highlight in Table */
+.kph-table tbody tr.selected-row td {
+    background-color: rgba(0, 102, 51, 0.05) !important;
+}
+
+.kph-table tbody tr.selected-row:hover td {
+    background-color: rgba(0, 102, 51, 0.07) !important;
+}

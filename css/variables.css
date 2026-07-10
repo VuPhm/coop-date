@@ -1,0 +1,44 @@
+:root {
+    /* Hệ màu Brand 5-3-1-1 */
+    --brand-primary: #006633;
+    --brand-secondary: #93c11f;
+    --brand-accent-red: #e20514;
+    --brand-accent-orange: #f29200;
+    
+    /* Cấu trúc nền tảng */
+    --bg-base: #f4f6f4;
+    --surface: #ffffff;
+    --text-main: #1c261c;
+    --text-sub: #667366;
+    
+    /* Trạng thái phản hồi trực quan */
+    --status-green-bg: #eff7f2;
+    --status-green-border: rgba(0, 102, 51, 0.2);
+    --status-green-text: var(--brand-primary);
+    
+    --status-yellow-bg: #fdf8f0;
+    --status-yellow-border: rgba(242, 146, 0, 0.2);
+    --status-yellow-text: var(--brand-accent-orange);
+    
+    --status-red-bg: #fdf3f3;
+    --status-red-border: rgba(226, 5, 20, 0.15);
+    --status-red-text: var(--brand-accent-red);
+    
+    --radius-box: 20px;
+    --radius-item: 12px;
+    --shadow: 0 8px 24px rgba(0, 66, 33, 0.04);
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--bg-base);
+    color: var(--text-main);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 16px;
+    box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
+}

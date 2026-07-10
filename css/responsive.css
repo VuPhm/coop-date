@@ -1,0 +1,229 @@
+/* ====================================================================
+    RESPONSIVE CONSOLIDATED MEDIA QUERIES
+   ==================================================================== */
+
+/* 1. Màn hình lớn (Desktop & Landscape Tablet): min-width: 768px */
+@media (min-width: 768px) {
+    /* Layout tổng thể & Trình tra cứu */
+    .workspace {
+        grid-template-columns: 1.1fr 1fr;
+        grid-template-areas: 
+            "calc history"
+            "diagram diagram";
+    }
+    .history-board {
+        display: flex;
+        flex-direction: column;
+        height: 0;
+        min-height: 100%;
+    }
+    .history-list {
+        flex: 1;
+        min-height: 0;
+        max-height: none;
+    }
+
+    /* Modal cập nhật app */
+    .apple-update-modal {
+        right: 24px;
+        left: auto;
+        margin: 0;
+    }
+
+    /* Tab Hàng KPH: Giới hạn chiều rộng form */
+    .kph-form-board {
+        max-width: 800px;
+    }
+    .kph-store-settings {
+        max-width: 800px;
+    }
+    
+    /* Header list board: title + actions nằm ngang */
+    .kph-list-board .history-board__header {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+}
+
+/* 2. Màn hình nhỏ (Mobile & Portrait Tablet): max-width: 767px */
+@media (max-width: 767px) {
+    /* Form Nhập & Row chung */
+    .apple-input-row {
+        flex-direction: column;
+        gap: 12px;
+    }
+    .apple-input-col {
+        flex: 1 1 auto !important;
+        width: 100% !important;
+    }
+
+    /* Cửa hàng KPH settings */
+    .kph-store-settings {
+        padding: 14px 16px;
+    }
+
+    /* Tải ảnh minh chứng KPH */
+    .kph-image-upload-wrapper {
+        width: 100%;
+    }
+    .kph-upload-btn {
+        flex: 1;
+        justify-content: center;
+    }
+
+    /* Filter Row KPH — giữ trên 1 dòng, co giãn linh hoạt */
+    .kph-filter-row {
+        padding: 10px 12px;
+        gap: 8px;
+    }
+    .kph-filter-row.compact-filter {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .kph-filter-row.compact-filter::-webkit-scrollbar {
+        display: none;
+    }
+    .compact-wrapper {
+        flex: 0 0 130px;
+        min-width: 110px;
+    }
+    .compact-btn {
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+    .kph-filter-text {
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+
+    /* Header stacking (Date calc & KPH) */
+    .history-board__header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    /* KPH List Actions — luôn nằm ngang */
+    .kph-list-actions {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 8px;
+        align-items: center;
+    }
+    .kph-list-actions .btn-export-excel {
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+    .kph-list-actions .btn-clear-history {
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+}
+
+/* 3. Màn hình điện thoại nhỏ: max-width: 480px */
+@media (max-width: 480px) {
+    /* Lọc lịch sử tra cứu hạn lùi */
+    .filter-tags {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 6px;
+        -webkit-overflow-scrolling: touch;
+    }
+    .filter-tags::-webkit-scrollbar {
+        display: none;
+    }
+    .tag {
+        flex-shrink: 0;
+    }
+
+    /* Tab KPH layout spacing */
+    #tab-kph.active-tab {
+        gap: 14px;
+    }
+
+    /* KPH Store Settings */
+    .kph-store-settings {
+        padding: 12px 14px;
+        border-radius: 16px;
+    }
+
+    /* Form board KPH */
+    .kph-form-board {
+        padding: 18px 16px !important;
+    }
+
+    .kph-form-board .calc-board__title {
+        font-size: 17px;
+        margin-bottom: 14px !important;
+    }
+
+    /* Form Actions full-width xếp dọc */
+    .kph-form-actions {
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 16px;
+    }
+    .kph-form-actions .btn-action,
+    .kph-form-actions .btn-secondary {
+        width: 100% !important;
+        flex: none !important;
+        margin-top: 0 !important;
+    }
+
+    /* Filter row KPH — vẫn giữ 1 dòng, scroll ngang nếu cần */
+    .kph-filter-row.compact-filter {
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        padding: 10px 12px !important;
+        gap: 6px !important;
+    }
+    .kph-filter-row.compact-filter::-webkit-scrollbar {
+        display: none;
+    }
+    .kph-filter-row.compact-filter .kph-filter-text {
+        display: none;
+    }
+    .kph-filter-row.compact-filter .compact-wrapper {
+        flex: 0 0 120px !important;
+        min-width: 100px !important;
+    }
+    .kph-filter-row.compact-filter .compact-btn {
+        flex: 0 0 auto !important;
+        white-space: nowrap;
+    }
+
+    /* Image upload KPH xếp dọc */
+    .kph-image-upload-wrapper {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .kph-upload-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    .kph-image-preview-container {
+        width: 56px;
+        height: 56px;
+        align-self: flex-start;
+    }
+
+    /* Header + list actions của KPH */
+    .kph-list-board .history-board__header {
+        gap: 10px;
+    }
+    .kph-list-actions {
+        flex-wrap: nowrap;
+        gap: 8px;
+    }
+}
+
+/* 4. Hỗ trợ thiết bị cảm ứng không có hover */
+@media (hover: none) {
+    .history-item__delete-btn {
+        opacity: 0.6;
+        transform: translateY(-50%) scale(1);
+    }
+}
