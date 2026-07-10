@@ -73,11 +73,11 @@
           </div>
           
           <div class="apple-input-row">
-            <div class="apple-input-col" style="flex: 2;">
-              <label class="apple-col-label" for="barcode">Mã Barcode</label>
-              <div class="apple-field-wrapper">
-                <input class="apple-core-input" type="text" id="barcode" placeholder="Nhập hoặc quét mã" inputmode="numeric">
-                <button type="button" class="btn-picker-trigger" id="btnScanBarcode" onclick="openScannerForCalc()" aria-label="Quét mã barcode" style="position: absolute; right: 0; top: 0; height: 100%;">
+            <div class="form-field flex-2">
+              <label class="form-label" for="barcode">Mã Barcode</label>
+              <div class="form-input-wrapper">
+                <input class="form-input" type="text" id="barcode" placeholder="Nhập hoặc quét mã" inputmode="numeric">
+                <button type="button" class="btn-picker-trigger" id="btnScanBarcode" onclick="openScannerForCalc()" aria-label="Quét mã barcode">
                   <svg viewBox="0 0 24 24" fill="none" stroke="var(--brand-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
                     <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
                     <circle cx="12" cy="13" r="4"></circle>
@@ -85,11 +85,11 @@
                 </button>
               </div>
             </div>
-            <div class="apple-input-col" style="flex: 1;">
-              <label class="apple-col-label" for="quantity">Số lượng</label>
-              <div class="apple-field-wrapper">
-                <input class="apple-core-input" type="number" id="quantity" value="1" min="1" placeholder="1" inputmode="numeric">
-                <span class="apple-field-suffix">cái</span>
+            <div class="form-field flex-1">
+              <label class="form-label" for="quantity">Số lượng</label>
+              <div class="form-input-wrapper">
+                <input class="form-input" type="number" id="quantity" value="1" min="1" placeholder="1" inputmode="numeric">
+                <span class="form-input-suffix">cái</span>
               </div>
             </div>
           </div>
@@ -105,10 +105,10 @@
             </div>
           </div>
 
-          <div class="form-group" id="nsxGroup">
-            <label class="form-group__label" for="nsx">Ngày sản xuất</label>
-            <div class="input-wrapper">
-              <input class="form-group__input auto-date" type="text" id="nsx" placeholder="dd/mm/yyyy" inputmode="numeric"
+          <div class="form-field" id="nsxGroup">
+            <label class="form-label" for="nsx">Ngày sản xuất</label>
+            <div class="form-input-wrapper">
+              <input class="form-input auto-date" type="text" id="nsx" placeholder="dd/mm/yyyy" inputmode="numeric"
                 maxlength="10">
               <button type="button" class="btn-picker-trigger" id="btnNsxPicker" onclick="openNsxPicker()"
                 aria-label="Chọn ngày">
@@ -123,10 +123,10 @@
             </div>
           </div>
 
-          <div class="form-group" id="hsdGroup">
-            <label class="form-group__label" for="hsdDate">Hạn sử dụng (Chọn ngày)</label>
-            <div class="input-wrapper">
-              <input class="form-group__input auto-date" type="text" id="hsdDate" placeholder="dd/mm/yyyy"
+          <div class="form-field" id="hsdGroup">
+            <label class="form-label" for="hsdDate">Hạn sử dụng (Chọn ngày)</label>
+            <div class="form-input-wrapper">
+              <input class="form-input auto-date" type="text" id="hsdDate" placeholder="dd/mm/yyyy"
                 inputmode="numeric" maxlength="10">
               <button type="button" class="btn-picker-trigger" onclick="openHsdPicker()" aria-label="Chọn ngày">
                 <svg viewBox="0 0 24 24">
@@ -143,20 +143,20 @@
           <div class="divider-or" id="dividerOr">hoặc</div>
 
           <div class="apple-input-row" id="hsdDuoRow">
-            <div class="apple-input-col">
-              <label class="apple-col-label" for="hsdDays">Hạn sử dụng (Số ngày)</label>
-              <div class="apple-field-wrapper">
-                <input class="apple-core-input" type="number" id="hsdDays" placeholder="Ví dụ: 30" inputmode="numeric"
+            <div class="form-field flex-1">
+              <label class="form-label" for="hsdDays">Hạn sử dụng (Số ngày)</label>
+              <div class="form-input-wrapper">
+                <input class="form-input" type="number" id="hsdDays" placeholder="Ví dụ: 30" inputmode="numeric"
                   min="1">
-                <span class="apple-field-suffix">ngày</span>
+                <span class="form-input-suffix">ngày</span>
               </div>
             </div>
-            <div class="apple-input-col">
-              <label class="apple-col-label" for="hsdMonths">Hạn sử dụng (Số tháng)</label>
-              <div class="apple-field-wrapper">
-                <input class="apple-core-input" type="number" id="hsdMonths" placeholder="Ví dụ: 3" inputmode="numeric"
+            <div class="form-field flex-1">
+              <label class="form-label" for="hsdMonths">Hạn sử dụng (Số tháng)</label>
+              <div class="form-input-wrapper">
+                <input class="form-input" type="number" id="hsdMonths" placeholder="Ví dụ: 3" inputmode="numeric"
                   min="1">
-                <span class="apple-field-suffix">tháng</span>
+                <span class="form-input-suffix">tháng</span>
               </div>
             </div>
           </div>
@@ -229,25 +229,25 @@
             </legend>
             
             <div class="apple-input-row">
-              <div class="apple-input-col">
-                <label class="apple-col-label" for="kphCoopFood">CO.OP FOOD (Đơn vị)</label>
-                <div class="apple-field-wrapper">
-                  <input class="apple-core-input" type="text" id="kphCoopFood" placeholder="Ví dụ: CO.OP FOOD NGUYỄN KIỆM" onchange="saveStoreSettings()">
+              <div class="form-field flex-1">
+                <label class="form-label" for="kphCoopFood">CO.OP FOOD (Đơn vị)</label>
+                <div class="form-input-wrapper">
+                  <input class="form-input" type="text" id="kphCoopFood" placeholder="Ví dụ: CO.OP FOOD NGUYỄN KIỆM" onchange="saveStoreSettings()">
                 </div>
               </div>
-              <div class="apple-input-col">
-                <label class="apple-col-label" for="kphStore">STORE (Cửa hàng)</label>
-                <div class="apple-field-wrapper">
-                  <input class="apple-core-input" type="text" id="kphStore" placeholder="Ví dụ: STORE NGUYỄN KIỆM" onchange="saveStoreSettings()">
+              <div class="form-field flex-1">
+                <label class="form-label" for="kphStore">STORE (Cửa hàng)</label>
+                <div class="form-input-wrapper">
+                  <input class="form-input" type="text" id="kphStore" placeholder="Ví dụ: STORE NGUYỄN KIỆM" onchange="saveStoreSettings()">
                 </div>
               </div>
             </div>
             
             <div class="apple-input-row">
-              <div class="apple-input-col">
-                <label class="apple-col-label" for="kphNgayPhatHien">Ngày phát hiện <span class="required-star">*</span></label>
-                <div class="input-wrapper">
-                  <input class="form-group__input auto-date" type="text" id="kphNgayPhatHien" placeholder="dd/mm/yyyy" inputmode="numeric" maxlength="10" required>
+              <div class="form-field flex-1">
+                <label class="form-label" for="kphNgayPhatHien">Ngày phát hiện <span class="required-star">*</span></label>
+                <div class="form-input-wrapper">
+                  <input class="form-input auto-date" type="text" id="kphNgayPhatHien" placeholder="dd/mm/yyyy" inputmode="numeric" maxlength="10" required>
                   <button type="button" class="btn-picker-trigger" id="btnKphNgayPicker" onclick="openKphNgayPicker()" aria-label="Chọn ngày">
                     <svg viewBox="0 0 24 24">
                       <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -259,10 +259,10 @@
                   <input type="text" id="kphNgayPhatHienHidden" class="hidden-picker">
                 </div>
               </div>
-              <div class="apple-input-col">
-                <label class="apple-col-label" for="kphNguoiPhatHien">Người phát hiện</label>
-                <div class="apple-field-wrapper">
-                  <input class="apple-core-input" type="text" id="kphNguoiPhatHien" placeholder="Họ và tên người lập biểu" onchange="saveNguoiPhatHien()">
+              <div class="form-field flex-1">
+                <label class="form-label" for="kphNguoiPhatHien">Người phát hiện</label>
+                <div class="form-input-wrapper">
+                  <input class="form-input" type="text" id="kphNguoiPhatHien" placeholder="Họ và tên người lập biểu" onchange="saveNguoiPhatHien()">
                 </div>
               </div>
             </div>
@@ -280,11 +280,11 @@
             </legend>
             
             <div class="apple-input-row">
-              <div class="apple-input-col" style="flex: 1.5;">
-                <label class="apple-col-label" for="kphSku">Mã SKU / UPC <span class="required-star">*</span></label>
-                <div class="apple-field-wrapper">
-                  <input class="apple-core-input" type="text" id="kphSku" placeholder="Nhập hoặc quét mã" required>
-                  <button type="button" class="btn-picker-trigger" onclick="openScannerForKPH()" aria-label="Quét mã barcode" style="position: absolute; right: 0; top: 0; height: 100%;">
+              <div class="form-field flex-1-5">
+                <label class="form-label" for="kphSku">Mã SKU / UPC <span class="required-star">*</span></label>
+                <div class="form-input-wrapper">
+                  <input class="form-input" type="text" id="kphSku" placeholder="Nhập hoặc quét mã" required>
+                  <button type="button" class="btn-picker-trigger" onclick="openScannerForKPH()" aria-label="Quét mã barcode">
                     <svg viewBox="0 0 24 24" fill="none" stroke="var(--brand-primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
                       <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
                       <circle cx="12" cy="13" r="4"></circle>
@@ -292,34 +292,34 @@
                   </button>
                 </div>
               </div>
-              <div class="apple-input-col" style="flex: 2;">
-                <label class="apple-col-label" for="kphTenHang">Tên hàng hóa <span class="required-star">*</span></label>
-                <div class="apple-field-wrapper">
-                  <input class="apple-core-input" type="text" id="kphTenHang" placeholder="Điền tay tên hàng hóa" required>
+              <div class="form-field flex-2">
+                <label class="form-label" for="kphTenHang">Tên hàng hóa <span class="required-star">*</span></label>
+                <div class="form-input-wrapper">
+                  <input class="form-input" type="text" id="kphTenHang" placeholder="Điền tay tên hàng hóa" required>
                 </div>
               </div>
             </div>
 
             <div class="apple-input-row">
-              <div class="apple-input-col" style="flex: 2;">
-                <label class="apple-col-label" for="kphNcc">Nhà cung cấp (NCC)</label>
-                <div class="apple-field-wrapper">
-                  <input class="apple-core-input" type="text" id="kphNcc" placeholder="Điền tên NCC">
+              <div class="form-field flex-2">
+                <label class="form-label" for="kphNcc">Nhà cung cấp (NCC)</label>
+                <div class="form-input-wrapper">
+                  <input class="form-input" type="text" id="kphNcc" placeholder="Điền tên NCC">
                 </div>
               </div>
-              <div class="apple-input-col" style="flex: 1;">
-                <label class="apple-col-label" for="kphDvt">Đơn vị tính</label>
-                <div class="apple-field-wrapper select-field-wrapper">
-                  <select class="apple-core-input apple-select" id="kphDvt">
+              <div class="form-field flex-1">
+                <label class="form-label" for="kphDvt">Đơn vị tính</label>
+                <div class="form-input-wrapper select-field-wrapper">
+                  <select class="form-input apple-select" id="kphDvt">
                     <option value="EA">EA (Cái/Bịch)</option>
                     <option value="kg">kg (Ký)</option>
                   </select>
                 </div>
               </div>
-              <div class="apple-input-col" style="flex: 1;">
-                <label class="apple-col-label" for="kphSoLuong">Số lượng <span class="required-star">*</span></label>
-                <div class="apple-field-wrapper">
-                  <input class="apple-core-input" type="number" id="kphSoLuong" value="1" min="0.001" step="any" placeholder="1" inputmode="decimal" required>
+              <div class="form-field flex-1">
+                <label class="form-label" for="kphSoLuong">Số lượng <span class="required-star">*</span></label>
+                <div class="form-input-wrapper">
+                  <input class="form-input" type="number" id="kphSoLuong" value="1" min="0.001" step="any" placeholder="1" inputmode="decimal" required>
                 </div>
               </div>
             </div>
@@ -339,10 +339,10 @@
             </legend>
             
             <div class="apple-input-row">
-              <div class="apple-input-col">
-                <label class="apple-col-label" for="kphTinhTrang">Mô tả tình trạng hàng KPH</label>
-                <div class="apple-field-wrapper select-field-wrapper">
-                  <select class="apple-core-input apple-select" id="kphTinhTrang" onchange="toggleTinhTrangKhac(this.value)">
+              <div class="form-field flex-1">
+                <label class="form-label" for="kphTinhTrang">Mô tả tình trạng hàng KPH</label>
+                <div class="form-input-wrapper select-field-wrapper">
+                  <select class="form-input apple-select" id="kphTinhTrang" onchange="toggleTinhTrangKhac(this.value)">
                     <option value="Hư Hỏng">Hư Hỏng</option>
                     <option value="Hết Hạn Sử Dụng">Hết Hạn Sử Dụng</option>
                     <option value="Mua X tặng Y">Mua X tặng Y</option>
@@ -351,19 +351,19 @@
                   </select>
                 </div>
               </div>
-              <div class="apple-input-col" id="colTinhTrangKhac" style="display: none;">
-                <label class="apple-col-label" for="kphTinhTrangKhac">Nội dung tình trạng khác</label>
-                <div class="apple-field-wrapper">
-                  <input class="apple-core-input" type="text" id="kphTinhTrangKhac" placeholder="Nhập tình trạng hàng">
+              <div class="form-field flex-1" id="colTinhTrangKhac" style="display: none;">
+                <label class="form-label" for="kphTinhTrangKhac">Nội dung tình trạng khác</label>
+                <div class="form-input-wrapper">
+                  <input class="form-input" type="text" id="kphTinhTrangKhac" placeholder="Nhập tình trạng hàng">
                 </div>
               </div>
             </div>
 
             <div class="apple-input-row">
-              <div class="apple-input-col">
-                <label class="apple-col-label" for="kphBienPhap">Biện pháp xử lý</label>
-                <div class="apple-field-wrapper select-field-wrapper">
-                  <select class="apple-core-input apple-select" id="kphBienPhap" onchange="toggleBienPhapKhac(this.value)">
+              <div class="form-field flex-1">
+                <label class="form-label" for="kphBienPhap">Biện pháp xử lý</label>
+                <div class="form-input-wrapper select-field-wrapper">
+                  <select class="form-input apple-select" id="kphBienPhap" onchange="toggleBienPhapKhac(this.value)">
                     <option value="HỦY">HỦY</option>
                     <option value="ĐỔI">ĐỔI</option>
                     <option value="XUẤT TRẢ">XUẤT TRẢ</option>
@@ -371,19 +371,19 @@
                   </select>
                 </div>
               </div>
-              <div class="apple-input-col" id="colBienPhapKhac" style="display: none;">
-                <label class="apple-col-label" for="kphBienPhapKhac">Nội dung xử lý khác</label>
-                <div class="apple-field-wrapper">
-                  <input class="apple-core-input" type="text" id="kphBienPhapKhac" placeholder="Ví dụ: Chuyển đổi công năng, giảm giá...">
+              <div class="form-field flex-1" id="colBienPhapKhac" style="display: none;">
+                <label class="form-label" for="kphBienPhapKhac">Nội dung xử lý khác</label>
+                <div class="form-input-wrapper">
+                  <input class="form-input" type="text" id="kphBienPhapKhac" placeholder="Ví dụ: Chuyển đổi công năng, giảm giá...">
                 </div>
               </div>
             </div>
 
             <div class="apple-input-row">
-              <div class="apple-input-col">
-                <label class="apple-col-label" for="kphNgayXuLy">Ngày xử lý (nếu có)</label>
-                <div class="input-wrapper">
-                  <input class="form-group__input auto-date" type="text" id="kphNgayXuLy" placeholder="dd/mm/yyyy (để trống nếu chưa xử lý)" inputmode="numeric" maxlength="10">
+              <div class="form-field flex-1">
+                <label class="form-label" for="kphNgayXuLy">Ngày xử lý (nếu có)</label>
+                <div class="form-input-wrapper">
+                  <input class="form-input auto-date" type="text" id="kphNgayXuLy" placeholder="dd/mm/yyyy (để trống nếu chưa xử lý)" inputmode="numeric" maxlength="10">
                   <button type="button" class="btn-picker-trigger" id="btnKphNgayXuLyPicker" onclick="openKphNgayXuLyPicker()" aria-label="Chọn ngày">
                     <svg viewBox="0 0 24 24">
                       <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -395,8 +395,8 @@
                   <input type="text" id="kphNgayXuLyHidden" class="hidden-picker">
                 </div>
               </div>
-              <div class="apple-input-col">
-                <label class="apple-col-label">Ảnh minh chứng</label>
+              <div class="form-field flex-1">
+                <label class="form-label">Ảnh minh chứng</label>
                 <div class="kph-image-upload-wrapper">
                   <label class="kph-upload-card" for="kphImageInput">
                     <div class="kph-upload-card-content">
@@ -457,8 +457,8 @@
           <!-- Bộ lọc khoảng ngày -->
           <div class="kph-filter-row compact-filter">
             <span class="kph-filter-text">Lọc từ:</span>
-            <div class="input-wrapper filter-input-wrapper compact-wrapper">
-              <input class="form-group__input auto-date compact-input" type="text" id="kphFilterTuNgay" placeholder="Từ ngày" inputmode="numeric" maxlength="10">
+            <div class="form-input-wrapper filter-input-wrapper compact-wrapper">
+              <input class="form-input auto-date compact-input" type="text" id="kphFilterTuNgay" placeholder="Từ ngày" inputmode="numeric" maxlength="10">
               <button type="button" class="btn-picker-trigger compact-trigger" id="btnFilterTuNgayPicker" onclick="openFilterTuNgayPicker()" aria-label="Chọn ngày">
                 <svg viewBox="0 0 24 24">
                   <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -470,8 +470,8 @@
               <input type="text" id="kphFilterTuNgayHidden" class="hidden-picker">
             </div>
             <span class="kph-filter-text">đến:</span>
-            <div class="input-wrapper filter-input-wrapper compact-wrapper">
-              <input class="form-group__input auto-date compact-input" type="text" id="kphFilterDenNgay" placeholder="Đến ngày" inputmode="numeric" maxlength="10">
+            <div class="form-input-wrapper filter-input-wrapper compact-wrapper">
+              <input class="form-input auto-date compact-input" type="text" id="kphFilterDenNgay" placeholder="Đến ngày" inputmode="numeric" maxlength="10">
               <button type="button" class="btn-picker-trigger compact-trigger" id="btnFilterDenNgayPicker" onclick="openFilterDenNgayPicker()" aria-label="Chọn ngày">
                 <svg viewBox="0 0 24 24">
                   <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
