@@ -315,7 +315,7 @@ export async function addKphLog() {
     const tinhTrangRadio = document.querySelector('input[name="kphTinhTrangRadio"]:checked');
     let tinhTrang = tinhTrangRadio ? tinhTrangRadio.value : 'Hư Hỏng';
     if (tinhTrang === 'Khác') {
-        tinhTrang = document.getElementById('kphTinhTrangKhac').value.trim();
+        tinhTrang = document.getElementById('kphTinhTrangKhacInput').value.trim();
         if (!tinhTrang) tinhTrang = 'Khác';
     }
     
@@ -323,7 +323,7 @@ export async function addKphLog() {
     let bienPhap = bienPhapRadio ? bienPhapRadio.value : 'HỦY';
     let bienPhapText = bienPhap;
     if (bienPhap === 'KHÁC') {
-        bienPhapText = document.getElementById('kphBienPhapKhac').value.trim();
+        bienPhapText = document.getElementById('kphBienPhapKhacInput').value.trim();
         if (!bienPhapText) bienPhapText = 'KHÁC';
     }
     
@@ -407,11 +407,13 @@ export function clearKphForm() {
     // Reset radios
     const radHuHong = document.getElementById('kphTinhTrangHuHong');
     if (radHuHong) radHuHong.checked = true;
-    document.getElementById('kphTinhTrangKhac').value = '';
+    const kphTinhTrangKhacInput = document.getElementById('kphTinhTrangKhacInput');
+    if (kphTinhTrangKhacInput) kphTinhTrangKhacInput.value = '';
     
     const radHuy = document.getElementById('kphBienPhapHuy');
     if (radHuy) radHuy.checked = true;
-    document.getElementById('kphBienPhapKhac').value = '';
+    const kphBienPhapKhacInput = document.getElementById('kphBienPhapKhacInput');
+    if (kphBienPhapKhacInput) kphBienPhapKhacInput.value = '';
     
     const kphDvtEA = document.getElementById('kphDvtEA');
     if (kphDvtEA) kphDvtEA.checked = true;
@@ -650,12 +652,12 @@ export function updateKphLogsUI() {
             } else if (item.bienPhap === 'XUẤT TRẢ') {
                 bienPhapBadge = `<span class="badge badge-info">XUẤT TRẢ</span>`;
             } else {
-                bienPhapBadge = `<span class="badge badge-secondary" title="${item.bienPhapText}">KHÁC</span>`;
+                bienPhapBadge = `<span class="badge badge-secondary" title="Biện pháp xử lý khác">${item.bienPhapText || 'KHÁC'}</span>`;
             }
             
             const xlText = item.ngayXuLy ? 
-                `<div class="xl-badge-wrapper">${bienPhapBadge} <span class="xl-desc">${item.bienPhapText === item.bienPhap ? '' : item.bienPhapText}</span></div>` : 
-                `<span class="badge badge-unprocessed">Chưa xử lý</span>`;
+                `<div class="xl-badge-wrapper">${bienPhapBadge}</div>` : 
+                `<div class="xl-badge-wrapper">${bienPhapBadge} <span class="badge badge-unprocessed">Chưa xử lý</span></div>`;
             
             return `
                 <tr ${isSelectedClass}>
@@ -708,17 +710,17 @@ export function updateKphLogsUI() {
             } else if (item.bienPhap === 'XUẤT TRẢ') {
                 bienPhapBadge = `<span class="badge badge-info">Xuất trả</span>`;
             } else {
-                bienPhapBadge = `<span class="badge badge-secondary">Khác</span>`;
+                bienPhapBadge = `<span class="badge badge-secondary">${item.bienPhapText || 'Khác'}</span>`;
             }
             
             const xlHtml = item.ngayXuLy ? 
                 `<div class="kph-card-detail-row">
                     <span class="detail-label">Xử lý:</span>
-                    <span class="detail-val">${bienPhapBadge} <span class="xl-text">${item.bienPhapText}</span> vào <span style="font-weight:600;">${item.ngayXuLy}</span></span>
+                    <span class="detail-val">${bienPhapBadge} vào <span style="font-weight:600;">${item.ngayXuLy}</span></span>
                  </div>` : 
                 `<div class="kph-card-detail-row">
                     <span class="detail-label">Xử lý:</span>
-                    <span class="detail-val"><span class="badge badge-unprocessed">Chưa xử lý</span></span>
+                    <span class="detail-val">${bienPhapBadge} <span class="badge badge-unprocessed" style="margin-left: 4px;">Chưa xử lý</span></span>
                  </div>`;
             
             return `
