@@ -516,6 +516,7 @@ window.removeHistoryItem = removeHistoryItem;
 window.toggleSelectRowKph = toggleSelectRowKph;
 window.removeKphLog = removeKphLog;
 window.zoomImage = zoomImage;
+window.toggleKphSort = toggleKphSort;
 
 export function toggleBarcodeFormats() {
     const container = document.getElementById('barcodeFormatsContainer');

@@ -237,7 +237,12 @@ export function clearKphImage() {
         kphImagePreviewUrl = null;
     }
     kphImageBlob = null;
-    document.getElementById('kphImageInput').value = '';
+    const kphImageInput = document.getElementById('kphImageInput');
+    if (kphImageInput) kphImageInput.value = '';
+    const kphCameraInput = document.getElementById('kphCameraInput');
+    if (kphCameraInput) kphCameraInput.value = '';
+    const kphLibraryInput = document.getElementById('kphLibraryInput');
+    if (kphLibraryInput) kphLibraryInput.value = '';
     const previewContainer = document.getElementById('kphPreviewContainer');
     const previewImg = document.getElementById('kphImagePreview');
     if (previewContainer) previewContainer.style.display = 'none';
