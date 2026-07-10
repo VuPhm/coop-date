@@ -1,70 +1,70 @@
-import { 
-    isValidDateStr, 
-    parseLocalDate, 
-    formatLocalDate, 
-    getCleanToday, 
-    MS_PER_DAY, 
+import {
+    isValidDateStr,
+    parseLocalDate,
+    formatLocalDate,
+    getCleanToday,
+    MS_PER_DAY,
     initAppVersion,
     showAppleConfirm,
     showAppleToast
 } from './helpers.js';
 
-import { 
-    openScanner, 
-    closeScanner, 
-    switchCamera, 
-    toggleTorch, 
-    setScannerTargetInputId 
+import {
+    openScanner,
+    closeScanner,
+    switchCamera,
+    toggleTorch,
+    setScannerTargetInputId
 } from './scanner.js';
 
-import { 
-    processReturnBusinessLogic 
+import {
+    processReturnBusinessLogic
 } from './business.js';
 
-import { 
-    drawTimelineDiagram 
+import {
+    drawTimelineDiagram
 } from './timeline.js';
 
-import { 
-    historyData, 
-    loadHistoryFromStorage, 
-    saveHistoryToStorage, 
-    removeHistoryItem, 
-    clearAllHistory, 
-    updateHistoryUI, 
-    setFilter, 
-    togglePrioritySort, 
-    loadHistoryItem 
+import {
+    historyData,
+    loadHistoryFromStorage,
+    saveHistoryToStorage,
+    removeHistoryItem,
+    clearAllHistory,
+    updateHistoryUI,
+    setFilter,
+    togglePrioritySort,
+    loadHistoryItem
 } from './history.js';
 
-import { 
-    switchTab, 
-    openKphNgayPicker, 
-    openKphNgayXuLyPicker, 
-    openFilterTuNgayPicker, 
-    openFilterDenNgayPicker, 
-    toggleTinhTrangKhac, 
-    toggleBienPhapKhac, 
+import {
+    switchTab,
+    openKphNgayPicker,
+    openKphNgayXuLyPicker,
+    openFilterTuNgayPicker,
+    openFilterDenNgayPicker,
+    toggleTinhTrangKhac,
+    toggleBienPhapKhac,
     toggleTinhTrangRadio,
     toggleBienPhapRadio,
     updateCharCount,
-    saveStoreSettings, 
-    saveNguoiPhatHien, 
-    handleKphImageUpload, 
-    clearKphImage, 
-    loadKphLogs, 
-    addKphLog, 
-    removeKphLog, 
-    clearAllKphLogs, 
+    saveStoreSettings,
+    saveNguoiPhatHien,
+    handleKphImageUpload,
+    clearKphImage,
+    loadKphLogs,
+    addKphLog,
+    removeKphLog,
+    clearAllKphLogs,
     deleteSelectedKphLogs,
-    clearKphForm, 
-    applyKphDateFilter, 
-    clearKphDateFilter, 
-    toggleKphSort, 
-    toggleSelectAllKph, 
-    toggleSelectRowKph, 
-    zoomImage, 
-    closeImageModal, 
+    clearKphForm,
+    applyKphDateFilter,
+    clearKphDateFilter,
+    toggleKphSort,
+    toggleSelectAllKph,
+    toggleSelectRowKph,
+    zoomImage,
+    closeImageModal,
     exportKphToExcel,
     initKphFlatpickrs,
     openKphCreateModal,
@@ -75,9 +75,9 @@ import {
 // State của màn hình chính
 export let nsxFlatpickr = null;
 export let hsdFlatpickr = null;
-export let isFirstCalculation = true; 
-export let isSyncing = false; 
-export let calcMode = 'forward'; 
+export let isFirstCalculation = true;
+export let isSyncing = false;
+export let calcMode = 'forward';
 
 export function openScannerForCalc() {
     setScannerTargetInputId('barcode');
@@ -89,105 +89,105 @@ export function openScannerForKPH() {
     openScanner();
 }
 
-export function openNsxPicker() { 
-    if (nsxFlatpickr) nsxFlatpickr.open(); 
-} 
+export function openNsxPicker() {
+    if (nsxFlatpickr) nsxFlatpickr.open();
+}
 
-export function openHsdPicker() { 
-    if (hsdFlatpickr) hsdFlatpickr.open(); 
-} 
+export function openHsdPicker() {
+    if (hsdFlatpickr) hsdFlatpickr.open();
+}
 
 // --- HỆ THỐNG ĐỒNG BỘ CÓ TƯỜNG NGĂN (GUARDED SYNCHRONIZATION) --- 
-export function syncFromDateToDays() { 
-    if (isSyncing) return; 
-    isSyncing = true; 
-    const nsxVal = document.getElementById('nsx').value.trim(); 
-    const hsdDateVal = document.getElementById('hsdDate').value.trim(); 
-    const hsdDaysInput = document.getElementById('hsdDays'); 
-    if (isValidDateStr(nsxVal) && isValidDateStr(hsdDateVal)) { 
-        const nsxDate = parseLocalDate(nsxVal); 
-        const hsdDate = parseLocalDate(hsdDateVal); 
-        const diffDays = Math.round((hsdDate - nsxDate) / MS_PER_DAY) + 1; 
-        hsdDaysInput.value = diffDays > 0 ? diffDays : ""; 
-    } else { 
-        hsdDaysInput.value = ""; 
-    } 
-    isSyncing = false; 
-} 
+export function syncFromDateToDays() {
+    if (isSyncing) return;
+    isSyncing = true;
+    const nsxVal = document.getElementById('nsx').value.trim();
+    const hsdDateVal = document.getElementById('hsdDate').value.trim();
+    const hsdDaysInput = document.getElementById('hsdDays');
+    if (isValidDateStr(nsxVal) && isValidDateStr(hsdDateVal)) {
+        const nsxDate = parseLocalDate(nsxVal);
+        const hsdDate = parseLocalDate(hsdDateVal);
+        const diffDays = Math.round((hsdDate - nsxDate) / MS_PER_DAY) + 1;
+        hsdDaysInput.value = diffDays > 0 ? diffDays : "";
+    } else {
+        hsdDaysInput.value = "";
+    }
+    isSyncing = false;
+}
 
-export function syncFromDaysToDate() { 
-    if (isSyncing) return; 
-    isSyncing = true; 
-    const nsxInput = document.getElementById('nsx'); 
-    const hsdDateInput = document.getElementById('hsdDate'); 
-    const hsdDaysVal = document.getElementById('hsdDays').value.trim(); 
-    document.getElementById('hsdMonths').value = ""; 
-    const days = parseInt(hsdDaysVal, 10); 
+export function syncFromDaysToDate() {
+    if (isSyncing) return;
+    isSyncing = true;
+    const nsxInput = document.getElementById('nsx');
+    const hsdDateInput = document.getElementById('hsdDate');
+    const hsdDaysVal = document.getElementById('hsdDays').value.trim();
+    document.getElementById('hsdMonths').value = "";
+    const days = parseInt(hsdDaysVal, 10);
 
-    if (calcMode === 'forward') { 
-        const nsxVal = nsxInput.value.trim(); 
-        if (isValidDateStr(nsxVal) && days > 0) { 
-            const computedHsdDate = new Date(parseLocalDate(nsxVal).getTime() + (days - 1) * MS_PER_DAY); 
-            hsdDateInput.value = formatLocalDate(computedHsdDate); 
-            if (hsdFlatpickr) hsdFlatpickr.setDate(computedHsdDate, false); 
-        } else { hsdDateInput.value = ""; if (hsdFlatpickr) hsdFlatpickr.clear(); } 
-    } else { 
-        const hsdDateVal = hsdDateInput.value.trim(); 
-        if (isValidDateStr(hsdDateVal) && days > 0) { 
-            const computedNsxDate = new Date(parseLocalDate(hsdDateVal).getTime() - (days - 1) * MS_PER_DAY); 
-            nsxInput.value = formatLocalDate(computedNsxDate); 
-            if (nsxFlatpickr) nsxFlatpickr.setDate(computedNsxDate, false); 
-        } else { nsxInput.value = ""; if (nsxFlatpickr) nsxFlatpickr.clear(); } 
-    } 
-    isSyncing = false; 
-} 
+    if (calcMode === 'forward') {
+        const nsxVal = nsxInput.value.trim();
+        if (isValidDateStr(nsxVal) && days > 0) {
+            const computedHsdDate = new Date(parseLocalDate(nsxVal).getTime() + (days - 1) * MS_PER_DAY);
+            hsdDateInput.value = formatLocalDate(computedHsdDate);
+            if (hsdFlatpickr) hsdFlatpickr.setDate(computedHsdDate, false);
+        } else { hsdDateInput.value = ""; if (hsdFlatpickr) hsdFlatpickr.clear(); }
+    } else {
+        const hsdDateVal = hsdDateInput.value.trim();
+        if (isValidDateStr(hsdDateVal) && days > 0) {
+            const computedNsxDate = new Date(parseLocalDate(hsdDateVal).getTime() - (days - 1) * MS_PER_DAY);
+            nsxInput.value = formatLocalDate(computedNsxDate);
+            if (nsxFlatpickr) nsxFlatpickr.setDate(computedNsxDate, false);
+        } else { nsxInput.value = ""; if (nsxFlatpickr) nsxFlatpickr.clear(); }
+    }
+    isSyncing = false;
+}
 
-export function syncFromMonthsToDate() { 
-    if (isSyncing) return; 
-    isSyncing = true; 
-    const nsxInput = document.getElementById('nsx'); 
-    const hsdDateInput = document.getElementById('hsdDate'); 
-    const hsdDaysInput = document.getElementById('hsdDays'); 
-    const hsdMonthsVal = document.getElementById('hsdMonths').value.trim(); 
-    const months = parseInt(hsdMonthsVal, 10); 
+export function syncFromMonthsToDate() {
+    if (isSyncing) return;
+    isSyncing = true;
+    const nsxInput = document.getElementById('nsx');
+    const hsdDateInput = document.getElementById('hsdDate');
+    const hsdDaysInput = document.getElementById('hsdDays');
+    const hsdMonthsVal = document.getElementById('hsdMonths').value.trim();
+    const months = parseInt(hsdMonthsVal, 10);
 
-    if (calcMode === 'forward') { 
-        const nsxVal = nsxInput.value.trim(); 
-        if (isValidDateStr(nsxVal) && months > 0) { 
-            const nsxDate = parseLocalDate(nsxVal); 
-            let finalHsdDate = new Date(nsxDate.getFullYear(), nsxDate.getMonth() + months, nsxDate.getDate()); 
-            if (finalHsdDate.getMonth() !== (nsxDate.getMonth() + months) % 12) { 
-                finalHsdDate = new Date(nsxDate.getFullYear(), nsxDate.getMonth() + months + 1, 0); 
-            } 
-            hsdDateInput.value = formatLocalDate(finalHsdDate); 
-            if (hsdFlatpickr) hsdFlatpickr.setDate(finalHsdDate, false); 
-            hsdDaysInput.value = Math.round((finalHsdDate - nsxDate) / MS_PER_DAY) + 1; 
-        } else { hsdDateInput.value = ""; hsdDaysInput.value = ""; } 
-    } else { 
-        const hsdDateVal = hsdDateInput.value.trim(); 
-        if (isValidDateStr(hsdDateVal) && months > 0) { 
-            const hsdDate = parseLocalDate(hsdDateVal); 
-            let finalNsxDate = new Date(hsdDate.getFullYear(), hsdDate.getMonth() - months, hsdDate.getDate()); 
-            if (finalNsxDate.getDate() !== hsdDate.getDate()) { 
-                finalNsxDate = new Date(hsdDate.getFullYear(), hsdDate.getMonth() - months + 1, 0); 
-            } 
-            nsxInput.value = formatLocalDate(finalNsxDate); 
-            if (nsxFlatpickr) nsxFlatpickr.setDate(finalNsxDate, false); 
-            hsdDaysInput.value = Math.round((hsdDate - finalNsxDate) / MS_PER_DAY) + 1; 
-        } else { nsxInput.value = ""; hsdDaysInput.value = ""; } 
-    } 
-    isSyncing = false; 
-} 
+    if (calcMode === 'forward') {
+        const nsxVal = nsxInput.value.trim();
+        if (isValidDateStr(nsxVal) && months > 0) {
+            const nsxDate = parseLocalDate(nsxVal);
+            let finalHsdDate = new Date(nsxDate.getFullYear(), nsxDate.getMonth() + months, nsxDate.getDate());
+            if (finalHsdDate.getMonth() !== (nsxDate.getMonth() + months) % 12) {
+                finalHsdDate = new Date(nsxDate.getFullYear(), nsxDate.getMonth() + months + 1, 0);
+            }
+            hsdDateInput.value = formatLocalDate(finalHsdDate);
+            if (hsdFlatpickr) hsdFlatpickr.setDate(finalHsdDate, false);
+            hsdDaysInput.value = Math.round((finalHsdDate - nsxDate) / MS_PER_DAY) + 1;
+        } else { hsdDateInput.value = ""; hsdDaysInput.value = ""; }
+    } else {
+        const hsdDateVal = hsdDateInput.value.trim();
+        if (isValidDateStr(hsdDateVal) && months > 0) {
+            const hsdDate = parseLocalDate(hsdDateVal);
+            let finalNsxDate = new Date(hsdDate.getFullYear(), hsdDate.getMonth() - months, hsdDate.getDate());
+            if (finalNsxDate.getDate() !== hsdDate.getDate()) {
+                finalNsxDate = new Date(hsdDate.getFullYear(), hsdDate.getMonth() - months + 1, 0);
+            }
+            nsxInput.value = formatLocalDate(finalNsxDate);
+            if (nsxFlatpickr) nsxFlatpickr.setDate(finalNsxDate, false);
+            hsdDaysInput.value = Math.round((hsdDate - finalNsxDate) / MS_PER_DAY) + 1;
+        } else { nsxInput.value = ""; hsdDaysInput.value = ""; }
+    }
+    isSyncing = false;
+}
 
 // --- ĐIỀU HƯỚNG CHẾ ĐỘ QUA CÔNG TẮC GẠT TRƯỢT APPLE ---
 export function handleToggleMode(toggleElement) {
     calcMode = toggleElement.checked ? 'forward' : 'backward';
-    
+
     const label = document.getElementById('nsxToggleLabel') || document.querySelector('.nsx-toggle-label');
     if (label) {
         label.textContent = toggleElement.checked ? 'Đã biết' : 'Chưa biết';
     }
-    
+
     document.getElementById('nsx').value = "";
     document.getElementById('hsdDate').value = "";
     document.getElementById('hsdDays').value = "";
@@ -213,10 +213,10 @@ export function handleToggleMode(toggleElement) {
     if (svgContainer) {
         svgContainer.innerHTML = '';
     }
-    
+
     const nsxInput = document.getElementById('nsx');
     const btnNsx = document.getElementById('btnNsxPicker');
-    
+
     if (calcMode === 'backward') {
         nsxInput.setAttribute('readonly', 'true');
         if (btnNsx) {
@@ -272,10 +272,10 @@ export function executeCalculation(saveToHistory = true) {
     let quantityVal = parseFloat(quantityRawVal || "1");
     if (isNaN(quantityVal)) quantityVal = 1;
     const calcDvtVal = document.querySelector('input[name="calcDvt"]:checked').value;
-    
+
     const wrapper = document.getElementById('resultWrapper');
     const text = document.getElementById('resultText');
-    
+
     if (text) {
         text.classList.remove('calc-board__result-text--visible');
     }
@@ -305,11 +305,11 @@ export function executeCalculation(saveToHistory = true) {
             if (wrapper) {
                 wrapper.className = `calc-board__result-wrapper ${output.alert.class}`;
             }
-            
+
             let mainText = "";
             let subText = "";
             let labelTitle = "";
-            
+
             if (output.isExpiredProduct) {
                 labelTitle = output.isShortProduct ? 'Hạn sử dụng' : 'Ngày lùi hàng';
                 mainText = `${labelTitle}: <strong>${output.dateStr}</strong>`;
@@ -343,14 +343,14 @@ export function executeCalculation(saveToHistory = true) {
             }
 
             openResultModal(theme, 'Kết quả tra cứu', mainText, subText, iconHtml);
-            
+
             if (saveToHistory) {
                 const existingIndex = historyData.findIndex(h => h.nsx === nsxVal && h.formattedHsd === output.formattedHsd && h.barcode === barcodeVal);
                 if (existingIndex !== -1) historyData.splice(existingIndex, 1);
-                
-                historyData.unshift({ 
+
+                historyData.unshift({
                     id: 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
-                    nsx: nsxVal, 
+                    nsx: nsxVal,
                     rawHsdDate: hsdDateVal,
                     rawHsdDays: hsdDaysVal || Math.round((parseLocalDate(hsdDateVal) - parseLocalDate(nsxVal)) / MS_PER_DAY) + 1,
                     formattedHsd: output.formattedHsd,
@@ -374,7 +374,7 @@ export function executeCalculation(saveToHistory = true) {
             if (wrapper) {
                 wrapper.className = 'calc-board__result-wrapper state-danger';
             }
-            
+
             let userFriendlyMessage = error.message;
             if (error.message.includes("Vui lòng nhập Ngày sản xuất")) {
                 userFriendlyMessage = "⚠️ <b>Thiếu Ngày sản xuất:</b> Vui lòng điền ngày in trên bao bì (hoặc bật lịch chọn) trước khi tra cứu.";
@@ -397,15 +397,15 @@ export function executeCalculation(saveToHistory = true) {
             // Open popup result modal for validation error
             const errorIcon = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
             openResultModal('danger', 'Lỗi tra cứu', 'Thông tin chưa đúng', userFriendlyMessage, errorIcon);
-            
+
             const container = document.getElementById('svgContainer');
             if (container) container.innerHTML = '';
             const board = document.getElementById('diagramBoard');
             if (board) board.style.display = 'none';
         }
-        
+
         if (text) {
-            text.offsetHeight; 
+            text.offsetHeight;
             text.classList.add('calc-board__result-text--visible');
         }
     }, 150);
@@ -443,42 +443,42 @@ document.addEventListener('DOMContentLoaded', () => {
     })();
 
     // 1. Khởi tạo Flatpickr cho Tra cứu
-    nsxFlatpickr = flatpickr("#nsxHidden", { 
-        dateFormat: "d/m/Y", 
-        position: "below", 
-        appendTo: document.getElementById('nsx').parentNode, 
-        onChange: function (selectedDates, dateStr) { 
-            document.getElementById('nsx').value = dateStr; 
-            document.getElementById('hsdMonths').value = ""; 
-            const hsdDaysVal = document.getElementById('hsdDays').value.trim(); 
-            if (hsdDaysVal !== "") { syncFromDaysToDate(); } else { syncFromDateToDays(); } 
-        } 
-    }); 
-    hsdFlatpickr = flatpickr("#hsdHidden", { 
-        dateFormat: "d/m/Y", 
-        position: "below", 
-        appendTo: document.getElementById('hsdDate').parentNode, 
-        onChange: function (selectedDates, dateStr) { 
-            document.getElementById('hsdDate').value = dateStr; 
-            document.getElementById('hsdMonths').value = ""; 
-            if (calcMode === 'forward') { syncFromDateToDays(); } else { 
-                const hsdDaysVal = document.getElementById('hsdDays').value.trim(); 
-                if (hsdDaysVal !== "") syncFromDaysToDate(); 
-            } 
-        } 
-    }); 
+    nsxFlatpickr = flatpickr("#nsxHidden", {
+        dateFormat: "d/m/Y",
+        position: "below",
+        appendTo: document.getElementById('nsx').parentNode,
+        onChange: function (selectedDates, dateStr) {
+            document.getElementById('nsx').value = dateStr;
+            document.getElementById('hsdMonths').value = "";
+            const hsdDaysVal = document.getElementById('hsdDays').value.trim();
+            if (hsdDaysVal !== "") { syncFromDaysToDate(); } else { syncFromDateToDays(); }
+        }
+    });
+    hsdFlatpickr = flatpickr("#hsdHidden", {
+        dateFormat: "d/m/Y",
+        position: "below",
+        appendTo: document.getElementById('hsdDate').parentNode,
+        onChange: function (selectedDates, dateStr) {
+            document.getElementById('hsdDate').value = dateStr;
+            document.getElementById('hsdMonths').value = "";
+            if (calcMode === 'forward') { syncFromDateToDays(); } else {
+                const hsdDaysVal = document.getElementById('hsdDays').value.trim();
+                if (hsdDaysVal !== "") syncFromDaysToDate();
+            }
+        }
+    });
 
     // 2. Định dạng hồ sơ Apple Chronometer
-    (function initAppleChronometer() { 
-        const now = new Date(); 
-        const daysOfWeek = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy']; 
-        const dayOfWeekStr = daysOfWeek[now.getDay()]; 
-        const dayOfMonthStr = String(now.getDate()).padStart(2, '0'); 
-        const monthStr = String(now.getMonth() + 1).padStart(2, '0'); 
-        const yearStr = now.getFullYear(); 
-        const fullContainer = document.getElementById('widgetFullDate'); 
-        if (fullContainer) { fullContainer.innerText = `${dayOfWeekStr}, Ngày ${dayOfMonthStr}/${monthStr}/${yearStr}`; } 
-    })(); 
+    (function initAppleChronometer() {
+        const now = new Date();
+        const daysOfWeek = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+        const dayOfWeekStr = daysOfWeek[now.getDay()];
+        const dayOfMonthStr = String(now.getDate()).padStart(2, '0');
+        const monthStr = String(now.getMonth() + 1).padStart(2, '0');
+        const yearStr = now.getFullYear();
+        const fullContainer = document.getElementById('widgetFullDate');
+        if (fullContainer) { fullContainer.innerText = `${dayOfWeekStr}, Ngày ${dayOfMonthStr}/${monthStr}/${yearStr}`; }
+    })();
 
     // 3. Nạp lịch sử & KPH
     loadHistoryFromStorage();
@@ -500,30 +500,30 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 4. Lắng nghe mask tự động date nhập tay
-    document.querySelectorAll('.auto-date').forEach(input => { 
-        input.addEventListener('keydown', (e) => { 
-            if (e.key === 'Enter') { 
-                e.preventDefault(); 
+    document.querySelectorAll('.auto-date').forEach(input => {
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
                 const form = input.closest('form');
                 if (form && form.id === 'kphForm') {
                     addKphLog();
                 } else {
-                    executeCalculation(); 
+                    executeCalculation();
                 }
-                return; 
-            } 
-            if (['Backspace', 'Tab', 'ArrowLeft', 'ArrowRight', 'Delete'].includes(e.key)) return; 
-            if (!/[0-9]/.test(e.key)) e.preventDefault(); 
-        }); 
-        input.addEventListener('input', () => { 
-            let value = input.value.replace(/\D/g, ''); 
-            if (value.length > 2 && value.length <= 4) { 
-                value = `${value.slice(0, 2)}/${value.slice(2)}`; 
-            } else if (value.length > 4) { 
-                value = `${value.slice(0, 2)}/${value.slice(2, 4)}/${value.slice(4, 8)}`; 
-            } 
-            input.value = value; 
-            
+                return;
+            }
+            if (['Backspace', 'Tab', 'ArrowLeft', 'ArrowRight', 'Delete'].includes(e.key)) return;
+            if (!/[0-9]/.test(e.key)) e.preventDefault();
+        });
+        input.addEventListener('input', () => {
+            let value = input.value.replace(/\D/g, '');
+            if (value.length > 2 && value.length <= 4) {
+                value = `${value.slice(0, 2)}/${value.slice(2)}`;
+            } else if (value.length > 4) {
+                value = `${value.slice(0, 2)}/${value.slice(2, 4)}/${value.slice(4, 8)}`;
+            }
+            input.value = value;
+
             // Tự động áp dụng bộ lọc KPH khi gõ tay xong ngày hợp lệ
             if (value.length === 10 && isValidDateStr(value)) {
                 if (input.id === 'kphFilterTuNgay' || input.id === 'kphFilterDenNgay') {
@@ -544,40 +544,40 @@ document.addEventListener('DOMContentLoaded', () => {
                     applyKphDateFilter();
                 }
             }
-        }); 
-    }); 
+        });
+    });
 
     // 5. Đồng bộ input listeners
     const hsdDateInput = document.getElementById('hsdDate');
     if (hsdDateInput) {
-        hsdDateInput.addEventListener('input', () => { 
-            document.getElementById('hsdMonths').value = ""; 
-            const hsdDateVal = hsdDateInput.value.trim(); 
-            if (isValidDateStr(hsdDateVal) && hsdFlatpickr) { 
-                hsdFlatpickr.setDate(parseLocalDate(hsdDateVal), false); 
-            } 
-            if (calcMode === 'forward') { 
-                syncFromDateToDays(); 
-            } else { 
-                const hsdDaysVal = document.getElementById('hsdDays').value.trim(); 
-                if (hsdDaysVal !== "") { syncFromDaysToDate(); } 
-            } 
+        hsdDateInput.addEventListener('input', () => {
+            document.getElementById('hsdMonths').value = "";
+            const hsdDateVal = hsdDateInput.value.trim();
+            if (isValidDateStr(hsdDateVal) && hsdFlatpickr) {
+                hsdFlatpickr.setDate(parseLocalDate(hsdDateVal), false);
+            }
+            if (calcMode === 'forward') {
+                syncFromDateToDays();
+            } else {
+                const hsdDaysVal = document.getElementById('hsdDays').value.trim();
+                if (hsdDaysVal !== "") { syncFromDaysToDate(); }
+            }
         });
     }
 
     const hsdDaysInput = document.getElementById('hsdDays');
     if (hsdDaysInput) {
-        hsdDaysInput.addEventListener('input', syncFromDaysToDate); 
-        hsdDaysInput.addEventListener('keydown', (e) => { 
-            if (e.key === 'Enter') { e.preventDefault(); executeCalculation(); } 
+        hsdDaysInput.addEventListener('input', syncFromDaysToDate);
+        hsdDaysInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); executeCalculation(); }
         });
     }
 
     const hsdMonthsInput = document.getElementById('hsdMonths');
     if (hsdMonthsInput) {
-        hsdMonthsInput.addEventListener('input', syncFromMonthsToDate); 
-        hsdMonthsInput.addEventListener('keydown', (e) => { 
-            if (e.key === 'Enter') { e.preventDefault(); executeCalculation(); } 
+        hsdMonthsInput.addEventListener('input', syncFromMonthsToDate);
+        hsdMonthsInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); executeCalculation(); }
         });
     }
 

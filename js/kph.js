@@ -24,7 +24,7 @@ export function switchTab(tabId) {
     activeTab = tabId;
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active-tab'));
-    
+
     if (tabId === 'tracuu') {
         const btnTraCuu = document.getElementById('tab-btn-tracuu');
         const tabTraCuu = document.getElementById('tab-tracuu');
@@ -180,7 +180,7 @@ export function loadStoreSettings() {
     const cf = localStorage.getItem('kph_coop_food') || '';
     const store = localStorage.getItem('kph_store') || '';
     const name = localStorage.getItem('kph_nguoi_phat_hien') || '';
-    
+
     document.getElementById('kphCoopFood').value = cf;
     document.getElementById('kphStore').value = store;
     document.getElementById('kphNguoiPhatHien').value = name;
@@ -191,19 +191,19 @@ export function loadStoreSettings() {
 export function handleKphImageUpload(input) {
     const file = input.files[0];
     if (!file) return;
-    
+
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = function (e) {
         const img = new Image();
-        img.onload = function() {
+        img.onload = function () {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
-            
+
             const MAX_WIDTH = 1024;
             const MAX_HEIGHT = 1024;
             let width = img.width;
             let height = img.height;
-            
+
             if (width > height) {
                 if (width > MAX_WIDTH) {
                     height *= MAX_WIDTH / width;
@@ -215,19 +215,19 @@ export function handleKphImageUpload(input) {
                     height = MAX_HEIGHT;
                 }
             }
-            
+
             canvas.width = width;
             canvas.height = height;
             ctx.drawImage(img, 0, 0, width, height);
-            
+
             // Nén JPEG chất lượng 0.7 để bảo vệ bộ nhớ IndexedDB
-            canvas.toBlob(function(blob) {
+            canvas.toBlob(function (blob) {
                 if (kphImagePreviewUrl) {
                     URL.revokeObjectURL(kphImagePreviewUrl);
                 }
                 kphImageBlob = blob;
                 kphImagePreviewUrl = URL.createObjectURL(blob);
-                
+
                 const previewImg = document.getElementById('kphImagePreview');
                 const previewContainer = document.getElementById('kphPreviewContainer');
                 if (previewImg) previewImg.src = kphImagePreviewUrl;
@@ -319,14 +319,14 @@ export async function addKphLog() {
     const ncc = document.getElementById('kphNcc').value.trim();
     const dvt = document.querySelector('input[name="kphDvt"]:checked').value;
     const soLuong = parseFloat(document.getElementById('kphSoLuong').value.trim() || '1');
-    
+
     const tinhTrangRadio = document.querySelector('input[name="kphTinhTrangRadio"]:checked');
     let tinhTrang = tinhTrangRadio ? tinhTrangRadio.value : 'Hư Hỏng';
     if (tinhTrang === 'Khác') {
         tinhTrang = document.getElementById('kphTinhTrangKhacInput').value.trim();
         if (!tinhTrang) tinhTrang = 'Khác';
     }
-    
+
     const bienPhapRadio = document.querySelector('input[name="kphBienPhapRadio"]:checked');
     let bienPhap = bienPhapRadio ? bienPhapRadio.value : 'HỦY';
     let bienPhapText = bienPhap;
@@ -334,15 +334,15 @@ export async function addKphLog() {
         bienPhapText = document.getElementById('kphBienPhapKhacInput').value.trim();
         if (!bienPhapText) bienPhapText = 'KHÁC';
     }
-    
+
     const ngayXuLy = document.getElementById('kphNgayXuLy').value.trim();
     const ghiChu = document.getElementById('kphGhiChu').value.trim();
-    
+
     if (!ngayPhatHien || !sku || !tenHang || isNaN(soLuong) || !nguoiPhatHien || !ncc) {
         showAppleToast("⚠️ Vui lòng điền các trường bắt buộc: Ngày phát hiện, Mã SKU/UPC, Tên hàng hóa, Nhà cung cấp, Số lượng, Người phát hiện.", "warning");
         return;
     }
-    
+
     const logEntry = {
         id: 'kph_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
         ngayPhatHien,
@@ -359,13 +359,13 @@ export async function addKphLog() {
         ghiChu,
         image: kphImageBlob // Lưu trữ binary Blob trực tiếp
     };
-    
+
     try {
         await addLog(logEntry);
         kphLogs.unshift(logEntry);
         // Tự động tích chọn dòng mới thêm
         kphSelectedIds.add(logEntry.id);
-        
+
         showAppleToast("Đã lưu phiếu khai báo KPH thành công.", "success");
         updateKphLogsUI();
         clearKphForm();
@@ -427,12 +427,12 @@ export async function clearAllKphLogs() {
 export async function deleteSelectedKphLogs() {
     const filteredLogs = getFilteredKphLogs();
     const selectedIds = filteredLogs.filter(item => kphSelectedIds.has(item.id)).map(item => item.id);
-    
+
     if (selectedIds.length === 0) {
         showAppleToast("⚠️ Vui lòng chọn ít nhất 1 dòng để xóa.", "warning");
         return;
     }
-    
+
     const confirmDelete = await showAppleConfirm({
         title: "Xác nhận xóa",
         message: `Bạn có chắc chắn muốn xóa ${selectedIds.length} bản ghi đã chọn? Hành động này không thể hoàn tác.`,
@@ -440,7 +440,7 @@ export async function deleteSelectedKphLogs() {
         cancelText: "Hủy",
         isDanger: true
     });
-    
+
     if (confirmDelete) {
         try {
             for (const id of selectedIds) {
@@ -465,33 +465,33 @@ export function clearKphForm() {
     document.getElementById('kphTenHang').value = '';
     document.getElementById('kphNcc').value = '';
     document.getElementById('kphSoLuong').value = '1';
-    
+
     // Reset radios
     const radHuHong = document.getElementById('kphTinhTrangHuHong');
     if (radHuHong) radHuHong.checked = true;
     const kphTinhTrangKhacInput = document.getElementById('kphTinhTrangKhacInput');
     if (kphTinhTrangKhacInput) kphTinhTrangKhacInput.value = '';
-    
+
     const radHuy = document.getElementById('kphBienPhapHuy');
     if (radHuy) radHuy.checked = true;
     const kphBienPhapKhacInput = document.getElementById('kphBienPhapKhacInput');
     if (kphBienPhapKhacInput) kphBienPhapKhacInput.value = '';
-    
+
     const kphDvtEA = document.getElementById('kphDvtEA');
     if (kphDvtEA) kphDvtEA.checked = true;
-    
+
     toggleTinhTrangRadio('Hư Hỏng');
     toggleBienPhapRadio('HỦY');
     clearKphImage();
-    
+
     // Clear Ngày xử lý
     document.getElementById('kphNgayXuLy').value = '';
     if (kphNgayXuLyPicker) kphNgayXuLyPicker.clear();
-    
+
     // Clear Ghi chú
     const kphGhiChu = document.getElementById('kphGhiChu');
     if (kphGhiChu) kphGhiChu.value = '';
-    
+
     // Reset character counts
     const bpKhacCharCount = document.getElementById('bpKhacCharCount');
     if (bpKhacCharCount) bpKhacCharCount.textContent = '0';
@@ -503,7 +503,7 @@ export function clearKphForm() {
 export function getFilteredKphLogs() {
     const tuStr = document.getElementById('kphFilterTuNgay').value.trim();
     const denStr = document.getElementById('kphFilterDenNgay').value.trim();
-    
+
     return kphLogs.filter(item => {
         if (tuStr && isValidDateStr(tuStr)) {
             const itemDate = parseLocalDate(item.ngayPhatHien);
@@ -525,7 +525,7 @@ export function applyKphDateFilter() {
     if (selectAllCheckbox) selectAllCheckbox.checked = false;
     const selectAllCheckboxMobile = document.getElementById('kphSelectAllMobile');
     if (selectAllCheckboxMobile) selectAllCheckboxMobile.checked = false;
-    
+
     updateKphLogsUI();
 }
 
@@ -534,13 +534,13 @@ export function clearKphDateFilter() {
     document.getElementById('kphFilterDenNgay').value = '';
     if (kphFilterTuNgayPicker) kphFilterTuNgayPicker.clear();
     if (kphFilterDenNgayPicker) kphFilterDenNgayPicker.clear();
-    
+
     kphSelectedIds.clear();
     const selectAllCheckbox = document.getElementById('kphSelectAll');
     if (selectAllCheckbox) selectAllCheckbox.checked = false;
     const selectAllCheckboxMobile = document.getElementById('kphSelectAllMobile');
     if (selectAllCheckboxMobile) selectAllCheckboxMobile.checked = false;
-    
+
     updateKphLogsUI();
 }
 
@@ -551,7 +551,7 @@ export function toggleKphSort(field) {
         kphSortField = field;
         kphSortDirection = 'desc';
     }
-    
+
     const fields = ['ngayPhatHien', 'soLuong', 'ngayXuLy'];
     fields.forEach(f => {
         const icon = document.getElementById(`sort-icon-${f}`);
@@ -565,23 +565,23 @@ export function toggleKphSort(field) {
             }
         }
     });
-    
+
     updateKphLogsUI();
 }
 
 export function sortKphLogs(logs) {
     if (!kphSortField) return logs;
-    
+
     return [...logs].sort((a, b) => {
         let valA, valB;
-        
+
         if (kphSortField === 'ngayPhatHien' || kphSortField === 'ngayXuLy') {
             const dateStrA = a[kphSortField];
             const dateStrB = b[kphSortField];
-            
+
             if (!dateStrA) return 1;
             if (!dateStrB) return -1;
-            
+
             valA = parseLocalDate(dateStrA).getTime();
             valB = parseLocalDate(dateStrB).getTime();
         } else if (kphSortField === 'soLuong') {
@@ -591,7 +591,7 @@ export function sortKphLogs(logs) {
             valA = a[kphSortField] || '';
             valB = b[kphSortField] || '';
         }
-        
+
         if (valA < valB) return (kphSortDirection === 'asc') ? -1 : 1;
         if (valA > valB) return (kphSortDirection === 'asc') ? 1 : -1;
         return 0;
@@ -615,10 +615,10 @@ export function toggleSelectRowKph(id) {
     } else {
         kphSelectedIds.add(id);
     }
-    
+
     const filteredLogs = getFilteredKphLogs();
     const allSelected = filteredLogs.length > 0 && filteredLogs.every(item => kphSelectedIds.has(item.id));
-    
+
     const selectAllCheckbox = document.getElementById('kphSelectAll');
     if (selectAllCheckbox) {
         selectAllCheckbox.checked = allSelected;
@@ -627,7 +627,7 @@ export function toggleSelectRowKph(id) {
     if (selectAllCheckboxMobile) {
         selectAllCheckboxMobile.checked = allSelected;
     }
-    
+
     updateKphLogsUI();
 }
 
@@ -644,7 +644,7 @@ export function updateKphLogsUI() {
     clearActiveImageUrls();
 
     const filteredLogs = getFilteredKphLogs();
-    
+
     // Cập nhật số lượng hiển thị bộ lọc
     const countText = document.getElementById('kphCountText');
     if (countText) countText.innerText = filteredLogs.length;
@@ -653,15 +653,15 @@ export function updateKphLogsUI() {
     const selectedCount = filteredLogs.filter(item => kphSelectedIds.has(item.id)).length;
     const selectedCountEl = document.getElementById('kphSelectedCount');
     if (selectedCountEl) selectedCountEl.innerText = selectedCount;
-    
+
     const btnExport = document.getElementById('btnExportExcel');
     const btnExportText = document.getElementById('btnExportExcelText');
     const btnDelete = document.getElementById('btnDeleteSelected');
     const btnDeleteText = document.getElementById('btnDeleteSelectedText');
-    
+
     if (btnExportText) btnExportText.innerText = selectedCount > 0 ? `Xuất ${selectedCount} dòng` : "Xuất Excel";
     if (btnDeleteText) btnDeleteText.innerText = selectedCount > 0 ? `Xóa ${selectedCount} dòng` : "Xóa";
-    
+
     if (selectedCount === 0) {
         if (btnExport) btnExport.setAttribute('disabled', 'true');
         if (btnDelete) btnDelete.setAttribute('disabled', 'true');
@@ -669,10 +669,10 @@ export function updateKphLogsUI() {
         if (btnExport) btnExport.removeAttribute('disabled');
         if (btnDelete) btnDelete.removeAttribute('disabled');
     }
-    
+
     const listContainer = document.getElementById('kphLogsList');
     const mobileContainer = document.getElementById('kphLogsMobileList');
-    
+
     if (filteredLogs.length === 0) {
         if (listContainer) {
             listContainer.innerHTML = `
@@ -692,9 +692,9 @@ export function updateKphLogsUI() {
         if (selectAllCheckboxMobile) selectAllCheckboxMobile.checked = false;
         return;
     }
-    
+
     const sortedLogs = sortKphLogs(filteredLogs);
-    
+
     const allSelected = sortedLogs.every(item => kphSelectedIds.has(item.id));
     const selectAllCheckbox = document.getElementById('kphSelectAll');
     if (selectAllCheckbox) {
@@ -718,17 +718,17 @@ export function updateKphLogsUI() {
         }
         return { ...item, imgUrl };
     });
-    
+
     // 1. Render giao diện Bảng (Desktop)
     if (listContainer) {
         listContainer.innerHTML = sortedLogsWithUrls.map((item, index) => {
             const isChecked = kphSelectedIds.has(item.id) ? 'checked' : '';
             const isSelectedClass = kphSelectedIds.has(item.id) ? 'class="selected-row"' : '';
-            
-            const imgHtml = item.imgUrl ? 
-                `<img class="kph-thumbnail" src="${item.imgUrl}" alt="Evidence" onclick="window.zoomImage('${item.imgUrl}')">` : 
+
+            const imgHtml = item.imgUrl ?
+                `<img class="kph-thumbnail" src="${item.imgUrl}" alt="Evidence" onclick="window.zoomImage('${item.imgUrl}')">` :
                 `<span style="color: var(--text-sub); font-size: 11px; font-style: italic;">Không có</span>`;
-            
+
             let bienPhapBadge = '';
             if (item.bienPhap === 'HỦY') {
                 bienPhapBadge = `<span class="badge badge-danger">HỦY</span>`;
@@ -739,11 +739,11 @@ export function updateKphLogsUI() {
             } else {
                 bienPhapBadge = `<span class="badge badge-secondary" title="Biện pháp xử lý khác">${item.bienPhapText || 'KHÁC'}</span>`;
             }
-            
-            const xlText = item.ngayXuLy ? 
-                `<div class="xl-badge-wrapper">${bienPhapBadge}</div>` : 
+
+            const xlText = item.ngayXuLy ?
+                `<div class="xl-badge-wrapper">${bienPhapBadge}</div>` :
                 `<div class="xl-badge-wrapper">${bienPhapBadge} <span class="badge badge-unprocessed">Chưa xử lý</span></div>`;
-            
+
             return `
                 <tr ${isSelectedClass}>
                     <td data-label="" style="text-align: center;">
@@ -781,12 +781,12 @@ export function updateKphLogsUI() {
         mobileContainer.innerHTML = sortedLogsWithUrls.map((item, index) => {
             const isChecked = kphSelectedIds.has(item.id) ? 'checked' : '';
             const isSelectedClass = kphSelectedIds.has(item.id) ? 'selected-card' : '';
-            
-            const imgHtml = item.imgUrl ? 
+
+            const imgHtml = item.imgUrl ?
                 `<div class="kph-card-img-wrapper" onclick="window.zoomImage('${item.imgUrl}')">
                     <img src="${item.imgUrl}" alt="Evidence">
                  </div>` : '';
-            
+
             let bienPhapBadge = '';
             if (item.bienPhap === 'HỦY') {
                 bienPhapBadge = `<span class="badge badge-danger">Hủy</span>`;
@@ -797,17 +797,17 @@ export function updateKphLogsUI() {
             } else {
                 bienPhapBadge = `<span class="badge badge-secondary">${item.bienPhapText || 'Khác'}</span>`;
             }
-            
-            const xlHtml = item.ngayXuLy ? 
+
+            const xlHtml = item.ngayXuLy ?
                 `<div class="kph-card-detail-row">
                     <span class="detail-label">Xử lý:</span>
                     <span class="detail-val">${bienPhapBadge} vào <span style="font-weight:600;">${item.ngayXuLy}</span></span>
-                 </div>` : 
+                 </div>` :
                 `<div class="kph-card-detail-row">
                     <span class="detail-label">Xử lý:</span>
                     <span class="detail-val">${bienPhapBadge} <span class="badge badge-unprocessed" style="margin-left: 4px;">Chưa xử lý</span></span>
                  </div>`;
-            
+
             return `
                 <div class="kph-mobile-card ${isSelectedClass}">
                     <div class="kph-card-header">
@@ -896,7 +896,7 @@ async function loadExcelJS() {
 
 export async function exportKphToExcel() {
     const selectedLogs = kphLogs.filter(item => kphSelectedIds.has(item.id));
-    
+
     if (selectedLogs.length === 0) {
         showAppleToast("⚠️ Vui lòng tích chọn ít nhất 1 hàng dữ liệu trước khi xuất Excel.", "warning");
         return;
@@ -1019,7 +1019,7 @@ export async function exportKphToExcel() {
         worksheet.getRow(8).height = 25;
 
         const startRow = 9;
-        
+
         // Vòng lặp tuần tự (Async Loop) xử lý từng hàng dữ liệu để tối ưu RAM
         for (let idx = 0; idx < sortedSelectedLogs.length; idx++) {
             const item = sortedSelectedLogs[idx];
@@ -1061,7 +1061,7 @@ export async function exportKphToExcel() {
                         }
                         arrayBuffer = arr.buffer;
                     }
-                    
+
                     if (arrayBuffer) {
                         // Nạp ArrayBuffer trực tiếp vào ExcelJS
                         const imageId = workbook.addImage({
@@ -1125,16 +1125,16 @@ export async function exportKphToExcel() {
         const dateStr = formatLocalDate(new Date()).replace(/\//g, '-');
         const fileBlob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
         const downloadUrl = URL.createObjectURL(fileBlob);
-        
+
         const downloadAnchor = document.createElement('a');
         downloadAnchor.href = downloadUrl;
         downloadAnchor.download = `Phieu_Theo_Doi_Hang_KPH_${dateStr}.xlsx`;
         document.body.appendChild(downloadAnchor);
         downloadAnchor.click();
-        
+
         document.body.removeChild(downloadAnchor);
         URL.revokeObjectURL(downloadUrl);
-        
+
         showAppleToast("Đã xuất file Excel thành công!", "success");
     } catch (err) {
         console.error("Export to Excel error:", err);

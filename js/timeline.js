@@ -7,15 +7,15 @@ export function drawTimelineDiagram(nsxStr, hsdStr, returnStr) {
 
     const nsx = parseLocalDate(nsxStr);
     const hsd = parseLocalDate(hsdStr);
-    const today = getCleanToday(); 
+    const today = getCleanToday();
 
     const totalDays = Math.round((hsd - nsx) / MS_PER_DAY) + 1;
     const todayIndex = Math.round((today - nsx) / MS_PER_DAY) + 1;
-    
-    const startX = 35; 
+
+    const startX = 35;
     const endX = 565;
     const widthX = endX - startX;
-    const y = 65; 
+    const y = 65;
 
     const getX = (dayIndex) => {
         if (totalDays <= 0) return startX;
@@ -43,11 +43,11 @@ export function drawTimelineDiagram(nsxStr, hsdStr, returnStr) {
                 
                 <circle cx="${startX}" cy="${y}" r="7" fill="#ffffff" stroke="${colorSafe}" stroke-width="3.5" />
                 <text x="${startX}" y="${y + 26}" style="font-size: 13px; font-weight: 600;" fill="#1c261c" text-anchor="middle">NSX</text>
-                <text x="${startX}" y="${y + 42}" style="font-size: 13px; font-weight: 700;" fill="#667366" text-anchor="middle">${nsxStr.slice(0,5)}</text>
+                <text x="${startX}" y="${y + 42}" style="font-size: 13px; font-weight: 700;" fill="#667366" text-anchor="middle">${nsxStr.slice(0, 5)}</text>
                 
                 <circle cx="${endX}" cy="${y}" r="7" fill="#ffffff" stroke="${mainColor}" stroke-width="3.5" />
                 <text x="${endX}" y="${y + 26}" style="font-size: 13px; font-weight: 800;" fill="${mainColor}" text-anchor="middle">HSD</text>
-                <text x="${endX}" y="${y + 42}" style="font-size: 13px; font-weight: 700;" fill="#667366" text-anchor="middle">${hsdStr.slice(0,5)}</text>
+                <text x="${endX}" y="${y + 42}" style="font-size: 13px; font-weight: 700;" fill="#667366" text-anchor="middle">${hsdStr.slice(0, 5)}</text>
                 
                 ${todayIndex >= 0 && todayIndex <= totalDays ? `
                     <g>
@@ -88,19 +88,19 @@ export function drawTimelineDiagram(nsxStr, hsdStr, returnStr) {
             
             <circle cx="${startX}" cy="${y}" r="7" fill="#ffffff" stroke="${colorSafe}" stroke-width="3.5" />
             <text x="${startX}" y="${y + 26}" style="font-size: 13px; font-weight: 600;" fill="#1c261c" text-anchor="middle">NSX</text>
-            <text x="${startX}" y="${y + 42}" style="font-size: 13px; font-weight: 700;" fill="#667366" text-anchor="middle">${nsxStr.slice(0,5)}</text>
+            <text x="${startX}" y="${y + 42}" style="font-size: 13px; font-weight: 700;" fill="#667366" text-anchor="middle">${nsxStr.slice(0, 5)}</text>
             
             <circle cx="${x_40}" cy="${y}" r="5" fill="#ffffff" stroke="${colorWarning}" stroke-width="3.5" />
             <text x="${x_40}" y="${y + 26}" style="font-size: 12px; font-weight: 700;" fill="${colorWarning}" text-anchor="middle">Mốc 40%</text>
-            <text x="${x_40}" y="${y + 42}" style="font-size: 13px; font-weight: 700;" fill="#667366" text-anchor="middle">${date40Str.slice(0,5)}</text>
+            <text x="${x_40}" y="${y + 42}" style="font-size: 13px; font-weight: 700;" fill="#667366" text-anchor="middle">${date40Str.slice(0, 5)}</text>
             
             <circle cx="${x_20}" cy="${y}" r="7" fill="#ffffff" stroke="${colorDanger}" stroke-width="3.5" />
             <text x="${x_20}" y="${y + 26}" style="font-size: 14px; font-weight: 800;" fill="${colorDanger}" text-anchor="middle">Hạn lùi</text>
-            <text x="${x_20}" y="${y + 42}" style="font-size: 13px; font-weight: 700;" fill="#667366" text-anchor="middle">${returnStr.slice(0,5)}</text>
+            <text x="${x_20}" y="${y + 42}" style="font-size: 13px; font-weight: 700;" fill="#667366" text-anchor="middle">${returnStr.slice(0, 5)}</text>
             
             <circle cx="${endX}" cy="${y}" r="7" fill="#ffffff" stroke="#667366" stroke-width="3.5" />
             <text x="${endX}" y="${y + 26}" style="font-size: 13px; font-weight: 600;" fill="#1c261c" text-anchor="middle">HSD</text>
-            <text x="${endX}" y="${y + 42}" style="font-size: 13px; font-weight: 700;" fill="#667366" text-anchor="middle">${hsdStr.slice(0,5)}</text>
+            <text x="${endX}" y="${y + 42}" style="font-size: 13px; font-weight: 700;" fill="#667366" text-anchor="middle">${hsdStr.slice(0, 5)}</text>
             
             ${todayIndex >= 0 && todayIndex <= totalDays ? `
                 <g>
