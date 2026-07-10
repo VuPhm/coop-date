@@ -42,10 +42,13 @@ export function switchTab(tabId) {
 // Khởi tạo lịch cho tab KPH (form và filter)
 export function initKphFlatpickrs() {
     if (!kphNgayPicker) {
-        kphNgayPicker = flatpickr("#kphNgayPhatHien", {
+        kphNgayPicker = flatpickr("#kphNgayPhatHienHidden", {
             dateFormat: "d/m/Y",
-            allowInput: true,
-            position: "below"
+            position: "below",
+            appendTo: document.getElementById('kphNgayPhatHien').closest('.input-wrapper'),
+            onChange: function (selectedDates, dateStr) {
+                document.getElementById('kphNgayPhatHien').value = dateStr;
+            }
         });
         if (!document.getElementById('kphNgayPhatHien').value) {
             document.getElementById('kphNgayPhatHien').value = formatLocalDate(new Date());
@@ -59,11 +62,13 @@ export function initKphFlatpickrs() {
         });
     }
     if (!kphNgayXuLyPicker) {
-        kphNgayXuLyPicker = flatpickr("#kphNgayXuLy", {
+        kphNgayXuLyPicker = flatpickr("#kphNgayXuLyHidden", {
             dateFormat: "d/m/Y",
-            allowInput: true,
             position: "below",
-            defaultDate: null
+            appendTo: document.getElementById('kphNgayXuLy').closest('.input-wrapper'),
+            onChange: function (selectedDates, dateStr) {
+                document.getElementById('kphNgayXuLy').value = dateStr;
+            }
         });
         document.getElementById('kphNgayXuLy').addEventListener('input', () => {
             const val = document.getElementById('kphNgayXuLy').value.trim();
@@ -75,10 +80,13 @@ export function initKphFlatpickrs() {
         });
     }
     if (!kphFilterTuNgayPicker) {
-        kphFilterTuNgayPicker = flatpickr("#kphFilterTuNgay", {
+        kphFilterTuNgayPicker = flatpickr("#kphFilterTuNgayHidden", {
             dateFormat: "d/m/Y",
-            allowInput: true,
-            position: "below"
+            position: "below",
+            appendTo: document.getElementById('kphFilterTuNgay').closest('.input-wrapper'),
+            onChange: function (selectedDates, dateStr) {
+                document.getElementById('kphFilterTuNgay').value = dateStr;
+            }
         });
         document.getElementById('kphFilterTuNgay').addEventListener('input', () => {
             const val = document.getElementById('kphFilterTuNgay').value.trim();
@@ -90,10 +98,13 @@ export function initKphFlatpickrs() {
         });
     }
     if (!kphFilterDenNgayPicker) {
-        kphFilterDenNgayPicker = flatpickr("#kphFilterDenNgay", {
+        kphFilterDenNgayPicker = flatpickr("#kphFilterDenNgayHidden", {
             dateFormat: "d/m/Y",
-            allowInput: true,
-            position: "below"
+            position: "below",
+            appendTo: document.getElementById('kphFilterDenNgay').closest('.input-wrapper'),
+            onChange: function (selectedDates, dateStr) {
+                document.getElementById('kphFilterDenNgay').value = dateStr;
+            }
         });
         document.getElementById('kphFilterDenNgay').addEventListener('input', () => {
             const val = document.getElementById('kphFilterDenNgay').value.trim();

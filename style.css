@@ -1378,6 +1378,14 @@ input:checked + .apple-switch-slider:before {
         max-width: 1400px !important;
     }
     
+    /* Center and constrain header on desktop so it doesn't stretch with KPH workspace */
+    .app-header {
+        max-width: 1200px;
+        width: 100%;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+    
     /* Header list board: title + actions nằm ngang */
     .kph-list-board .history-board__header {
         flex-direction: row;
@@ -1392,7 +1400,7 @@ input:checked + .apple-switch-slider:before {
         display: none !important;
     }
 
-    /* Sticky Top cho Tab Bar trên Desktop */
+    /* Sticky Top cho Tab Bar trên Desktop, constrained to 1200px and centered */
     .apple-tab-bar {
         position: sticky;
         top: 0;
@@ -1402,7 +1410,9 @@ input:checked + .apple-switch-slider:before {
         -webkit-backdrop-filter: blur(20px);
         box-shadow: 0 4px 16px rgba(0, 66, 33, 0.04);
         border: 1px solid rgba(0, 0, 0, 0.04);
-        margin: 0 0 16px 0 !important;
+        margin: 0 auto 16px auto !important;
+        max-width: 1200px;
+        width: 100%;
         padding: 4px;
         border-radius: var(--radius-item);
     }
@@ -1504,8 +1514,8 @@ input:checked + .apple-switch-slider:before {
         display: none;
     }
     .compact-wrapper {
-        flex: 0 0 130px;
-        min-width: 110px;
+        flex: 1 1 110px;
+        min-width: 90px;
     }
     .compact-btn {
         flex: 0 0 auto;
@@ -1605,8 +1615,8 @@ input:checked + .apple-switch-slider:before {
         display: none;
     }
     .kph-filter-row.compact-filter .compact-wrapper {
-        flex: 0 0 120px !important;
-        min-width: 100px !important;
+        flex: 1 1 100px !important;
+        min-width: 90px !important;
     }
     .kph-filter-row.compact-filter .compact-btn {
         flex: 0 0 auto !important;

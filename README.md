@@ -35,10 +35,22 @@ Hệ thống hỗ trợ các tính năng nghiệp vụ cốt lõi sau:
 * Phối màu động cho các đoạn trục (Xanh: An toàn, Vàng: Sắp tới hạn, Đỏ: Đã quá hạn lùi) giúp người dùng nhận diện tức thì trạng thái của lô hàng.
 
 ### D. Lịch Sử Tra Cứu (Search History)
-* Lưu trữ danh sách các phiên tra cứu gần nhất trong bộ nhớ tạm (In-memory).
+* Lưu trữ danh sách các phiên tra cứu gần nhất trong bộ nhớ tạm (In-memory) và đồng bộ tự động xuống `localStorage` dưới khóa `coop_date_history`.
 * Hỗ trợ **Bộ lọc trạng thái (Filter tags):** Tất cả, An toàn, Sắp tới hạn, Quá hạn lùi, Hàng ngắn ngày, Đã hết HSD.
 * Hỗ trợ **Sắp xếp ưu tiên (Priority Sort):** Sắp xếp danh sách lịch sử theo mức độ khẩn cấp của hạn lùi hàng (Danger -> Warning -> Safe).
 * Cho phép click vào một mục trong lịch sử để nạp nhanh (load) lại toàn bộ dữ liệu lên các trường nhập liệu.
+
+### E. Khai Báo và Quản Lý Hàng Không Phù Hợp (KPH)
+* **Khai báo thông tin chi tiết:** Hỗ trợ nhập liệu Đơn vị (CO.OP FOOD), Cửa hàng (STORE), Người phát hiện, Ngày phát hiện (mặc định hôm nay), SKU/UPC (hỗ trợ quét camera), Tên hàng, Nhà cung cấp (NCC), Đơn vị tính (DVT), Số lượng, Tình trạng (Hư hỏng, Móp méo, Cận hạn, Hết hạn, Khác), Biện pháp xử lý (Hủy, Trả NCC, Giảm giá, Khác), Ngày xử lý thực tế và Ảnh minh chứng.
+* **Nén ảnh tự động (Client-side Compression):** Đọc tệp tin ảnh tải lên, vẽ lại bằng Canvas để giới hạn kích thước tối đa `400x400` pixel và nén định dạng JPEG chất lượng `0.7` trước khi chuyển sang chuỗi Base64. Cơ chế này giúp tối ưu hóa dung lượng lưu trữ trên LocalStorage tránh bị tràn hạn mức (quota) của trình duyệt.
+* **Quản lý danh sách phiếu KPH:**
+  * Đồng bộ tự động offline xuống `localStorage` dưới khóa `coop_kph_logs`.
+  * Bộ lọc thông minh theo khoảng thời gian phát hiện hàng KPH (Từ ngày - Đến ngày).
+  * Sắp xếp danh sách linh hoạt theo các cột dữ liệu chính: Ngày phát hiện, Số lượng, Ngày xử lý.
+  * Chọn dòng hàng loạt (Select All / Single check) để thực hiện các thao tác nhóm.
+  * Xem ảnh minh chứng phóng to sắc nét thông qua Modal giao diện tối giản.
+  * Xóa từng phiếu khai báo lỗi hoặc xóa toàn bộ lịch sử khai báo KPH.
+* **Xuất báo cáo Excel (Excel Export):** Sử dụng các thư viện `exceljs` và `FileSaver.js` để kết xuất danh sách phiếu KPH được chọn (hoặc tất cả nếu không chọn) ra file Excel định dạng chuẩn chỉ với 1 click.
 
 ---
 
@@ -71,7 +83,7 @@ Thuật toán tính toán hạn lùi hàng tuân thủ quy tắc sau:
 ## 3. Yêu Cầu Phi Chức Năng (Non-functional Requirements)
 
 ### A. Tương Thích PWA Hoạt Động Ngoại Tuyến (Offline Compatibility)
-* **Pre-caching tài nguyên:** Tệp Service Worker (`sw.js`) thực hiện đăng ký và lưu trữ cứng (cache) toàn bộ tài nguyên cốt lõi (`index.html`, `app.js`, `style.css`, `manifest.json` và các biểu tượng favicon).
+* **Pre-caching tài nguyên:** Tệp Service Worker (`sw.js`) thực hiện đăng ký và lưu trữ cứng (cache) toàn bộ tài nguyên cốt lõi (`index.html`, `style.css`, các tệp tin trong thư mục `js/`, `manifest.json` và các biểu tượng favicon).
 * **Chiến lược Caching (Network-First với Cache Fallback):**
   * Đối với các yêu cầu `GET` tải tài nguyên, hệ thống ưu tiên gửi yêu cầu lên Network trước nhằm bảo đảm người dùng nhận được phiên bản logic mới nhất khi có kết nối mạng ổn định.
   * Nếu kết nối mạng thất bại (ngoại tuyến), Service Worker lập tức chặn và trả về tài nguyên trong Cache giúp ứng dụng hoạt động mượt mà không bị gián đoạn.
@@ -95,7 +107,7 @@ Thuật toán tính toán hạn lùi hàng tuân thủ quy tắc sau:
 * **Tách biệt rõ rệt trách nhiệm (Separation of Concerns):**
   * Tệp `index.html` chỉ định nghĩa cấu trúc khung.
   * Tệp `style.css` quản lý toàn bộ hệ thống biến CSS màu sắc thương hiệu (Brand Palette 5-3-1-1) và hiệu ứng chuyển động.
-  * Tệp `app.js` chứa mã nguồn xử lý logic nghiệp vụ tách biệt hoàn toàn với mã điều khiển DOM.
+  * Thư mục `js/` chứa mã nguồn JavaScript chia theo mô-đun chức năng riêng biệt.
 * **Triển khai tự động (CI/CD):** Tích hợp sẵn luồng GitHub Actions (`.github/workflows/static.yml`) tự động deploy ứng dụng lên GitHub Pages mỗi khi nhánh `main` được cập nhật.
 
 ---
@@ -110,25 +122,43 @@ coop-date/
 ├── .github/workflows/
 │   └── static.yml          # GitHub Actions tự động deploy lên Github Pages
 ├── favicon_io/             # Chứa bộ tài nguyên Icon đa nền tảng
+├── js/                     # Thư mục mã nguồn Javascript modular
+│   ├── business.js         # Xử lý logic nghiệp vụ tính toán hạn lùi
+│   ├── helpers.js          # Các hàm phụ trợ định dạng ngày, playBeep, cấu hình phiên bản
+│   ├── history.js          # Quản lý lưu trữ/hiển thị danh sách lịch sử tra cứu
+│   ├── kph.js              # Nghiệp vụ và giao diện Khai Báo Hàng Không Phù Hợp (KPH)
+│   ├── main.js             # Điểm khởi chạy ứng dụng, lắng nghe DOM, điều hướng tổng
+│   ├── scanner.js          # Điều khiển camera và tích hợp html5-qrcode
+│   └── timeline.js         # Vẽ sơ đồ trực quan SVG động
 ├── index.html              # Layout cấu trúc của PWA
 ├── style.css               # Hệ thống CSS stylesheet (Apple Design Concept)
-├── app.js                  # Toàn bộ logic nghiệp vụ, đồng bộ, PWA versioning
 ├── sw.js                   # Service Worker phục vụ chế độ offline
 ├── manifest.json           # Cấu hình PWA cài đặt ứng dụng trên màn hình chính
 └── version.json            # Tệp lưu vết phiên bản deploy
 ```
 
-### Các hàm logic quan trọng trong [app.js](file:///Users/vup/coop-date/app.js)
-* **`initAppVersion()`**: Khởi tạo hiển thị phiên bản hiện tại, cập nhật nhãn trạng thái trực tuyến/ngoại tuyến thời gian thực dựa trên trạng thái kết nối mạng của thiết bị và đăng ký Service Worker chạy ngầm.
-* **`handleToggleMode(toggleElement)`**: Hàm điều hướng chế độ Tra xuôi / Tra ngược. Quản lý trạng thái khóa ô nhập liệu và reset dữ liệu đầu vào chống nhiễm độc dữ liệu chéo.
-* **`processReturnBusinessLogic(nsxStr, hsdDateStr)`**: Trọng tâm xử lý nghiệp vụ bán lẻ. Tính số ngày thời hạn sử dụng và phân bổ trạng thái cảnh báo lùi hàng. **Tuyệt đối không chèn mã điều khiển DOM vào đây.**
-* **`drawTimelineDiagram(nsxStr, hsdStr, returnStr)`**: Tính toán tọa độ và kết xuất mã SVG động vẽ sơ đồ trực quan. Nếu có sửa đổi giao diện sơ đồ, hãy điều chỉnh trực tiếp chuỗi template SVG ở đây.
-* **`executeCalculation(saveToHistory)`**: Điều phối toàn bộ quy trình: thu thập dữ liệu đầu vào -> kiểm tra tính hợp lệ (validate) -> chạy logic nghiệp vụ -> vẽ sơ đồ -> cập nhật giao diện kết quả -> lưu lịch sử.
+### Các tệp logic và hàm quan trọng
+* **`js/main.js`**: Điểm khởi chạy ứng dụng (`DOMContentLoaded`), cấu hình Flatpickr, thiết lập lắng nghe sự kiện nhập liệu tự động thêm dấu gạch chéo cho ô ngày tháng (`auto-date` mask), điều phối cơ chế đồng bộ có tường ngăn giữa các ô ngày HSD, số ngày HSD, và số tháng HSD.
+* **`js/helpers.js`**: Chứa hằng số cấu hình phiên bản `APP_VERSION_CONFIG` và các hàm phụ trợ dùng chung:
+  * `parseLocalDate(str)` / `formatLocalDate(date)`: Chuyển đổi qua lại giữa chuỗi ngày tháng và đối tượng `Date` múi giờ địa phương.
+  * `isValidDateStr(str)`: Kiểm tra chuỗi định dạng ngày có hợp lệ hay không.
+  * `playBeep()`: Phát âm thanh bíp giả làm từ phần cứng khi quét mã vạch thành công.
+  * `initAppVersion()`: Đăng ký Service Worker và theo dõi trạng thái mạng (online/offline).
+* **`js/business.js`**: Chứa hàm `processReturnBusinessLogic(nsxStr, hsdDateStr)` thực thi thuật toán phân loại hàng ngắn ngày/dài ngày, tính ngày lùi hàng theo quy tắc 20%-40% và trả về trạng thái cảnh báo tương ứng. **Tuyệt đối không thao túng DOM trong tệp này.**
+* **`js/timeline.js`**: Chứa hàm `drawTimelineDiagram(nsxStr, hsdStr, returnStr)` tính toán vị trí hiển thị và xuất chuỗi template SVG vẽ sơ đồ trục thời gian trực quan.
+* **`js/history.js`**: Quản lý mảng dữ liệu lịch sử tra cứu, lưu trữ vào localStorage dưới khóa `coop_date_history`, áp dụng bộ lọc trạng thái (filter) và sắp xếp ưu tiên (sort), cập nhật giao diện danh sách lịch sử tra cứu.
+* **`js/scanner.js`**: Điều khiển camera qua thư viện `Html5Qrcode`, xử lý bật/tắt đèn pin (flash/torch) nếu thiết bị hỗ trợ, định vị luồng nhận diện mã EAN-13, EAN-8, Code 128, Code 39, UPC-A, tự động điền mã vạch quét được vào ô input tương ứng.
+* **`js/kph.js`**: Quản lý nghiệp vụ Khai Báo Hàng Không Phù Hợp (KPH):
+  * Lưu trữ dữ liệu offline dưới khóa `coop_kph_logs`.
+  * Nén ảnh minh chứng bằng Canvas & JPEG 0.7 chất lượng trước khi chuyển sang Base64 để chống tràn hạn mức lưu trữ.
+  * Lọc tìm kiếm theo khoảng ngày phát hiện, sắp xếp danh sách phiếu KPH theo các cột thông tin.
+  * Xuất báo cáo ra định dạng file Excel (.xlsx) thông qua thư viện `exceljs` và `FileSaver.js`.
 
 ### Điểm cần lưu ý khi nâng cấp hệ thống (Dành cho AI Agent)
-1. **Thay đổi phiên bản:** Khi cập nhật bất kỳ tính năng nào trong `app.js` hoặc `style.css`, bạn bắt buộc phải nâng cấp chuỗi phiên bản tại hai nơi:
-   * Biến `APP_VERSION_CONFIG.currentVersion` trong [app.js](file:///Users/vup/coop-date/app.js) (dòng 3).
-   * Hằng số `CACHE_NAME` trong [sw.js](file:///Users/vup/coop-date/sw.js) (dòng 1).
+1. **Thay đổi phiên bản:** Khi cập nhật bất kỳ tính năng hoặc sửa đổi mã nguồn trong thư mục `js/` hoặc tệp `style.css`, bạn bắt buộc phải đồng bộ chuỗi phiên bản (ví dụ: `2.16.0`) tại 3 nơi:
+   * Hằng số `currentVersion` và `lastUpdated` tại [helpers.js](file:///Users/vup/coop-date/js/helpers.js) (dòng 3).
+   * Hằng số `CACHE_NAME` tại [sw.js](file:///Users/vup/coop-date/sw.js) (dòng 1).
+   * Trường `version` và `lastUpdated` tại [version.json](file:///Users/vup/coop-date/version.json) (dòng 2).
    * Điều này đảm bảo cơ chế Version Mismatch Guard hoạt động chính xác và người dùng cuối nhận được bản cập nhật ngay lập tức.
-2. **Giới hạn Thư viện Ngoại vi:** Hạn chế tối đa việc cài đặt các gói NPM hoặc thêm các tệp CDN mới nhằm giữ vững tiêu chí tải trang tức thì dưới 1 giây và tương thích offline tuyệt đối của PWA.
+2. **Giới hạn Thư viện Ngoại vi:** Hạn chế tối đa việc thêm các tệp CDN mới nhằm giữ vững tiêu chí tải trang tức thì dưới 1 giây và tương thích offline tuyệt đối của PWA.
 3. **Màu sắc trạng thái:** Khi thay đổi giao diện cảnh báo, hãy chỉnh sửa các biến CSS tương ứng (`--status-green-bg`, `--status-yellow-bg`, `--status-red-bg`) trong tệp [style.css](file:///Users/vup/coop-date/style.css) để duy trì tính đồng nhất của hệ thống giao diện.
