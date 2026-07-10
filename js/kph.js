@@ -126,14 +126,14 @@ export function openFilterDenNgayPicker() { if (kphFilterDenNgayPicker) kphFilte
 export function toggleTinhTrangKhac(val) {
     const col = document.getElementById('colTinhTrangKhac');
     if (col) {
-        col.style.display = (val === 'Khác') ? 'block' : 'none';
+        col.style.display = (val === 'Khác') ? '' : 'none';
     }
 }
 
 export function toggleBienPhapKhac(val) {
     const col = document.getElementById('colBienPhapKhac');
     if (col) {
-        col.style.display = (val === 'KHÁC') ? 'block' : 'none';
+        col.style.display = (val === 'KHÁC') ? '' : 'none';
     }
 }
 

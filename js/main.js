@@ -347,6 +347,20 @@ document.addEventListener('DOMContentLoaded', () => {
     loadHistoryFromStorage();
     loadKphLogs();
 
+    // Fallback cho header compact khi cuộn trang (nếu trình duyệt không hỗ trợ scroll-driven animations)
+    if (!CSS.supports('(animation-timeline: scroll()) and (animation-range: 0% 100%)')) {
+        const header = document.querySelector('.app-header');
+        if (header) {
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 40) {
+                    header.classList.add('app-header--compact');
+                } else {
+                    header.classList.remove('app-header--compact');
+                }
+            }, { passive: true });
+        }
+    }
+
     // 4. Lắng nghe mask tự động date nhập tay
     document.querySelectorAll('.auto-date').forEach(input => { 
         input.addEventListener('keydown', (e) => { 
