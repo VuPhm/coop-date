@@ -45,7 +45,7 @@ export function initKphFlatpickrs() {
         kphNgayPicker = flatpickr("#kphNgayPhatHienHidden", {
             dateFormat: "d/m/Y",
             position: "below",
-            appendTo: document.getElementById('kphNgayPhatHien').closest('.input-wrapper'),
+            positionElement: document.getElementById('kphNgayPhatHien'),
             onChange: function (selectedDates, dateStr) {
                 document.getElementById('kphNgayPhatHien').value = dateStr;
             }
@@ -65,7 +65,7 @@ export function initKphFlatpickrs() {
         kphNgayXuLyPicker = flatpickr("#kphNgayXuLyHidden", {
             dateFormat: "d/m/Y",
             position: "below",
-            appendTo: document.getElementById('kphNgayXuLy').closest('.input-wrapper'),
+            positionElement: document.getElementById('kphNgayXuLy'),
             onChange: function (selectedDates, dateStr) {
                 document.getElementById('kphNgayXuLy').value = dateStr;
             }
@@ -83,7 +83,7 @@ export function initKphFlatpickrs() {
         kphFilterTuNgayPicker = flatpickr("#kphFilterTuNgayHidden", {
             dateFormat: "d/m/Y",
             position: "below",
-            appendTo: document.getElementById('kphFilterTuNgay').closest('.input-wrapper'),
+            positionElement: document.getElementById('kphFilterTuNgay'),
             onChange: function (selectedDates, dateStr) {
                 document.getElementById('kphFilterTuNgay').value = dateStr;
             }
@@ -101,7 +101,7 @@ export function initKphFlatpickrs() {
         kphFilterDenNgayPicker = flatpickr("#kphFilterDenNgayHidden", {
             dateFormat: "d/m/Y",
             position: "below",
-            appendTo: document.getElementById('kphFilterDenNgay').closest('.input-wrapper'),
+            positionElement: document.getElementById('kphFilterDenNgay'),
             onChange: function (selectedDates, dateStr) {
                 document.getElementById('kphFilterDenNgay').value = dateStr;
             }
@@ -357,6 +357,8 @@ export function applyKphDateFilter() {
     kphSelectedIds.clear();
     const selectAllCheckbox = document.getElementById('kphSelectAll');
     if (selectAllCheckbox) selectAllCheckbox.checked = false;
+    const selectAllCheckboxMobile = document.getElementById('kphSelectAllMobile');
+    if (selectAllCheckboxMobile) selectAllCheckboxMobile.checked = false;
     
     updateKphLogsUI();
 }
@@ -370,6 +372,8 @@ export function clearKphDateFilter() {
     kphSelectedIds.clear();
     const selectAllCheckbox = document.getElementById('kphSelectAll');
     if (selectAllCheckbox) selectAllCheckbox.checked = false;
+    const selectAllCheckboxMobile = document.getElementById('kphSelectAllMobile');
+    if (selectAllCheckboxMobile) selectAllCheckboxMobile.checked = false;
     
     updateKphLogsUI();
 }
@@ -447,10 +451,15 @@ export function toggleSelectRowKph(id) {
     }
     
     const filteredLogs = getFilteredKphLogs();
+    const allSelected = filteredLogs.length > 0 && filteredLogs.every(item => kphSelectedIds.has(item.id));
+    
     const selectAllCheckbox = document.getElementById('kphSelectAll');
     if (selectAllCheckbox) {
-        const allSelected = filteredLogs.length > 0 && filteredLogs.every(item => kphSelectedIds.has(item.id));
         selectAllCheckbox.checked = allSelected;
+    }
+    const selectAllCheckboxMobile = document.getElementById('kphSelectAllMobile');
+    if (selectAllCheckboxMobile) {
+        selectAllCheckboxMobile.checked = allSelected;
     }
     
     updateKphLogsUI();
@@ -480,15 +489,21 @@ export function updateKphLogsUI() {
         }
         const selectAllCheckbox = document.getElementById('kphSelectAll');
         if (selectAllCheckbox) selectAllCheckbox.checked = false;
+        const selectAllCheckboxMobile = document.getElementById('kphSelectAllMobile');
+        if (selectAllCheckboxMobile) selectAllCheckboxMobile.checked = false;
         return;
     }
     
     const sortedLogs = sortKphLogs(filteredLogs);
     
+    const allSelected = sortedLogs.every(item => kphSelectedIds.has(item.id));
     const selectAllCheckbox = document.getElementById('kphSelectAll');
     if (selectAllCheckbox) {
-        const allSelected = sortedLogs.every(item => kphSelectedIds.has(item.id));
         selectAllCheckbox.checked = allSelected;
+    }
+    const selectAllCheckboxMobile = document.getElementById('kphSelectAllMobile');
+    if (selectAllCheckboxMobile) {
+        selectAllCheckboxMobile.checked = allSelected;
     }
     
     // 1. Render giao diện Bảng (Desktop)

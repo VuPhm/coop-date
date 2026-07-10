@@ -431,6 +431,10 @@
             <h2 class="history-board__title">Phiếu Đã Khai Báo (<span id="kphCountText">0</span>)</h2>
 
             <div class="kph-list-actions">
+              <label class="kph-select-all-mobile-wrapper">
+                <input type="checkbox" id="kphSelectAllMobile" onchange="toggleSelectAllKph(this)" class="kph-checkbox">
+                <span>Chọn tất cả</span>
+              </label>
               <button id="btnExportExcel" class="btn-action btn-export-excel" onclick="exportKphToExcel()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 15px; height: 15px; margin-right: 5px;">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4"></path>

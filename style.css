@@ -1540,6 +1540,10 @@ input:checked + .apple-switch-slider:before {
         gap: 8px;
         align-items: center;
     }
+    
+    .kph-select-all-mobile-wrapper {
+        display: flex !important;
+    }
     .kph-list-actions .btn-export-excel {
         flex: 0 0 auto;
         white-space: nowrap;
@@ -1856,6 +1860,21 @@ input:checked + .apple-switch-slider:before {
     gap: 8px;
     align-items: center;
     flex-wrap: nowrap;
+}
+
+.kph-select-all-mobile-wrapper {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-sub);
+    cursor: pointer;
+    user-select: none;
+}
+
+.kph-select-all-mobile-wrapper .kph-checkbox {
+    margin: 0;
 }
 
 .btn-export-excel {
