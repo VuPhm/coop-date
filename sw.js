@@ -1,4 +1,4 @@
-const CACHE_NAME = 'app-cache-v2.16.0';
+const CACHE_NAME = 'app-cache-v2.17.0';
 const ASSETS = [
     './',
     './index.html',
@@ -8,6 +8,7 @@ const ASSETS = [
     './js/business.js',
     './js/timeline.js',
     './js/history.js',
+    './js/db.js',
     './js/kph.js',
     './js/main.js',
     './manifest.json',
@@ -19,8 +20,7 @@ const ASSETS = [
     'https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css',
     'https://cdn.jsdelivr.net/npm/flatpickr',
     'https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js'
+    'https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js'
 ];
 
 // Cài đặt: Lưu trữ cứng tài nguyên

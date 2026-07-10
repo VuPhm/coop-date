@@ -1,8 +1,10 @@
 import { isValidDateStr, parseLocalDate, formatLocalDate } from './helpers.js';
+import { addLog, deleteLog, clearAllLogs, getAllLogs } from './db.js';
 
 export let activeTab = 'tracuu';
 export const kphLogs = [];
-export let kphImageBase64 = null;
+export let kphImageBlob = null;
+export let kphImagePreviewUrl = null;
 export let kphNgayPicker, kphNgayXuLyPicker;
 export let kphFilterTuNgayPicker, kphFilterDenNgayPicker;
 
@@ -13,8 +15,8 @@ export let kphFilterTuNgay = '';
 export let kphFilterDenNgay = '';
 export const kphSelectedIds = new Set();
 
-export function setKphImageBase64(val) {
-    kphImageBase64 = val;
+export function setKphImageBlob(val) {
+    kphImageBlob = val;
 }
 
 // Điều hướng Tab
@@ -173,8 +175,8 @@ export function handleKphImageUpload(input) {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             
-            const MAX_WIDTH = 400;
-            const MAX_HEIGHT = 400;
+            const MAX_WIDTH = 1024;
+            const MAX_HEIGHT = 1024;
             let width = img.width;
             let height = img.height;
             
@@ -194,13 +196,19 @@ export function handleKphImageUpload(input) {
             canvas.height = height;
             ctx.drawImage(img, 0, 0, width, height);
             
-            // Nén JPEG chất lượng 0.7 để bảo vệ LocalStorage
-            kphImageBase64 = canvas.toDataURL('image/jpeg', 0.7);
-            
-            const previewImg = document.getElementById('kphImagePreview');
-            const previewContainer = document.getElementById('kphPreviewContainer');
-            if (previewImg) previewImg.src = kphImageBase64;
-            if (previewContainer) previewContainer.style.display = 'block';
+            // Nén JPEG chất lượng 0.7 để bảo vệ bộ nhớ IndexedDB
+            canvas.toBlob(function(blob) {
+                if (kphImagePreviewUrl) {
+                    URL.revokeObjectURL(kphImagePreviewUrl);
+                }
+                kphImageBlob = blob;
+                kphImagePreviewUrl = URL.createObjectURL(blob);
+                
+                const previewImg = document.getElementById('kphImagePreview');
+                const previewContainer = document.getElementById('kphPreviewContainer');
+                if (previewImg) previewImg.src = kphImagePreviewUrl;
+                if (previewContainer) previewContainer.style.display = 'block';
+            }, 'image/jpeg', 0.7);
         };
         img.src = e.target.result;
     };
@@ -208,7 +216,11 @@ export function handleKphImageUpload(input) {
 }
 
 export function clearKphImage() {
-    kphImageBase64 = null;
+    if (kphImagePreviewUrl) {
+        URL.revokeObjectURL(kphImagePreviewUrl);
+        kphImagePreviewUrl = null;
+    }
+    kphImageBlob = null;
     document.getElementById('kphImageInput').value = '';
     const previewContainer = document.getElementById('kphPreviewContainer');
     const previewImg = document.getElementById('kphImagePreview');
@@ -217,28 +229,60 @@ export function clearKphImage() {
 }
 
 // CRUD Phiếu khai báo KPH
-export function loadKphLogs() {
+export async function loadKphLogs() {
     try {
+        // Tự động di chuyển dữ liệu cũ từ localStorage sang IndexedDB
         const stored = localStorage.getItem('coop_kph_logs');
         if (stored) {
-            kphLogs.length = 0;
-            kphLogs.push(...JSON.parse(stored));
+            console.log("Tìm thấy dữ liệu KPH cũ trong localStorage, tiến hành migration sang IndexedDB...");
+            try {
+                const oldLogs = JSON.parse(stored);
+                for (const log of oldLogs) {
+                    if (log.image && typeof log.image === 'string' && log.image.startsWith('data:')) {
+                        try {
+                            const parts = log.image.split(',');
+                            const mime = parts[0].match(/:(.*?);/)[1] || 'image/jpeg';
+                            const binStr = atob(parts[1]);
+                            const len = binStr.length;
+                            const arr = new Uint8Array(len);
+                            for (let i = 0; i < len; i++) {
+                                arr[i] = binStr.charCodeAt(i);
+                            }
+                            log.image = new Blob([arr], { type: mime });
+                        } catch (err) {
+                            console.error("Lỗi chuyển đổi ảnh cũ sang Blob:", err);
+                        }
+                    }
+                    await addLog(log);
+                }
+                localStorage.removeItem('coop_kph_logs');
+                console.log("Migration dữ liệu KPH sang IndexedDB thành công!");
+            } catch (err) {
+                console.error("Lỗi trong quá trình migration dữ liệu KPH:", err);
+            }
+        }
+
+        const logs = await getAllLogs();
+        kphLogs.length = 0;
+        kphLogs.push(...logs);
+        updateKphLogsUI();
+    } catch (e) {
+        console.error("Failed to load KPH logs from IndexedDB", e);
+    }
+}
+
+// Hàm lưu log (để tương thích ngược nếu cần, thực tế lưu trực tiếp khi CRUD)
+export async function saveKphLogs() {
+    try {
+        for (const log of kphLogs) {
+            await addLog(log);
         }
     } catch (e) {
-        console.error("Failed to load KPH logs", e);
+        console.error("Failed to save KPH logs to IndexedDB", e);
     }
 }
 
-// Lưu log
-export function saveKphLogs() {
-    try {
-        localStorage.setItem('coop_kph_logs', JSON.stringify(kphLogs));
-    } catch (e) {
-        console.error("Failed to save KPH logs", e);
-    }
-}
-
-export function addKphLog() {
+export async function addKphLog() {
     const ngayPhatHien = document.getElementById('kphNgayPhatHien').value.trim();
     const nguoiPhatHien = document.getElementById('kphNguoiPhatHien').value.trim();
     const sku = document.getElementById('kphSku').value.trim();
@@ -280,38 +324,52 @@ export function addKphLog() {
         bienPhap,
         bienPhapText,
         ngayXuLy,
-        image: kphImageBase64
+        image: kphImageBlob // Lưu trữ binary Blob trực tiếp
     };
     
-    kphLogs.unshift(logEntry);
-    saveKphLogs();
-    
-    // Tự động tích chọn dòng mới thêm
-    kphSelectedIds.add(logEntry.id);
-    
-    updateKphLogsUI();
-    clearKphForm();
+    try {
+        await addLog(logEntry);
+        kphLogs.unshift(logEntry);
+        // Tự động tích chọn dòng mới thêm
+        kphSelectedIds.add(logEntry.id);
+        
+        updateKphLogsUI();
+        clearKphForm();
+    } catch (e) {
+        console.error("Failed to add log to IndexedDB", e);
+        alert("⚠️ Có lỗi xảy ra khi lưu dữ liệu vào IndexedDB.");
+    }
 }
 
-export function removeKphLog(id) {
+export async function removeKphLog(id) {
     const idx = kphLogs.findIndex(item => item.id === id);
     if (idx !== -1) {
         if (confirm("Bạn có chắc chắn muốn xóa bản ghi này?")) {
-            kphLogs.splice(idx, 1);
-            kphSelectedIds.delete(id);
-            saveKphLogs();
-            updateKphLogsUI();
+            try {
+                await deleteLog(id);
+                kphLogs.splice(idx, 1);
+                kphSelectedIds.delete(id);
+                updateKphLogsUI();
+            } catch (e) {
+                console.error("Failed to delete log from IndexedDB", e);
+                alert("⚠️ Có lỗi xảy ra khi xóa dữ liệu khỏi IndexedDB.");
+            }
         }
     }
 }
 
-export function clearAllKphLogs() {
+export async function clearAllKphLogs() {
     if (kphLogs.length === 0) return;
     if (confirm("⚠️ Bạn có chắc chắn muốn xóa toàn bộ danh sách phiếu đã khai báo?")) {
-        kphLogs.length = 0;
-        kphSelectedIds.clear();
-        localStorage.removeItem('coop_kph_logs');
-        updateKphLogsUI();
+        try {
+            await clearAllLogs();
+            kphLogs.length = 0;
+            kphSelectedIds.clear();
+            updateKphLogsUI();
+        } catch (e) {
+            console.error("Failed to clear IndexedDB", e);
+            alert("⚠️ Có lỗi xảy ra khi xóa toàn bộ dữ liệu.");
+        }
     }
 }
 
@@ -465,8 +523,18 @@ export function toggleSelectRowKph(id) {
     updateKphLogsUI();
 }
 
+let activeImageUrls = [];
+
+export function clearActiveImageUrls() {
+    activeImageUrls.forEach(url => URL.revokeObjectURL(url));
+    activeImageUrls = [];
+}
+
 // Cập nhật render bảng giao diện
 export function updateKphLogsUI() {
+    // Thu hồi toàn bộ Object URL cũ để giải phóng RAM lập tức
+    clearActiveImageUrls();
+
     const filteredLogs = getFilteredKphLogs();
     const countText = document.getElementById('kphCountText');
     if (countText) countText.innerText = filteredLogs.length;
@@ -505,15 +573,29 @@ export function updateKphLogsUI() {
     if (selectAllCheckboxMobile) {
         selectAllCheckboxMobile.checked = allSelected;
     }
+
+    // Tạo Object URL cho các ảnh hiển thị để tối ưu hóa bộ nhớ
+    const sortedLogsWithUrls = sortedLogs.map(item => {
+        let imgUrl = '';
+        if (item.image) {
+            if (item.image instanceof Blob) {
+                imgUrl = URL.createObjectURL(item.image);
+                activeImageUrls.push(imgUrl);
+            } else if (typeof item.image === 'string') {
+                imgUrl = item.image; // fallback cho Base64 nếu có
+            }
+        }
+        return { ...item, imgUrl };
+    });
     
     // 1. Render giao diện Bảng (Desktop)
     if (listContainer) {
-        listContainer.innerHTML = sortedLogs.map((item, index) => {
+        listContainer.innerHTML = sortedLogsWithUrls.map((item, index) => {
             const isChecked = kphSelectedIds.has(item.id) ? 'checked' : '';
             const isSelectedClass = kphSelectedIds.has(item.id) ? 'class="selected-row"' : '';
             
-            const imgHtml = item.image ? 
-                `<img class="kph-thumbnail" src="${item.image}" alt="Evidence" onclick="window.zoomImage('${item.image}')">` : 
+            const imgHtml = item.imgUrl ? 
+                `<img class="kph-thumbnail" src="${item.imgUrl}" alt="Evidence" onclick="window.zoomImage('${item.imgUrl}')">` : 
                 `<span style="color: var(--text-sub); font-size: 11px; font-style: italic;">Không có</span>`;
             
             let bienPhapBadge = '';
@@ -562,13 +644,13 @@ export function updateKphLogsUI() {
 
     // 2. Render giao diện Card (Mobile)
     if (mobileContainer) {
-        mobileContainer.innerHTML = sortedLogs.map((item, index) => {
+        mobileContainer.innerHTML = sortedLogsWithUrls.map((item, index) => {
             const isChecked = kphSelectedIds.has(item.id) ? 'checked' : '';
             const isSelectedClass = kphSelectedIds.has(item.id) ? 'selected-card' : '';
             
-            const imgHtml = item.image ? 
-                `<div class="kph-card-img-wrapper" onclick="window.zoomImage('${item.image}')">
-                    <img src="${item.image}" alt="Evidence">
+            const imgHtml = item.imgUrl ? 
+                `<div class="kph-card-img-wrapper" onclick="window.zoomImage('${item.imgUrl}')">
+                    <img src="${item.imgUrl}" alt="Evidence">
                  </div>` : '';
             
             let bienPhapBadge = '';
@@ -642,6 +724,7 @@ export function updateKphLogsUI() {
     }
 }
 
+
 export function zoomImage(src) {
     const modal = document.getElementById('imageModal');
     const img = document.getElementById('modalImg');
@@ -659,6 +742,18 @@ export function closeImageModal() {
 }
 
 // XUẤT FILE EXCEL ĐÚNG MẪU BM-331.CF CỦA SAIGON CO.OP
+// Hàm tải động thư viện ExcelJS từ CDN nếu chưa được định nghĩa
+async function loadExcelJS() {
+    if (window.ExcelJS) return window.ExcelJS;
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js';
+        script.onload = () => resolve(window.ExcelJS);
+        script.onerror = () => reject(new Error('Không thể tải thư viện ExcelJS. Vui lòng kiểm tra kết nối mạng.'));
+        document.head.appendChild(script);
+    });
+}
+
 export async function exportKphToExcel() {
     const selectedLogs = kphLogs.filter(item => kphSelectedIds.has(item.id));
     
@@ -667,9 +762,19 @@ export async function exportKphToExcel() {
         return;
     }
 
+    // 1. Kiểm soát số lượng hàng chứa ảnh (tối đa 200 dòng có ảnh)
+    const logsWithImages = selectedLogs.filter(item => item.image);
+    if (logsWithImages.length > 200) {
+        alert("⚠️ Để đảm bảo bộ nhớ và tốc độ xử lý của thiết bị, bạn chỉ được chọn tối đa 200 dòng có ảnh minh chứng cho mỗi file Excel. Vui lòng phân trang hoặc bỏ tích chọn bớt.");
+        return;
+    }
+
     const sortedSelectedLogs = sortKphLogs(selectedLogs);
 
     try {
+        // Tải động ExcelJS
+        await loadExcelJS();
+
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Khai báo KPH', {
             views: [{ showGridLines: true }]
@@ -765,7 +870,10 @@ export async function exportKphToExcel() {
         worksheet.getRow(8).height = 25;
 
         const startRow = 9;
-        sortedSelectedLogs.forEach((item, idx) => {
+        
+        // Vòng lặp tuần tự (Async Loop) xử lý từng hàng dữ liệu để tối ưu RAM
+        for (let idx = 0; idx < sortedSelectedLogs.length; idx++) {
+            const item = sortedSelectedLogs[idx];
             const currentRow = startRow + idx;
             const row = worksheet.getRow(currentRow);
             row.height = 70;
@@ -789,17 +897,37 @@ export async function exportKphToExcel() {
 
             if (item.image) {
                 try {
-                    const base64Data = item.image.split(',')[1];
-                    const imageId = workbook.addImage({
-                        base64: base64Data,
-                        extension: 'jpeg',
-                    });
-                    worksheet.addImage(imageId, {
-                        tl: { col: 14, row: currentRow - 1 },
-                        ext: { width: 85, height: 85 },
-                        editAs: 'oneCell'
-                    });
-                    worksheet.getCell(`O${currentRow}`).value = '';
+                    let arrayBuffer;
+                    if (item.image instanceof Blob) {
+                        // Đọc ảnh dạng Blob -> Chuyển thành ArrayBuffer
+                        arrayBuffer = await item.image.arrayBuffer();
+                    } else if (typeof item.image === 'string' && item.image.startsWith('data:')) {
+                        // Hỗ trợ ảnh Base64 cũ
+                        const base64Data = item.image.split(',')[1];
+                        const binStr = atob(base64Data);
+                        const len = binStr.length;
+                        const arr = new Uint8Array(len);
+                        for (let i = 0; i < len; i++) {
+                            arr[i] = binStr.charCodeAt(i);
+                        }
+                        arrayBuffer = arr.buffer;
+                    }
+                    
+                    if (arrayBuffer) {
+                        // Nạp ArrayBuffer trực tiếp vào ExcelJS
+                        const imageId = workbook.addImage({
+                            buffer: arrayBuffer,
+                            extension: 'jpeg',
+                        });
+                        worksheet.addImage(imageId, {
+                            tl: { col: 14, row: currentRow - 1 },
+                            ext: { width: 85, height: 85 },
+                            editAs: 'oneCell'
+                        });
+                        worksheet.getCell(`O${currentRow}`).value = '';
+                    } else {
+                        worksheet.getCell(`O${currentRow}`).value = '[Lỗi ảnh]';
+                    }
                 } catch (err) {
                     console.error("Error inserting image to Excel cell", err);
                     worksheet.getCell(`O${currentRow}`).value = '[Lỗi tải ảnh]';
@@ -826,7 +954,7 @@ export async function exportKphToExcel() {
                     wrapText: true
                 };
             });
-        });
+        }
 
         const footerRow = startRow + sortedSelectedLogs.length + 1;
         worksheet.getRow(footerRow).height = 20;
@@ -843,9 +971,20 @@ export async function exportKphToExcel() {
         worksheet.getCell(`N${footerRow}`).font = { name: 'Arial', italic: true, size: 8.5 };
         worksheet.getCell(`N${footerRow}`).alignment = { vertical: 'middle', horizontal: 'right' };
 
+        // Viết Buffer và xuất file thông qua thẻ download bản địa để giải phóng bộ nhớ
         const buffer = await workbook.xlsx.writeBuffer();
         const dateStr = formatLocalDate(new Date()).replace(/\//g, '-');
-        saveAs(new Blob([buffer]), `Phieu_Theo_Doi_Hang_KPH_${dateStr}.xlsx`);
+        const fileBlob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const downloadUrl = URL.createObjectURL(fileBlob);
+        
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.href = downloadUrl;
+        downloadAnchor.download = `Phieu_Theo_Doi_Hang_KPH_${dateStr}.xlsx`;
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        
+        document.body.removeChild(downloadAnchor);
+        URL.revokeObjectURL(downloadUrl);
     } catch (err) {
         console.error("Export to Excel error:", err);
         alert("⚠️ Đã xảy ra lỗi khi tạo file Excel. Hãy thử lại.");
