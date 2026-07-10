@@ -4,7 +4,9 @@ import {
     formatLocalDate, 
     getCleanToday, 
     MS_PER_DAY, 
-    initAppVersion 
+    initAppVersion,
+    showAppleConfirm,
+    showAppleToast
 } from './helpers.js';
 
 import { 
@@ -54,6 +56,7 @@ import {
     addKphLog, 
     removeKphLog, 
     clearAllKphLogs, 
+    deleteSelectedKphLogs,
     clearKphForm, 
     applyKphDateFilter, 
     clearKphDateFilter, 
@@ -413,6 +416,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 value = `${value.slice(0, 2)}/${value.slice(2, 4)}/${value.slice(4, 8)}`; 
             } 
             input.value = value; 
+            
+            // Tự động áp dụng bộ lọc KPH khi gõ tay xong ngày hợp lệ
+            if (value.length === 10 && isValidDateStr(value)) {
+                if (input.id === 'kphFilterTuNgay' || input.id === 'kphFilterDenNgay') {
+                    if (input.id === 'kphFilterTuNgay' && window.kphFilterTuNgayPicker) {
+                        window.kphFilterTuNgayPicker.setDate(parseLocalDate(value), false);
+                    } else if (input.id === 'kphFilterDenNgay' && window.kphFilterDenNgayPicker) {
+                        window.kphFilterDenNgayPicker.setDate(parseLocalDate(value), false);
+                    }
+                    applyKphDateFilter();
+                }
+            } else if (value === '') {
+                if (input.id === 'kphFilterTuNgay' || input.id === 'kphFilterDenNgay') {
+                    if (input.id === 'kphFilterTuNgay' && window.kphFilterTuNgayPicker) {
+                        window.kphFilterTuNgayPicker.clear();
+                    } else if (input.id === 'kphFilterDenNgay' && window.kphFilterDenNgayPicker) {
+                        window.kphFilterDenNgayPicker.clear();
+                    }
+                    applyKphDateFilter();
+                }
+            }
         }); 
     }); 
 
@@ -519,6 +543,9 @@ window.toggleSelectRowKph = toggleSelectRowKph;
 window.removeKphLog = removeKphLog;
 window.zoomImage = zoomImage;
 window.toggleKphSort = toggleKphSort;
+window.deleteSelectedKphLogs = deleteSelectedKphLogs;
+window.showAppleToast = showAppleToast;
+window.showAppleConfirm = showAppleConfirm;
 
 export function toggleBarcodeFormats() {
     const container = document.getElementById('barcodeFormatsContainer');

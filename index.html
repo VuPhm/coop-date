@@ -574,62 +574,90 @@
                 <input type="checkbox" id="kphSelectAllMobile" onchange="toggleSelectAllKph(this)" class="kph-checkbox">
                 <span>Chọn tất cả</span>
               </label>
-              <button id="btnExportExcel" class="btn-action btn-export-excel" onclick="exportKphToExcel()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-                  stroke-linejoin="round" style="width: 15px; height: 15px; margin-right: 5px;">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4"></path>
-                  <polyline points="7 10 12 15 17 10"></polyline>
-                  <line x1="12" y1="15" x2="12" y2="3"></line>
-                </svg>
-                Xuất Excel
-              </button>
-              <button class="btn-clear-history" onclick="clearAllKphLogs()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-                  stroke-linejoin="round" style="width: 14px; height: 14px;">
-                  <polyline points="3 6 5 6 21 6"></polyline>
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                  <line x1="10" y1="11" x2="10" y2="17"></line>
-                  <line x1="14" y1="11" x2="14" y2="17"></line>
-                </svg>
-                Xóa hết
-              </button>
+              
+              <div class="kph-selection-status">
+                Đã chọn <span id="kphSelectedCount" style="font-weight: 700;">0</span> dòng
+              </div>
+              
+              <div class="kph-action-buttons">
+                <button id="btnExportExcel" class="btn-action btn-export-excel" onclick="exportKphToExcel()" disabled>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                    stroke-linejoin="round" style="width: 15px; height: 15px; margin-right: 5px;">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                  <span id="btnExportExcelText">Xuất Excel</span>
+                </button>
+                <button id="btnDeleteSelected" class="btn-delete-selected" onclick="deleteSelectedKphLogs()" disabled>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                    stroke-linejoin="round" style="width: 14px; height: 14px; margin-right: 5px;">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                  </svg>
+                  <span id="btnDeleteSelectedText">Xóa</span>
+                </button>
+              </div>
             </div>
           </div>
-          <!-- Bộ lọc khoảng ngày -->
+          <!-- Bộ lọc khoảng ngày tối ưu -->
           <div class="kph-filter-row compact-filter">
-            <span class="kph-filter-text">Lọc từ:</span>
-            <div class="form-input-wrapper filter-input-wrapper compact-wrapper">
-              <input class="form-input auto-date compact-input" type="text" id="kphFilterTuNgay" placeholder="Từ ngày"
-                inputmode="numeric" maxlength="10">
-              <button type="button" class="btn-picker-trigger compact-trigger" id="btnFilterTuNgayPicker"
-                onclick="openFilterTuNgayPicker()" aria-label="Chọn ngày">
-                <svg viewBox="0 0 24 24">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                  <line x1="16" y1="2" x2="16" y2="6"></line>
-                  <line x1="8" y1="2" x2="8" y2="6"></line>
-                  <line x1="3" y1="10" x2="21" y2="10"></line>
-                </svg>
-              </button>
-              <input type="text" id="kphFilterTuNgayHidden" class="hidden-picker">
+            <div class="kph-filter-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="kph-filter-icon">
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+              </svg>
+              <span>Lọc ngày</span>
             </div>
-            <span class="kph-filter-text">đến:</span>
-            <div class="form-input-wrapper filter-input-wrapper compact-wrapper">
-              <input class="form-input auto-date compact-input" type="text" id="kphFilterDenNgay" placeholder="Đến ngày"
-                inputmode="numeric" maxlength="10">
-              <button type="button" class="btn-picker-trigger compact-trigger" id="btnFilterDenNgayPicker"
-                onclick="openFilterDenNgayPicker()" aria-label="Chọn ngày">
-                <svg viewBox="0 0 24 24">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                  <line x1="16" y1="2" x2="16" y2="6"></line>
-                  <line x1="8" y1="2" x2="8" y2="6"></line>
-                  <line x1="3" y1="10" x2="21" y2="10"></line>
+            
+            <div class="kph-filter-range">
+              <div class="form-input-wrapper filter-input-wrapper compact-wrapper">
+                <input class="form-input auto-date compact-input" type="text" id="kphFilterTuNgay" placeholder="Từ ngày"
+                  inputmode="numeric" maxlength="10">
+                <button type="button" class="btn-picker-trigger compact-trigger" id="btnFilterTuNgayPicker"
+                  onclick="openFilterTuNgayPicker()" aria-label="Chọn ngày">
+                  <svg viewBox="0 0 24 24">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                </button>
+                <input type="text" id="kphFilterTuNgayHidden" class="hidden-picker">
+              </div>
+              
+              <span class="kph-filter-range-sep">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
                 </svg>
-              </button>
-              <input type="text" id="kphFilterDenNgayHidden" class="hidden-picker">
+              </span>
+              
+              <div class="form-input-wrapper filter-input-wrapper compact-wrapper">
+                <input class="form-input auto-date compact-input" type="text" id="kphFilterDenNgay" placeholder="Đến ngày"
+                  inputmode="numeric" maxlength="10">
+                <button type="button" class="btn-picker-trigger compact-trigger" id="btnFilterDenNgayPicker"
+                  onclick="openFilterDenNgayPicker()" aria-label="Chọn ngày">
+                  <svg viewBox="0 0 24 24">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                </button>
+                <input type="text" id="kphFilterDenNgayHidden" class="hidden-picker">
+              </div>
             </div>
-            <button class="kph-filter-btn compact-btn" onclick="applyKphDateFilter()" title="Lọc dữ liệu">Lọc</button>
-            <button class="kph-filter-btn kph-filter-btn--clear compact-btn" onclick="clearKphDateFilter()"
-              title="Xóa bộ lọc">Xóa lọc</button>
+            
+            <button class="kph-filter-btn kph-filter-btn--clear compact-btn" onclick="clearKphDateFilter()" title="Xóa bộ lọc">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px; margin-right: 4px;">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="15" y1="9" x2="9" y2="15"></line>
+                <line x1="9" y1="9" x2="15" y2="15"></line>
+              </svg>
+              Xóa bộ lọc
+            </button>
           </div>
 
           <div class="kph-table-container">

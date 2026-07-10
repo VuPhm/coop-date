@@ -1,4 +1,4 @@
-import { isValidDateStr, parseLocalDate, formatLocalDate } from './helpers.js';
+import { isValidDateStr, parseLocalDate, formatLocalDate, showAppleConfirm, showAppleToast } from './helpers.js';
 import { addLog, deleteLog, clearAllLogs, getAllLogs } from './db.js';
 
 export let activeTab = 'tracuu';
@@ -88,14 +88,17 @@ export function initKphFlatpickrs() {
             appendTo: document.getElementById('kphFilterTuNgay').parentNode,
             onChange: function (selectedDates, dateStr) {
                 document.getElementById('kphFilterTuNgay').value = dateStr;
+                applyKphDateFilter();
             }
         });
         document.getElementById('kphFilterTuNgay').addEventListener('input', () => {
             const val = document.getElementById('kphFilterTuNgay').value.trim();
             if (isValidDateStr(val)) {
                 kphFilterTuNgayPicker.setDate(parseLocalDate(val), false);
+                applyKphDateFilter();
             } else if (val === '') {
                 kphFilterTuNgayPicker.clear();
+                applyKphDateFilter();
             }
         });
     }
@@ -106,14 +109,17 @@ export function initKphFlatpickrs() {
             appendTo: document.getElementById('kphFilterDenNgay').parentNode,
             onChange: function (selectedDates, dateStr) {
                 document.getElementById('kphFilterDenNgay').value = dateStr;
+                applyKphDateFilter();
             }
         });
         document.getElementById('kphFilterDenNgay').addEventListener('input', () => {
             const val = document.getElementById('kphFilterDenNgay').value.trim();
             if (isValidDateStr(val)) {
                 kphFilterDenNgayPicker.setDate(parseLocalDate(val), false);
+                applyKphDateFilter();
             } else if (val === '') {
                 kphFilterDenNgayPicker.clear();
+                applyKphDateFilter();
             }
         });
     }
@@ -331,7 +337,7 @@ export async function addKphLog() {
     const ghiChu = document.getElementById('kphGhiChu').value.trim();
     
     if (!ngayPhatHien || !sku || !tenHang || isNaN(soLuong) || !nguoiPhatHien || !ncc) {
-        alert("⚠️ Vui lòng điền các trường bắt buộc: Ngày phát hiện, Mã SKU/UPC, Tên hàng hóa, Nhà cung cấp, Số lượng, Người phát hiện.");
+        showAppleToast("⚠️ Vui lòng điền các trường bắt buộc: Ngày phát hiện, Mã SKU/UPC, Tên hàng hóa, Nhà cung cấp, Số lượng, Người phát hiện.", "warning");
         return;
     }
     
@@ -358,26 +364,35 @@ export async function addKphLog() {
         // Tự động tích chọn dòng mới thêm
         kphSelectedIds.add(logEntry.id);
         
+        showAppleToast("Đã lưu phiếu khai báo KPH thành công.", "success");
         updateKphLogsUI();
         clearKphForm();
     } catch (e) {
         console.error("Failed to add log to IndexedDB", e);
-        alert("⚠️ Có lỗi xảy ra khi lưu dữ liệu vào IndexedDB.");
+        showAppleToast("⚠️ Có lỗi xảy ra khi lưu dữ liệu vào IndexedDB.", "error");
     }
 }
 
 export async function removeKphLog(id) {
     const idx = kphLogs.findIndex(item => item.id === id);
     if (idx !== -1) {
-        if (confirm("Bạn có chắc chắn muốn xóa bản ghi này?")) {
+        const confirmDelete = await showAppleConfirm({
+            title: "Xác nhận xóa",
+            message: "Bạn có chắc chắn muốn xóa bản ghi này? Hành động này không thể hoàn tác.",
+            confirmText: "Xóa",
+            cancelText: "Hủy",
+            isDanger: true
+        });
+        if (confirmDelete) {
             try {
                 await deleteLog(id);
                 kphLogs.splice(idx, 1);
                 kphSelectedIds.delete(id);
+                showAppleToast("Đã xóa bản ghi thành công.", "success");
                 updateKphLogsUI();
             } catch (e) {
                 console.error("Failed to delete log from IndexedDB", e);
-                alert("⚠️ Có lỗi xảy ra khi xóa dữ liệu khỏi IndexedDB.");
+                showAppleToast("⚠️ Có lỗi xảy ra khi xóa dữ liệu khỏi IndexedDB.", "error");
             }
         }
     }
@@ -385,15 +400,59 @@ export async function removeKphLog(id) {
 
 export async function clearAllKphLogs() {
     if (kphLogs.length === 0) return;
-    if (confirm("⚠️ Bạn có chắc chắn muốn xóa toàn bộ danh sách phiếu đã khai báo?")) {
+    const confirmClear = await showAppleConfirm({
+        title: "Xóa toàn bộ phiếu",
+        message: "⚠️ Bạn có chắc chắn muốn xóa toàn bộ danh sách phiếu đã khai báo? Hành động này không thể hoàn tác.",
+        confirmText: "Xóa tất cả",
+        cancelText: "Hủy",
+        isDanger: true
+    });
+    if (confirmClear) {
         try {
             await clearAllLogs();
             kphLogs.length = 0;
             kphSelectedIds.clear();
+            showAppleToast("Đã xóa toàn bộ danh sách thành công.", "success");
             updateKphLogsUI();
         } catch (e) {
             console.error("Failed to clear IndexedDB", e);
-            alert("⚠️ Có lỗi xảy ra khi xóa toàn bộ dữ liệu.");
+            showAppleToast("⚠️ Có lỗi xảy ra khi xóa toàn bộ dữ liệu.", "error");
+        }
+    }
+}
+
+export async function deleteSelectedKphLogs() {
+    const filteredLogs = getFilteredKphLogs();
+    const selectedIds = filteredLogs.filter(item => kphSelectedIds.has(item.id)).map(item => item.id);
+    
+    if (selectedIds.length === 0) {
+        showAppleToast("⚠️ Vui lòng chọn ít nhất 1 dòng để xóa.", "warning");
+        return;
+    }
+    
+    const confirmDelete = await showAppleConfirm({
+        title: "Xác nhận xóa",
+        message: `Bạn có chắc chắn muốn xóa ${selectedIds.length} bản ghi đã chọn? Hành động này không thể hoàn tác.`,
+        confirmText: "Xóa",
+        cancelText: "Hủy",
+        isDanger: true
+    });
+    
+    if (confirmDelete) {
+        try {
+            for (const id of selectedIds) {
+                await deleteLog(id);
+                const idx = kphLogs.findIndex(item => item.id === id);
+                if (idx !== -1) {
+                    kphLogs.splice(idx, 1);
+                }
+                kphSelectedIds.delete(id);
+            }
+            showAppleToast(`Đã xóa thành công ${selectedIds.length} dòng đã chọn.`, "success");
+            updateKphLogsUI();
+        } catch (e) {
+            console.error("Failed to delete selected logs", e);
+            showAppleToast("⚠️ Có lỗi xảy ra khi xóa dữ liệu.", "error");
         }
     }
 }
@@ -582,8 +641,31 @@ export function updateKphLogsUI() {
     clearActiveImageUrls();
 
     const filteredLogs = getFilteredKphLogs();
+    
+    // Cập nhật số lượng hiển thị bộ lọc
     const countText = document.getElementById('kphCountText');
     if (countText) countText.innerText = filteredLogs.length;
+
+    // Cập nhật số lượng đang chọn và trạng thái các nút thao tác chọn dòng
+    const selectedCount = filteredLogs.filter(item => kphSelectedIds.has(item.id)).length;
+    const selectedCountEl = document.getElementById('kphSelectedCount');
+    if (selectedCountEl) selectedCountEl.innerText = selectedCount;
+    
+    const btnExport = document.getElementById('btnExportExcel');
+    const btnExportText = document.getElementById('btnExportExcelText');
+    const btnDelete = document.getElementById('btnDeleteSelected');
+    const btnDeleteText = document.getElementById('btnDeleteSelectedText');
+    
+    if (btnExportText) btnExportText.innerText = selectedCount > 0 ? `Xuất ${selectedCount} dòng` : "Xuất Excel";
+    if (btnDeleteText) btnDeleteText.innerText = selectedCount > 0 ? `Xóa ${selectedCount} dòng` : "Xóa";
+    
+    if (selectedCount === 0) {
+        if (btnExport) btnExport.setAttribute('disabled', 'true');
+        if (btnDelete) btnDelete.setAttribute('disabled', 'true');
+    } else {
+        if (btnExport) btnExport.removeAttribute('disabled');
+        if (btnDelete) btnDelete.removeAttribute('disabled');
+    }
     
     const listContainer = document.getElementById('kphLogsList');
     const mobileContainer = document.getElementById('kphLogsMobileList');
@@ -813,16 +895,25 @@ export async function exportKphToExcel() {
     const selectedLogs = kphLogs.filter(item => kphSelectedIds.has(item.id));
     
     if (selectedLogs.length === 0) {
-        alert("⚠️ Vui lòng tích chọn ít nhất 1 hàng dữ liệu ở cột ngoài cùng bên trái bảng trước khi xuất Excel.");
+        showAppleToast("⚠️ Vui lòng tích chọn ít nhất 1 hàng dữ liệu trước khi xuất Excel.", "warning");
         return;
     }
 
     // 1. Kiểm soát số lượng hàng chứa ảnh (tối đa 200 dòng có ảnh)
     const logsWithImages = selectedLogs.filter(item => item.image);
     if (logsWithImages.length > 200) {
-        alert("⚠️ Để đảm bảo bộ nhớ và tốc độ xử lý của thiết bị, bạn chỉ được chọn tối đa 200 dòng có ảnh minh chứng cho mỗi file Excel. Vui lòng phân trang hoặc bỏ tích chọn bớt.");
+        showAppleToast("⚠️ Để đảm bảo bộ nhớ, bạn chỉ được chọn tối đa 200 dòng có ảnh minh chứng cho mỗi file Excel.", "warning");
         return;
     }
+
+    const confirmExport = await showAppleConfirm({
+        title: "Xác nhận xuất Excel",
+        message: `Bạn có chắc chắn muốn xuất file Excel cho ${selectedLogs.length} bản ghi đã chọn?`,
+        confirmText: "Xuất file",
+        cancelText: "Hủy",
+        isPrimary: true
+    });
+    if (!confirmExport) return;
 
     const sortedSelectedLogs = sortKphLogs(selectedLogs);
 
@@ -1040,8 +1131,10 @@ export async function exportKphToExcel() {
         
         document.body.removeChild(downloadAnchor);
         URL.revokeObjectURL(downloadUrl);
+        
+        showAppleToast("Đã xuất file Excel thành công!", "success");
     } catch (err) {
         console.error("Export to Excel error:", err);
-        alert("⚠️ Đã xảy ra lỗi khi tạo file Excel. Hãy thử lại.");
+        showAppleToast("⚠️ Đã xảy ra lỗi khi tạo file Excel. Hãy thử lại.", "error");
     }
 }
