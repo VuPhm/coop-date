@@ -200,16 +200,17 @@ export function updateHistoryUI() {
         const remainingText = item.isExpiredProduct ? 'Đã hết HSD' : formatRemainingText(item.daysRemaining);
         const alertLabelText = item.isExpiredProduct ? 'Đã qua hạn lùi' : item.alertLabel;
         const dvtLabel = item.dvt || 'EA';
-        const qtyLabel = item.quantity !== undefined ? item.quantity : 1;
+        const qtyLabel = (item.quantity !== undefined && item.quantity !== "") ? item.quantity : "";
         const displayBarcode = item.barcode || 'Tra cứu không mã';
+        const displayQty = qtyLabel !== "" ? `x${qtyLabel} ${dvtLabel}` : "";
         
         return `
-            <li class="history-item ${item.alertClass}" onclick="window.loadHistoryItem('${item.nsx}', '${item.formattedHsd}', '${item.rawHsdDays}', '${item.barcode || ''}', ${qtyLabel}, '${dvtLabel}', '${(item.tenHang || '').replace(/'/g, "\\'")}')">
+            <li class="history-item ${item.alertClass}" onclick="window.loadHistoryItem('${item.nsx}', '${item.formattedHsd}', '${item.rawHsdDays}', '${item.barcode || ''}', '${qtyLabel}', '${dvtLabel}', '${(item.tenHang || '').replace(/'/g, "\\'")}')">
                 <div class="history-item__indicator"></div>
                 <div class="history-item__content">
                     <div class="history-item__header-row">
                         <span class="history-item__barcode">${displayBarcode}</span>
-                        <span class="history-item__qty-badge">x${qtyLabel} ${dvtLabel}</span>
+                        ${displayQty ? `<span class="history-item__qty-badge">${displayQty}</span>` : ''}
                     </div>
                     ${item.tenHang ? `<div class="history-item__name-row" style="font-size: 13px; font-weight: 600; color: var(--text-main); margin-top: 4px; margin-bottom: 2px; text-align: left;">${item.tenHang}</div>` : ''}
                     <div class="history-item__detail-row">
@@ -435,7 +436,7 @@ export async function exportHistoryToExcel() {
             worksheet.getCell(`B${currentRow}`).value = inspectionDate;
             worksheet.getCell(`C${currentRow}`).value = item.barcode || '';
             worksheet.getCell(`D${currentRow}`).value = item.tenHang || '';
-            worksheet.getCell(`E${currentRow}`).value = item.quantity || 1;
+            worksheet.getCell(`E${currentRow}`).value = (item.quantity !== undefined && item.quantity !== "") ? item.quantity : "";
             
             // Tính toán Mốc 40% và Hạn lùi 20%
             let date40Str = '-';
@@ -478,7 +479,21 @@ export async function exportHistoryToExcel() {
             const columns = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
             columns.forEach(col => {
                 const cell = worksheet.getCell(`${col}${currentRow}`);
-                cell.font = { name: 'Times New Roman', size: 10 };
+                
+                if (col === 'H') {
+                    // Màu sắc có độ tương phản cao, in rõ nét không bị nhạt
+                    let fontColor = '000000';
+                    if (alertType === 'safe') fontColor = '006633';       // Xanh lá đậm
+                    else if (alertType === 'warning') fontColor = 'B85C00'; // Cam đất đậm
+                    else if (alertType === 'danger') fontColor = 'C60000';  // Đỏ đậm
+                    else if (alertType === 'expired') fontColor = '800000'; // Đỏ đô đậm
+                    else if (alertType === 'other') fontColor = '4A4A4A';   // Xám đậm
+                    
+                    cell.font = { name: 'Times New Roman', size: 10, bold: true, color: { argb: fontColor } };
+                } else {
+                    cell.font = { name: 'Times New Roman', size: 10 };
+                }
+                
                 cell.border = {
                     top: { style: 'thin' },
                     left: { style: 'thin' },

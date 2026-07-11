@@ -277,8 +277,8 @@ export function executeCalculation(saveToHistory = true) {
     const barcodeVal = document.getElementById('barcode').value.trim();
     const tenHangVal = document.getElementById('tenHang') ? document.getElementById('tenHang').value.trim() : '';
     const quantityRawVal = document.getElementById('quantity').value.trim();
-    let quantityVal = parseFloat(quantityRawVal || "1");
-    if (isNaN(quantityVal)) quantityVal = 1;
+    let quantityVal = quantityRawVal !== "" ? parseFloat(quantityRawVal) : "";
+    if (quantityRawVal !== "" && isNaN(quantityVal)) quantityVal = "";
     const calcDvtVal = document.querySelector('input[name="calcDvt"]:checked').value;
 
     const wrapper = document.getElementById('resultWrapper');
