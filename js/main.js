@@ -69,7 +69,13 @@ import {
     initKphFlatpickrs,
     openKphCreateModal,
     closeKphCreateModal,
-    toggleStoreSettingsEdit
+    toggleStoreSettingsEdit,
+    openKphApproveModal,
+    closeKphApproveModal,
+    openKphApproveNgayXuLyPicker,
+    saveKphApproval,
+    toggleApproveBienPhapRadio,
+    toggleApproveNguoiDuyetEdit
 } from './kph.js';
 
 // State của màn hình chính
@@ -704,6 +710,13 @@ window.closeKphCreateModal = closeKphCreateModal;
 window.toggleStoreSettingsEdit = toggleStoreSettingsEdit;
 window.closeResultModal = closeResultModal;
 window.openResultModal = openResultModal;
+
+window.openKphApproveModal = openKphApproveModal;
+window.closeKphApproveModal = closeKphApproveModal;
+window.openKphApproveNgayXuLyPicker = openKphApproveNgayXuLyPicker;
+window.saveKphApproval = saveKphApproval;
+window.toggleApproveBienPhapRadio = toggleApproveBienPhapRadio;
+window.toggleApproveNguoiDuyetEdit = toggleApproveNguoiDuyetEdit;
 
 export function toggleBarcodeFormats() {
     const container = document.getElementById('barcodeFormatsContainer');

@@ -5,8 +5,19 @@ export let activeTab = 'tracuu';
 export const kphLogs = [];
 export let kphImageBlob = null;
 export let kphImagePreviewUrl = null;
-export let kphNgayPicker, kphNgayXuLyPicker;
+export let kphNgayPicker, kphNgayXuLyPicker, kphApproveNgayXuLyPicker;
 export let kphFilterTuNgayPicker, kphFilterDenNgayPicker;
+
+// Định dạng ngày giờ dạng dd/mm/yyyy hh:mm:ss
+export function formatLocalDateTime(dateObj) {
+    const d = String(dateObj.getDate()).padStart(2, '0');
+    const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const y = dateObj.getFullYear();
+    const h = String(dateObj.getHours()).padStart(2, '0');
+    const mi = String(dateObj.getMinutes()).padStart(2, '0');
+    const s = String(dateObj.getSeconds()).padStart(2, '0');
+    return `${d}/${m}/${y} ${h}:${mi}:${s}`;
+}
 
 // Cấu hình lọc và sắp xếp bảng KPH
 export let kphSortField = null;
@@ -123,10 +134,29 @@ export function initKphFlatpickrs() {
             }
         });
     }
+    if (!kphApproveNgayXuLyPicker) {
+        kphApproveNgayXuLyPicker = flatpickr("#kphApproveNgayXuLyHidden", {
+            dateFormat: "d/m/Y",
+            position: "below",
+            appendTo: document.getElementById('kphApproveNgayXuLy').parentNode,
+            onChange: function (selectedDates, dateStr) {
+                document.getElementById('kphApproveNgayXuLy').value = dateStr;
+            }
+        });
+        document.getElementById('kphApproveNgayXuLy').addEventListener('input', () => {
+            const val = document.getElementById('kphApproveNgayXuLy').value.trim();
+            if (isValidDateStr(val)) {
+                kphApproveNgayXuLyPicker.setDate(parseLocalDate(val), false);
+            } else if (val === '') {
+                kphApproveNgayXuLyPicker.clear();
+            }
+        });
+    }
 }
 
 export function openKphNgayPicker() { if (kphNgayPicker) kphNgayPicker.open(); }
 export function openKphNgayXuLyPicker() { if (kphNgayXuLyPicker) kphNgayXuLyPicker.open(); }
+export function openKphApproveNgayXuLyPicker() { if (kphApproveNgayXuLyPicker) kphApproveNgayXuLyPicker.open(); }
 export function openFilterTuNgayPicker() { if (kphFilterTuNgayPicker) kphFilterTuNgayPicker.open(); }
 export function openFilterDenNgayPicker() { if (kphFilterDenNgayPicker) kphFilterDenNgayPicker.open(); }
 
@@ -165,9 +195,11 @@ export function updateCharCount(inputId, countId) {
 export function saveStoreSettings() {
     const cf = document.getElementById('kphCoopFood').value.trim();
     const store = document.getElementById('kphStore').value.trim();
+    const cht = document.getElementById('kphCht') ? document.getElementById('kphCht').value.trim() : '';
     localStorage.setItem('kph_coop_food', cf);
     localStorage.setItem('kph_store', store);
-    updateStoreSettingsLabels(cf, store);
+    localStorage.setItem('kph_cht', cht);
+    updateStoreSettingsLabels(cf, store, cht);
 }
 
 export function saveNguoiPhatHien() {
@@ -179,12 +211,15 @@ export function saveNguoiPhatHien() {
 export function loadStoreSettings() {
     const cf = localStorage.getItem('kph_coop_food') || '';
     const store = localStorage.getItem('kph_store') || '';
+    const cht = localStorage.getItem('kph_cht') || '';
     const name = localStorage.getItem('kph_nguoi_phat_hien') || '';
 
     document.getElementById('kphCoopFood').value = cf;
     document.getElementById('kphStore').value = store;
+    const inputCht = document.getElementById('kphCht');
+    if (inputCht) inputCht.value = cht;
     document.getElementById('kphNguoiPhatHien').value = name;
-    updateStoreSettingsLabels(cf, store);
+    updateStoreSettingsLabels(cf, store, cht);
 }
 
 // Xử lý nén ảnh minh chứng trên Canvas
@@ -357,6 +392,8 @@ export async function addKphLog() {
         bienPhapText,
         ngayXuLy,
         ghiChu,
+        trangThaiDuyet: 'cho_duyet',
+        thoiGianDuyet: '',
         image: kphImageBlob // Lưu trữ binary Blob trực tiếp
     };
 
@@ -740,9 +777,25 @@ export function updateKphLogsUI() {
                 bienPhapBadge = `<span class="badge badge-secondary" title="Biện pháp xử lý khác">${item.bienPhapText || 'KHÁC'}</span>`;
             }
 
-            const xlText = item.ngayXuLy ?
-                `<div class="xl-badge-wrapper">${bienPhapBadge}</div>` :
-                `<div class="xl-badge-wrapper">${bienPhapBadge} <span class="badge badge-unprocessed">Chưa xử lý</span></div>`;
+            const xlText = `<div class="xl-badge-wrapper">${bienPhapBadge}</div>`;
+            const ngayXlText = item.ngayXuLy ? 
+                item.ngayXuLy : 
+                `<span class="badge badge-unprocessed">Chưa xử lý</span>`;
+
+            const status = item.trangThaiDuyet || 'cho_duyet';
+            let approvalBtnHtml = '';
+            if (status === 'da_duyet') {
+                approvalBtnHtml = `<button class="btn-approval btn-approved" onclick="window.openKphApproveModal('${item.id}')">Đã duyệt</button>`;
+            } else if (status === 'khong_duyet') {
+                approvalBtnHtml = `<button class="btn-approval btn-rejected" onclick="window.openKphApproveModal('${item.id}')">Không duyệt</button>`;
+            } else {
+                approvalBtnHtml = `<button class="btn-approval btn-pending" onclick="window.openKphApproveModal('${item.id}')">Chờ duyệt</button>`;
+            }
+
+            const approvalTimeHtml = (status === 'cho_duyet') ? 
+                `<span class="thoi-gian-duyet-val cho-duyet">chưa duyệt</span>` : 
+                `<div class="thoi-gian-duyet-val">${item.thoiGianDuyet || '-'}</div>
+                 ${item.nguoiDuyet ? `<div style="font-size: 11px; color: var(--text-sub); margin-top: 2px;">Duyệt bởi: ${item.nguoiDuyet}</div>` : ''}`;
 
             return `
                 <tr ${isSelectedClass}>
@@ -750,6 +803,7 @@ export function updateKphLogsUI() {
                         <input type="checkbox" class="kph-checkbox" ${isChecked} onchange="window.toggleSelectRowKph('${item.id}')">
                     </td>
                     <td data-label="Ngày PH" style="text-align: center;">${item.ngayPhatHien}</td>
+                    <td data-label="Duyệt" style="text-align: center;">${approvalBtnHtml}</td>
                     <td data-label="SKU" style="font-weight: 600; font-family: monospace; text-align: center;">${item.sku}</td>
                     <td data-label="Tên hàng" style="font-weight: 500;">
                         ${item.tenHang}
@@ -760,7 +814,8 @@ export function updateKphLogsUI() {
                     <td data-label="Số lượng" style="text-align: center; font-weight: 600;">${item.soLuong}</td>
                     <td data-label="Tình trạng">${item.tinhTrang}</td>
                     <td data-label="Biện pháp" style="font-weight: 500;">${xlText}</td>
-                    <td data-label="Ngày XL" style="text-align: center;">${item.ngayXuLy || '-'}</td>
+                    <td data-label="Ngày XL" style="text-align: center;">${ngayXlText}</td>
+                    <td data-label="Thời gian duyệt" style="text-align: center;">${approvalTimeHtml}</td>
                     <td data-label="Người PH">${item.nguoiPhatHien || '-'}</td>
                     <td data-label="Ảnh" style="text-align: center;">${imgHtml}</td>
                     <td data-label="">
@@ -798,15 +853,38 @@ export function updateKphLogsUI() {
                 bienPhapBadge = `<span class="badge badge-secondary">${item.bienPhapText || 'Khác'}</span>`;
             }
 
-            const xlHtml = item.ngayXuLy ?
+            const mobileXlPlanHtml = `
+                <div class="kph-card-detail-row">
+                    <span class="detail-label">Biện pháp:</span>
+                    <span class="detail-val">${bienPhapBadge}</span>
+                </div>
+            `;
+            const mobileXlDateHtml = `
+                <div class="kph-card-detail-row">
+                    <span class="detail-label">Ngày xử lý:</span>
+                    <span class="detail-val">${item.ngayXuLy ? `<span style="font-weight:600;">${item.ngayXuLy}</span>` : `<span class="badge badge-unprocessed">Chưa xử lý</span>`}</span>
+                </div>
+            `;
+
+            const status = item.trangThaiDuyet || 'cho_duyet';
+
+            const mobileApprovalTimeHtml = (status !== 'cho_duyet') ? 
                 `<div class="kph-card-detail-row">
-                    <span class="detail-label">Xử lý:</span>
-                    <span class="detail-val">${bienPhapBadge} vào <span style="font-weight:600;">${item.ngayXuLy}</span></span>
-                 </div>` :
-                `<div class="kph-card-detail-row">
-                    <span class="detail-label">Xử lý:</span>
-                    <span class="detail-val">${bienPhapBadge} <span class="badge badge-unprocessed" style="margin-left: 4px;">Chưa xử lý</span></span>
-                 </div>`;
+                    <span class="detail-label">Thời gian duyệt:</span>
+                    <span class="detail-val" style="font-size: 11px;">
+                        <div>${item.thoiGianDuyet || '-'}</div>
+                        ${item.nguoiDuyet ? `<div style="font-size: 11.5px; color: var(--text-sub); margin-top: 2px;">Duyệt bởi: ${item.nguoiDuyet}</div>` : ''}
+                    </span>
+                 </div>` : '';
+
+            let mobileActionBtn = '';
+            if (status === 'da_duyet') {
+                mobileActionBtn = `<button type="button" class="btn-approval btn-approved" onclick="window.openKphApproveModal('${item.id}')">Đã duyệt</button>`;
+            } else if (status === 'khong_duyet') {
+                mobileActionBtn = `<button type="button" class="btn-approval btn-rejected" onclick="window.openKphApproveModal('${item.id}')">Không duyệt</button>`;
+            } else {
+                mobileActionBtn = `<button type="button" class="btn-approval btn-pending" onclick="window.openKphApproveModal('${item.id}')">Chờ duyệt</button>`;
+            }
 
             return `
                 <div class="kph-mobile-card ${isSelectedClass}">
@@ -833,7 +911,9 @@ export function updateKphLogsUI() {
                                 <span class="detail-label">Tình trạng:</span>
                                 <span class="detail-val" style="color: var(--brand-accent-orange); font-weight: 500;">${item.tinhTrang}</span>
                             </div>
-                            ${xlHtml}
+                            ${mobileXlPlanHtml}
+                            ${mobileXlDateHtml}
+                            ${mobileApprovalTimeHtml}
                             <div class="kph-card-detail-row">
                                 <span class="detail-label font-light">Người PH:</span>
                                 <span class="detail-val font-light">${item.nguoiPhatHien || '-'}</span>
@@ -850,6 +930,7 @@ export function updateKphLogsUI() {
                     </div>
                     
                     <div class="kph-card-actions">
+                        ${mobileActionBtn}
                         <button type="button" class="kph-card-btn-delete" onclick="window.removeKphLog('${item.id}')">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 14px; height: 14px; margin-right: 4px;">
                                 <polyline points="3 6 5 6 21 6"></polyline>
@@ -944,27 +1025,28 @@ export async function exportKphToExcel() {
             { key: 'xuatTra', width: 11 },
             { key: 'khac', width: 24 },
             { key: 'ngayXuLy', width: 14 },
-            { key: 'image', width: 20 }
+            { key: 'image', width: 20 },
+            { key: 'nguoiDuyet', width: 20 }
         ];
 
         worksheet.getCell('A1').value = 'CÔNG TY TNHH MTV THỰC PHẨM SAIGON CO.OP';
-        worksheet.getCell('A1').font = { name: 'Arial', bold: true, size: 9 };
-        worksheet.getCell('A1').alignment = { horizontal: 'left' };
+        worksheet.getCell('A1').font = { name: 'Times New Roman', bold: true, size: 9 };
+        worksheet.getCell('A1').alignment = { horizontal: 'left', wrapText: false };
 
         const coopFoodVal = document.getElementById('kphCoopFood').value.trim();
         const storeVal = document.getElementById('kphStore').value.trim();
 
-        worksheet.getCell('J1').value = `CO.OP FOOD: ${coopFoodVal || '................................'}`;
-        worksheet.getCell('J1').font = { name: 'Arial', bold: true, size: 9 };
-        worksheet.getCell('J1').alignment = { horizontal: 'left' };
+        worksheet.getCell('A2').value = `CO.OP FOOD: ${coopFoodVal || '................................'}`;
+        worksheet.getCell('A2').font = { name: 'Times New Roman', bold: true, size: 9 };
+        worksheet.getCell('A2').alignment = { horizontal: 'left', wrapText: false };
 
-        worksheet.getCell('J2').value = `STORE: ${storeVal || '................................'}`;
-        worksheet.getCell('J2').font = { name: 'Arial', bold: true, size: 9 };
-        worksheet.getCell('J2').alignment = { horizontal: 'left' };
+        worksheet.getCell('A3').value = `STORE: ${storeVal || '................................'}`;
+        worksheet.getCell('A3').font = { name: 'Times New Roman', bold: true, size: 9 };
+        worksheet.getCell('A3').alignment = { horizontal: 'left', wrapText: false };
 
-        worksheet.mergeCells('A5:O5');
+        worksheet.mergeCells('A5:P5');
         worksheet.getCell('A5').value = 'PHIẾU THEO DÕI HÀNG KHÔNG PHÙ HỢP';
-        worksheet.getCell('A5').font = { name: 'Arial', bold: true, size: 15 };
+        worksheet.getCell('A5').font = { name: 'Times New Roman', bold: true, size: 15 };
         worksheet.getCell('A5').alignment = { vertical: 'middle', horizontal: 'center' };
         worksheet.getRow(5).height = 25;
 
@@ -980,6 +1062,7 @@ export async function exportKphToExcel() {
         worksheet.mergeCells('J7:M7');
         worksheet.mergeCells('N7:N8');
         worksheet.mergeCells('O7:O8');
+        worksheet.mergeCells('P7:P8');
 
         worksheet.getCell('A7').value = 'STT';
         worksheet.getCell('B7').value = 'NGÀY\nPHÁT\nHIỆN';
@@ -997,11 +1080,12 @@ export async function exportKphToExcel() {
         worksheet.getCell('M8').value = 'KHÁC (ghi rõ\nnội dung xử lý)';
         worksheet.getCell('N7').value = 'Ghi ngày\nxử lý';
         worksheet.getCell('O7').value = 'ẢNH MINH\nCHỨNG';
+        worksheet.getCell('P7').value = 'BĐH THEO DÕI\nXỬ LÝ\n(ký và ghi rõ họ tên)';
 
-        const headerCells = ['A7', 'B7', 'C7', 'D7', 'E7', 'F7', 'G7', 'H7', 'I7', 'J7', 'N7', 'O7', 'J8', 'K8', 'L8', 'M8'];
+        const headerCells = ['A7', 'B7', 'C7', 'D7', 'E7', 'F7', 'G7', 'H7', 'I7', 'J7', 'N7', 'O7', 'P7', 'J8', 'K8', 'L8', 'M8'];
         headerCells.forEach(cellId => {
             const cell = worksheet.getCell(cellId);
-            cell.font = { name: 'Arial', bold: true, size: 8.5, color: { argb: '000000' } };
+            cell.font = { name: 'Times New Roman', bold: true, size: 8.5, color: { argb: '000000' } };
             cell.fill = {
                 type: 'pattern',
                 pattern: 'solid',
@@ -1085,10 +1169,12 @@ export async function exportKphToExcel() {
                 worksheet.getCell(`O${currentRow}`).value = '';
             }
 
-            const columns = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O'];
+            worksheet.getCell(`P${currentRow}`).value = item.nguoiDuyet || '';
+
+            const columns = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P'];
             columns.forEach(col => {
                 const cell = worksheet.getCell(`${col}${currentRow}`);
-                cell.font = { name: 'Arial', size: 9 };
+                cell.font = { name: 'Times New Roman', size: 9 };
                 cell.border = {
                     top: { style: 'thin' },
                     left: { style: 'thin' },
@@ -1096,7 +1182,7 @@ export async function exportKphToExcel() {
                     right: { style: 'thin' }
                 };
 
-                const isCentered = ['A', 'B', 'C', 'F', 'G', 'J', 'K', 'L', 'N', 'O'].includes(col);
+                const isCentered = ['A', 'B', 'C', 'F', 'G', 'J', 'K', 'L', 'N', 'O', 'P'].includes(col);
                 cell.alignment = {
                     vertical: 'middle',
                     horizontal: isCentered ? 'center' : 'left',
@@ -1109,16 +1195,16 @@ export async function exportKphToExcel() {
         worksheet.getRow(footerRow).height = 20;
 
         worksheet.getCell(`A${footerRow}`).value = 'BM-331.CF';
-        worksheet.getCell(`A${footerRow}`).font = { name: 'Arial', italic: true, size: 8.5 };
-        worksheet.getCell(`A${footerRow}`).alignment = { vertical: 'middle', horizontal: 'left' };
+        worksheet.getCell(`A${footerRow}`).font = { name: 'Times New Roman', italic: true, size: 8.5 };
+        worksheet.getCell(`A${footerRow}`).alignment = { vertical: 'middle', horizontal: 'left', wrapText: false };
 
         worksheet.getCell(`G${footerRow}`).value = 'Lần ban hành: 01';
-        worksheet.getCell(`G${footerRow}`).font = { name: 'Arial', italic: true, size: 8.5 };
-        worksheet.getCell(`G${footerRow}`).alignment = { vertical: 'middle', horizontal: 'center' };
+        worksheet.getCell(`G${footerRow}`).font = { name: 'Times New Roman', italic: true, size: 8.5 };
+        worksheet.getCell(`G${footerRow}`).alignment = { vertical: 'middle', horizontal: 'center', wrapText: false };
 
-        worksheet.getCell(`N${footerRow}`).value = 'Trang 1 / 1';
-        worksheet.getCell(`N${footerRow}`).font = { name: 'Arial', italic: true, size: 8.5 };
-        worksheet.getCell(`N${footerRow}`).alignment = { vertical: 'middle', horizontal: 'right' };
+        worksheet.getCell(`P${footerRow}`).value = 'Trang 1 / 1';
+        worksheet.getCell(`P${footerRow}`).font = { name: 'Times New Roman', italic: true, size: 8.5 };
+        worksheet.getCell(`P${footerRow}`).alignment = { vertical: 'middle', horizontal: 'right', wrapText: false };
 
         // Viết Buffer và xuất file thông qua thẻ download bản địa để giải phóng bộ nhớ
         const buffer = await workbook.xlsx.writeBuffer();
@@ -1188,9 +1274,165 @@ export function toggleStoreSettingsEdit(editMode) {
     }
 }
 
-export function updateStoreSettingsLabels(cf, store) {
+export function updateStoreSettingsLabels(cf, store, cht) {
     const lblCf = document.getElementById('lblCoopFood');
     const lblStore = document.getElementById('lblStore');
+    const lblCht = document.getElementById('lblCht');
     if (lblCf) lblCf.textContent = cf || 'Chưa thiết lập';
     if (lblStore) lblStore.textContent = store || 'Chưa thiết lập';
+    if (lblCht) lblCht.textContent = cht || 'Chưa thiết lập';
+}
+
+export function openKphApproveModal(id) {
+    const log = kphLogs.find(item => item.id === id);
+    if (!log) return;
+
+    document.getElementById('kphApproveId').value = id;
+
+    // Set approval status radio
+    const status = log.trangThaiDuyet || 'cho_duyet';
+    const statusRadio = document.getElementById(`kphApproveStatus${status === 'cho_duyet' ? 'Cho' : status === 'da_duyet' ? 'Da' : 'Khong'}`);
+    if (statusRadio) statusRadio.checked = true;
+
+    // Set biện pháp xử lý radio
+    const bienPhap = log.bienPhap || 'HỦY';
+    let bpRadioId = 'kphApproveBienPhapHuy';
+    if (bienPhap === 'ĐỔI') bpRadioId = 'kphApproveBienPhapDoi';
+    else if (bienPhap === 'XUẤT TRẢ') bpRadioId = 'kphApproveBienPhapXuatTra';
+    else if (bienPhap === 'KHÁC') bpRadioId = 'kphApproveBienPhapKhac';
+    
+    const bpRadio = document.getElementById(bpRadioId);
+    if (bpRadio) bpRadio.checked = true;
+
+    // If KHÁC, show textarea and fill content
+    const colKhac = document.getElementById('colApproveBienPhapKhac');
+    if (colKhac) {
+        colKhac.style.display = (bienPhap === 'KHÁC') ? '' : 'none';
+    }
+    const khacInput = document.getElementById('kphApproveBienPhapKhacInput');
+    if (khacInput) {
+        khacInput.value = (bienPhap === 'KHÁC') ? (log.bienPhapText || '') : '';
+        updateCharCount('kphApproveBienPhapKhacInput', 'bpApproveKhacCharCount');
+    }
+
+    // Set ngày xử lý
+    const ngayXuLy = log.ngayXuLy || '';
+    document.getElementById('kphApproveNgayXuLy').value = ngayXuLy;
+    if (kphApproveNgayXuLyPicker) {
+        if (isValidDateStr(ngayXuLy)) {
+            kphApproveNgayXuLyPicker.setDate(parseLocalDate(ngayXuLy), false);
+        } else {
+            kphApproveNgayXuLyPicker.clear();
+        }
+    }
+
+    // Set người duyệt
+    const nguoiDuyet = log.nguoiDuyet !== undefined ? log.nguoiDuyet : (localStorage.getItem('kph_cht') || '');
+    const nguoiDuyetInput = document.getElementById('kphApproveNguoiDuyet');
+    if (nguoiDuyetInput) {
+        nguoiDuyetInput.value = nguoiDuyet;
+    }
+    const nguoiDuyetText = document.getElementById('kphApproveNguoiDuyetText');
+    if (nguoiDuyetText) {
+        nguoiDuyetText.textContent = nguoiDuyet || 'Chưa thiết lập';
+    }
+    toggleApproveNguoiDuyetEdit(false);
+
+    // Open modal
+    const modal = document.getElementById('kphApproveModal');
+    if (modal) {
+        modal.classList.add('active');
+        const modalContent = modal.querySelector('.apple-modal-content');
+        if (modalContent) modalContent.scrollTop = 0;
+    }
+}
+
+export function closeKphApproveModal() {
+    const modal = document.getElementById('kphApproveModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+export function toggleApproveNguoiDuyetEdit(editable) {
+    const displayDiv = document.getElementById('kphApproveNguoiDuyetDisplay');
+    const editDiv = document.getElementById('kphApproveNguoiDuyetEdit');
+    const inputField = document.getElementById('kphApproveNguoiDuyet');
+    const textLabel = document.getElementById('kphApproveNguoiDuyetText');
+
+    if (displayDiv && editDiv) {
+        if (editable) {
+            displayDiv.classList.add('hidden');
+            editDiv.classList.remove('hidden');
+            if (inputField) inputField.focus();
+        } else {
+            displayDiv.classList.remove('hidden');
+            editDiv.classList.add('hidden');
+            if (textLabel && inputField) {
+                textLabel.textContent = inputField.value.trim() || 'Chưa thiết lập';
+            }
+        }
+    }
+}
+
+export function toggleApproveBienPhapRadio(val) {
+    const col = document.getElementById('colApproveBienPhapKhac');
+    if (col) {
+        col.style.display = (val === 'KHÁC') ? '' : 'none';
+    }
+}
+
+export async function saveKphApproval() {
+    const id = document.getElementById('kphApproveId').value;
+    const logIdx = kphLogs.findIndex(item => item.id === id);
+    if (logIdx === -1) return;
+
+    const currentLog = kphLogs[logIdx];
+
+    const statusRadio = document.querySelector('input[name="kphApproveStatusRadio"]:checked');
+    const newStatus = statusRadio ? statusRadio.value : 'cho_duyet';
+
+    const bpRadio = document.querySelector('input[name="kphApproveBienPhapRadio"]:checked');
+    const newBienPhap = bpRadio ? bpRadio.value : 'HỦY';
+    let newBienPhapText = newBienPhap;
+    if (newBienPhap === 'KHÁC') {
+        newBienPhapText = document.getElementById('kphApproveBienPhapKhacInput').value.trim();
+        if (!newBienPhapText) newBienPhapText = 'KHÁC';
+    }
+
+    const newNgayXuLy = document.getElementById('kphApproveNgayXuLy').value.trim();
+    const newNguoiDuyet = document.getElementById('kphApproveNguoiDuyet') ? document.getElementById('kphApproveNguoiDuyet').value.trim() : '';
+
+    // Determine thoiGianDuyet
+    let thoiGianDuyet = currentLog.thoiGianDuyet || '';
+    if (newStatus !== currentLog.trangThaiDuyet) {
+        if (newStatus === 'cho_duyet') {
+            thoiGianDuyet = '';
+        } else {
+            thoiGianDuyet = formatLocalDateTime(new Date());
+        }
+    } else if ((newStatus === 'da_duyet' || newStatus === 'khong_duyet') && !thoiGianDuyet) {
+        thoiGianDuyet = formatLocalDateTime(new Date());
+    }
+
+    const updatedLog = {
+        ...currentLog,
+        trangThaiDuyet: newStatus,
+        thoiGianDuyet: thoiGianDuyet,
+        nguoiDuyet: newNguoiDuyet,
+        bienPhap: newBienPhap,
+        bienPhapText: newBienPhapText,
+        ngayXuLy: newNgayXuLy
+    };
+
+    try {
+        await addLog(updatedLog); // IndexedDB put
+        kphLogs[logIdx] = updatedLog;
+        showAppleToast("Đã cập nhật duyệt phiếu thành công.", "success");
+        updateKphLogsUI();
+        closeKphApproveModal();
+    } catch (e) {
+        console.error("Failed to update approval in IndexedDB", e);
+        showAppleToast("⚠️ Lỗi xảy ra khi lưu trạng thái duyệt.", "error");
+    }
 }

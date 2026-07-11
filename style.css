@@ -2515,10 +2515,33 @@
 
     .kph-card-actions {
         display: flex;
-        justify-content: flex-end;
+        justify-content: space-between;
         align-items: center;
         border-top: 1px solid #f2f2f7;
         padding-top: 8px;
+    }
+
+    .kph-card-btn-approve {
+        background: transparent;
+        border: none;
+        color: var(--brand-primary);
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        padding: 6px 10px;
+        border-radius: 6px;
+        transition: background-color 0.2s;
+    }
+
+    .kph-card-btn-approve:hover {
+        background-color: var(--status-green-bg);
+    }
+
+    .kph-card-actions .btn-approval {
+        padding: 6px 12px;
+        font-size: 12px;
     }
 
     .kph-card-btn-delete {
@@ -2593,6 +2616,135 @@
     .xl-desc {
         font-size: 12px;
         color: var(--text-sub);
+    }
+
+    /* Status Approval button styles for KPH logs list */
+    .btn-approval {
+        display: inline-block;
+        padding: 5px 8px;
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 1.2;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: baseline;
+        border-radius: 6px;
+        text-transform: uppercase;
+        border: 1px solid transparent;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .btn-approval:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+    .btn-approval:active {
+        transform: translateY(0);
+    }
+    .btn-approved {
+        background-color: var(--status-green-bg);
+        border-color: var(--status-green-border);
+        color: var(--status-green-text);
+    }
+    .btn-rejected {
+        background-color: var(--status-red-bg);
+        border-color: var(--status-red-border);
+        color: var(--status-red-text);
+    }
+    .btn-pending {
+        background-color: var(--status-yellow-bg);
+        border-color: var(--status-yellow-border);
+        color: var(--status-yellow-text);
+    }
+
+    /* Active states for approval status in kphApproveModal */
+    .kph-card-radio-label.cho-duyet span,
+    .kph-card-radio-label.cho-duyet .kph-card-radio-icon svg {
+        color: var(--status-yellow-text);
+    }
+    .kph-card-radio-label.da-duyet span,
+    .kph-card-radio-label.da-duyet .kph-card-radio-icon svg {
+        color: var(--status-green-text);
+    }
+    .kph-card-radio-label.khong-duyet span,
+    .kph-card-radio-label.khong-duyet .kph-card-radio-icon svg {
+        color: var(--status-red-text);
+    }
+
+    #kphApproveStatusCho:checked+.cho-duyet {
+        border-color: var(--brand-accent-orange);
+        background-color: var(--status-yellow-bg);
+    }
+    #kphApproveStatusCho:checked+.cho-duyet span,
+    #kphApproveStatusCho:checked+.cho-duyet .kph-card-radio-icon svg {
+        color: var(--status-yellow-text);
+    }
+
+    #kphApproveStatusDa:checked+.da-duyet {
+        border-color: var(--brand-primary);
+        background-color: var(--status-green-bg);
+    }
+    #kphApproveStatusDa:checked+.da-duyet span,
+    #kphApproveStatusDa:checked+.da-duyet .kph-card-radio-icon svg {
+        color: var(--status-green-text);
+    }
+
+    #kphApproveStatusKhong:checked+.khong-duyet {
+        border-color: var(--brand-accent-red);
+        background-color: var(--status-red-bg);
+    }
+    #kphApproveStatusKhong:checked+.khong-duyet span,
+    #kphApproveStatusKhong:checked+.khong-duyet .kph-card-radio-icon svg {
+        color: var(--status-red-text);
+    }
+
+    /* Checked states for radio buttons in kphApproveModal */
+    #kphApproveBienPhapHuy:checked+.huy {
+        border-color: var(--brand-accent-red);
+        background-color: var(--status-red-bg);
+    }
+    #kphApproveBienPhapHuy:checked+.huy span,
+    #kphApproveBienPhapHuy:checked+.huy .kph-card-radio-icon svg {
+        color: var(--status-red-text);
+    }
+
+    #kphApproveBienPhapDoi:checked+.doi {
+        border-color: var(--brand-primary);
+        background-color: var(--status-green-bg);
+    }
+    #kphApproveBienPhapDoi:checked+.doi span,
+    #kphApproveBienPhapDoi:checked+.doi .kph-card-radio-icon svg {
+        color: var(--status-green-text);
+    }
+
+    #kphApproveBienPhapXuatTra:checked+.xuat-tra {
+        border-color: #007aff;
+        background-color: #eef7ff;
+    }
+    #kphApproveBienPhapXuatTra:checked+.xuat-tra span,
+    #kphApproveBienPhapXuatTra:checked+.xuat-tra .kph-card-radio-icon svg {
+        color: #007aff;
+    }
+
+    #kphApproveBienPhapKhac:checked+.khac-bp {
+        border-color: #8e8e93;
+        background-color: #f2f2f7;
+    }
+    #kphApproveBienPhapKhac:checked+.khac-bp span,
+    #kphApproveBienPhapKhac:checked+.khac-bp .kph-card-radio-icon svg {
+        color: #1c261c;
+    }
+
+    .thoi-gian-duyet-val {
+        font-family: monospace;
+        font-size: 11px;
+        color: var(--text-main);
+    }
+    
+    .thoi-gian-duyet-val.cho-duyet {
+        color: var(--text-sub);
+        font-style: italic;
+        font-family: inherit;
     }
 
     /* --- Component: Custom Apple Confirm Dialog & Toast --- */
