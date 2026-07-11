@@ -867,8 +867,12 @@
         color: #2b4539;
     }
 
-    .result-theme-safe #btnResultModalClose {
-        background-color: var(--brand-primary);
+    .result-theme-safe #btnResultModalCreateKph {
+        background-color: var(--brand-primary) !important;
+        color: white !important;
+    }
+    .result-theme-safe #btnResultModalCreateKph:hover {
+        background-color: #005229 !important;
     }
 
     .result-modal-content.result-theme-warning {
@@ -888,8 +892,12 @@
         color: #614113;
     }
 
-    .result-theme-warning #btnResultModalClose {
-        background-color: var(--brand-accent-orange);
+    .result-theme-warning #btnResultModalCreateKph {
+        background-color: var(--brand-accent-orange) !important;
+        color: white !important;
+    }
+    .result-theme-warning #btnResultModalCreateKph:hover {
+        background-color: #d17e00 !important;
     }
 
     .result-modal-content.result-theme-danger {
@@ -909,8 +917,12 @@
         color: #5c181c;
     }
 
-    .result-theme-danger #btnResultModalClose {
-        background-color: var(--brand-accent-red);
+    .result-theme-danger #btnResultModalCreateKph {
+        background-color: var(--brand-accent-red) !important;
+        color: white !important;
+    }
+    .result-theme-danger #btnResultModalCreateKph:hover {
+        background-color: #bd0410 !important;
     }
 
     .result-modal-content.result-theme-other {
@@ -930,8 +942,12 @@
         color: #4a544a;
     }
 
-    .result-theme-other #btnResultModalClose {
-        background-color: #667366;
+    .result-theme-other #btnResultModalCreateKph {
+        background-color: #667366 !important;
+        color: white !important;
+    }
+    .result-theme-other #btnResultModalCreateKph:hover {
+        background-color: #4f5a4f !important;
     }
 
     .result-modal-content.result-theme-expired {
@@ -951,8 +967,12 @@
         color: #555555;
     }
 
-    .result-theme-expired #btnResultModalClose {
-        background-color: #555555;
+    .result-theme-expired #btnResultModalCreateKph {
+        background-color: #555555 !important;
+        color: white !important;
+    }
+    .result-theme-expired #btnResultModalCreateKph:hover {
+        background-color: #3e3e3e !important;
     }
 
     /* --- Component: Barcode Camera Scanner --- */
@@ -1177,10 +1197,9 @@
     }
 
     .state-danger .history-item__meta,
-    .state-danger .history-item__status-line,
-    .state-danger div {
+    .state-danger .history-item__status-line {
         color: var(--brand-accent-red) !important;
-        opacity: 0.75;
+        opacity: 0.85;
     }
 
     .state-expired {
@@ -1403,6 +1422,23 @@
     .history-item:hover {
         filter: brightness(0.97);
         box-shadow: 0 4px 12px rgba(0, 66, 33, 0.04);
+    }
+
+    .history-item.is-selected {
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08) !important;
+        transform: scale(1.01);
+    }
+    .history-item.is-selected.state-safe {
+        border-color: var(--brand-primary) !important;
+    }
+    .history-item.is-selected.state-warning {
+        border-color: var(--brand-accent-orange) !important;
+    }
+    .history-item.is-selected.state-danger {
+        border-color: var(--brand-accent-red) !important;
+    }
+    .history-item.is-selected.state-expired {
+        border-color: #8e8e93 !important;
     }
 
     .history-item__indicator {

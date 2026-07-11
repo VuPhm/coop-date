@@ -63,14 +63,17 @@
           <span class="chrono-line__value mobile-only" id="widgetShortDate">---</span>
         </div>
         <button class="header-action-btn notification-btn" id="btnNotification" aria-label="Thông báo" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+            stroke-linejoin="round">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
           </svg>
           <span class="notification-badge">3</span>
         </button>
-        <button class="header-action-btn menu-personal-btn" id="btnOpenSidebar" aria-label="Cá nhân và cấu hình" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <button class="header-action-btn menu-personal-btn" id="btnOpenSidebar" aria-label="Cá nhân và cấu hình"
+          type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+            stroke-linejoin="round">
             <circle cx="12" cy="6" r="3.5"></circle>
             <path d="M4 12h16"></path>
             <path d="M6 16h12"></path>
@@ -221,7 +224,7 @@
         <div class="history-wrapper">
           <section class="history-board">
             <div class="history-board__header">
-              <h2 class="history-board__title">Lịch sử tra cứu</h2>
+              <h2 class="history-board__title">Lịch sử</h2>
               <div class="history-board__actions" style="display: flex; gap: 8px; align-items: center;">
                 <button id="btnExportHistoryExcel" class="btn-export-history-excel" onclick="exportHistoryToExcel()"
                   title="Xuất Excel" disabled>
@@ -1029,8 +1032,12 @@
         <div class="result-modal-main-text" id="resultModalMainText"></div>
         <div class="result-modal-sub-text" id="resultModalSubText"></div>
       </div>
-      <div class="kph-form-actions" style="margin-top: 0; padding: 16px 20px; border-top: 1px solid #f2f2f7; background: var(--surface);">
-        <button class="btn-action" onclick="closeResultModal()" id="btnResultModalClose" style="margin: 0; width: 100%;">Đồng ý</button>
+      <div class="kph-form-actions"
+        style="margin-top: 0; padding: 16px 20px; border-top: 1px solid #f2f2f7; background: var(--surface);">
+        <button class="btn-action" onclick="createKphFromCalculation()" id="btnResultModalCreateKph"
+          style="margin: 0; display: none;">Tạo phiếu KPH</button>
+        <button class="btn-secondary" onclick="closeResultModal()" id="btnResultModalClose"
+          style="margin: 0;">Đồng ý</button>
       </div>
     </div>
   </div>
@@ -1096,21 +1103,21 @@
     <div class="sidebar-content">
       <div class="sidebar-section">
         <h4 class="sidebar-section-title">Cấu hình chung</h4>
-        
+
         <div class="form-field" style="margin-bottom: 16px;">
           <label class="form-label" for="sidebarCoopFood">CO.OP FOOD (Đơn vị)</label>
           <div class="form-input-wrapper">
             <input class="form-input" type="text" id="sidebarCoopFood" placeholder="Nhập đơn vị">
           </div>
         </div>
-        
+
         <div class="form-field" style="margin-bottom: 16px;">
           <label class="form-label" for="sidebarStore">STORE (Cửa hàng)</label>
           <div class="form-input-wrapper">
             <input class="form-input" type="text" id="sidebarStore" placeholder="Nhập cửa hàng">
           </div>
         </div>
-        
+
         <div class="form-field" style="margin-bottom: 16px;">
           <label class="form-label" for="sidebarCht">CỬA HÀNG TRƯỞNG (CHT)</label>
           <div class="form-input-wrapper">
@@ -1118,10 +1125,12 @@
           </div>
         </div>
       </div>
-      
-      <div class="sidebar-section info-section" style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-color, rgba(0,0,0,0.08));">
+
+      <div class="sidebar-section info-section"
+        style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-color, rgba(0,0,0,0.08));">
         <h4 class="sidebar-section-title" style="margin-bottom: 8px;">Thông tin ứng dụng</h4>
-        <div class="info-item" style="font-size: 13px; color: var(--text-secondary); display: flex; justify-content: space-between; align-items: center;">
+        <div class="info-item"
+          style="font-size: 13px; color: var(--text-secondary); display: flex; justify-content: space-between; align-items: center;">
           <span class="info-label">Chi tiết:</span>
           <span id="appVersionNote" class="info-value" style="font-weight: 600;">Đang tải...</span>
         </div>

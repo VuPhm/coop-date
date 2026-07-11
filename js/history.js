@@ -17,6 +17,11 @@ import {
 export const historyData = [];
 export const activeFilters = new Set(['all']);
 export let isPrioritySort = false;
+export let selectedHistoryId = null;
+
+export function setSelectedHistoryId(id) {
+    selectedHistoryId = id;
+}
 
 export function setFilter(filterType) { 
     if (filterType === 'all') {
@@ -216,9 +221,10 @@ export function updateHistoryUI() {
         const qtyLabel = (item.quantity !== undefined && item.quantity !== "") ? item.quantity : "";
         const displayBarcode = item.barcode || 'Tra cứu không mã';
         const displayQty = qtyLabel !== "" ? `x${qtyLabel} ${dvtLabel}` : "";
+        const isSelected = item.id === selectedHistoryId;
         
         return `
-            <li class="history-item ${item.alertClass}" onclick="window.loadHistoryItem('${item.nsx}', '${item.formattedHsd}', '${item.rawHsdDays}', '${item.barcode || ''}', '${qtyLabel}', '${dvtLabel}', '${(item.tenHang || '').replace(/'/g, "\\'")}')">
+            <li class="history-item ${item.alertClass} ${isSelected ? 'is-selected' : ''}" onclick="window.loadHistoryItem('${item.nsx}', '${item.formattedHsd}', '${item.rawHsdDays}', '${item.barcode || ''}', '${qtyLabel}', '${dvtLabel}', '${(item.tenHang || '').replace(/'/g, "\\'")}', '${item.id}')">
                 <div class="history-item__indicator"></div>
                 <div class="history-item__content">
                     <div class="history-item__header-row">
@@ -252,7 +258,8 @@ export function updateHistoryUI() {
     }).join('');
 } 
 
-export function loadHistoryItem(nsx, hsdDate, hsdDays, barcode = "", quantity = 1, dvt = "EA", tenHang = "") { 
+export function loadHistoryItem(nsx, hsdDate, hsdDays, barcode = "", quantity = 1, dvt = "EA", tenHang = "", id = null) { 
+    selectedHistoryId = id;
     const toggleSwitch = document.getElementById('calcModeToggle');
     if (toggleSwitch && toggleSwitch.checked) {
         toggleSwitch.checked = false;
@@ -265,6 +272,7 @@ export function loadHistoryItem(nsx, hsdDate, hsdDays, barcode = "", quantity = 
     }
 
     function proceedLoading() {
+        updateHistoryUI();
         import('./main.js').then(module => {
             document.getElementById('nsx').value = nsx; 
             if (module.nsxFlatpickr) module.nsxFlatpickr.setDate(nsx, false); 

@@ -249,6 +249,8 @@ export function openResultModal(theme, title, mainText, subText, iconHtml) {
     const mainEl = document.getElementById('resultModalMainText');
     const subEl = document.getElementById('resultModalSubText');
     const iconEl = document.getElementById('resultModalIcon');
+    const btnCreateKph = document.getElementById('btnResultModalCreateKph');
+    const btnClose = document.getElementById('btnResultModalClose');
 
     // Reset themes
     if (content) {
@@ -261,6 +263,21 @@ export function openResultModal(theme, title, mainText, subText, iconHtml) {
     if (subEl) subEl.innerHTML = subText;
     if (iconEl) iconEl.innerHTML = iconHtml;
 
+    // Toggle button layout based on status/error
+    if (theme === 'danger' && title === 'Lỗi tra cứu') {
+        if (btnCreateKph) btnCreateKph.style.display = 'none';
+        if (btnClose) {
+            btnClose.className = 'btn-action btn-danger';
+            btnClose.style.width = '100%';
+        }
+    } else {
+        if (btnCreateKph) btnCreateKph.style.display = 'flex';
+        if (btnClose) {
+            btnClose.className = 'btn-secondary';
+            btnClose.style.width = 'auto';
+        }
+    }
+
     modal.classList.add('active');
 }
 
@@ -272,6 +289,12 @@ export function closeResultModal() {
 }
 
 export function executeCalculation(saveToHistory = true) {
+    if (saveToHistory) {
+        import('./history.js').then(module => {
+            module.setSelectedHistoryId(null);
+            module.updateHistoryUI();
+        });
+    }
     const nsxVal = document.getElementById('nsx').value.trim();
     const hsdDateVal = document.getElementById('hsdDate').value.trim();
     const hsdDaysVal = document.getElementById('hsdDays').value.trim();
@@ -783,4 +806,47 @@ export function toggleBarcodeFormats() {
     }
 }
 window.toggleBarcodeFormats = toggleBarcodeFormats;
+
+export function createKphFromCalculation() {
+    const tenHangVal = document.getElementById('tenHang') ? document.getElementById('tenHang').value.trim() : '';
+    const barcodeVal = document.getElementById('barcode') ? document.getElementById('barcode').value.trim() : '';
+    const quantityVal = document.getElementById('quantity') ? document.getElementById('quantity').value.trim() : '';
+    
+    // Get unit radio selection from lookup form
+    const calcDvtKg = document.getElementById('calcDvtKg');
+    const dvtVal = (calcDvtKg && calcDvtKg.checked) ? 'kg' : 'EA';
+
+    // Close result modal
+    closeResultModal();
+
+    // Switch to KPH tab
+    switchTab('kph');
+
+    // Open KPH Create Modal
+    openKphCreateModal();
+
+    // Fill values into KPH form
+    const kphTenHang = document.getElementById('kphTenHang');
+    const kphSku = document.getElementById('kphSku');
+    const kphSoLuong = document.getElementById('kphSoLuong');
+    
+    if (kphTenHang) kphTenHang.value = tenHangVal;
+    if (kphSku) kphSku.value = barcodeVal;
+    if (kphSoLuong) kphSoLuong.value = quantityVal;
+
+    // Check correct radio button for KPH unit
+    const kphDvtEA = document.getElementById('kphDvtEA');
+    const kphDvtKg = document.getElementById('kphDvtKg');
+    if (dvtVal === 'kg') {
+        if (kphDvtKg) kphDvtKg.checked = true;
+    } else {
+        if (kphDvtEA) kphDvtEA.checked = true;
+    }
+
+    // Trigger input / change events so char counts and layout update
+    if (kphTenHang) {
+        kphTenHang.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+}
+window.createKphFromCalculation = createKphFromCalculation;
 
