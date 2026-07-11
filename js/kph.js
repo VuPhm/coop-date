@@ -427,8 +427,19 @@ export async function addKphLog() {
     const ngayXuLy = document.getElementById('kphNgayXuLy').value.trim();
     const ghiChu = document.getElementById('kphGhiChu').value.trim();
 
-    if (!ngayPhatHien || !sku || !tenHang || isNaN(soLuong) || !nguoiPhatHien || !ncc) {
-        showAppleToast("⚠️ Vui lòng điền các trường bắt buộc: Ngày phát hiện, Mã SKU/UPC, Tên hàng hóa, Nhà cung cấp, Số lượng, Người phát hiện.", "warning");
+    // Kiểm tra các trường bắt buộc
+    if (!ngayPhatHien || isNaN(soLuong) || !nguoiPhatHien) {
+        showAppleToast("⚠️ Vui lòng điền đầy đủ các thông tin: Ngày phát hiện, Số lượng, Người phát hiện.", "warning");
+        return;
+    }
+
+    if (!sku && !tenHang) {
+        showAppleToast("⚠️ Vui lòng điền ít nhất Mã SKU/UPC hoặc Tên hàng hóa.", "warning");
+        return;
+    }
+
+    if (!kphImageBlob) {
+        showAppleToast("⚠️ Ảnh minh chứng là bắt buộc. Vui lòng chụp hoặc chọn ảnh từ thư viện.", "warning");
         return;
     }
 
@@ -890,8 +901,7 @@ export function updateKphLogsUI() {
 
             const approvalTimeHtml = (status === 'cho_duyet') ? 
                 `<span class="thoi-gian-duyet-val cho-duyet">chưa duyệt</span>` : 
-                `<div class="thoi-gian-duyet-val">${item.thoiGianDuyet || '-'}</div>
-                 ${item.nguoiDuyet ? `<div style="font-size: 11px; color: var(--text-sub); margin-top: 2px;">Duyệt bởi: ${item.nguoiDuyet}</div>` : ''}`;
+                `<div class="thoi-gian-duyet-val">${item.thoiGianDuyet || '-'}</div>`;
 
             return `
                 <tr ${isSelectedClass}>
@@ -969,7 +979,6 @@ export function updateKphLogsUI() {
                     <span class="detail-label">Thời gian duyệt:</span>
                     <span class="detail-val" style="font-size: 11px;">
                         <div>${item.thoiGianDuyet || '-'}</div>
-                        ${item.nguoiDuyet ? `<div style="font-size: 11.5px; color: var(--text-sub); margin-top: 2px;">Duyệt bởi: ${item.nguoiDuyet}</div>` : ''}
                     </span>
                  </div>` : '';
 
