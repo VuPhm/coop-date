@@ -321,6 +321,7 @@
         align-items: center;
         width: 100%;
         margin-bottom: 2px;
+        min-height: 24px;
     }
 
     .nsx-toggle-container {
@@ -3076,6 +3077,10 @@
     }
 
     .store-settings-text {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
         line-height: 1.4;
     }
 
@@ -3660,6 +3665,25 @@
         width: 100% !important;
         flex: none !important;
         margin-top: 0 !important;
+    }
+
+    /* Store Settings Compact layout on mobile */
+    .store-settings-info {
+        align-items: flex-start;
+    }
+
+    .store-settings-info .settings-icon-primary {
+        margin-top: 2px;
+    }
+
+    .store-settings-text {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .store-settings-divider {
+        display: none;
     }
 }
 

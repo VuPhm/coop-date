@@ -248,10 +248,13 @@
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                 <circle cx="12" cy="10" r="3"></circle>
               </svg>
-              <span class="store-settings-text">
-                Đơn vị: <strong id="lblCoopFood">Chưa thiết lập</strong> | Cửa hàng: <strong id="lblStore">Chưa thiết
-                  lập</strong> | CHT: <strong id="lblCht">Chưa thiết lập</strong>
-              </span>
+              <div class="store-settings-text">
+                <span class="store-settings-item">Đơn vị: <strong id="lblCoopFood">Chưa thiết lập</strong></span>
+                <span class="store-settings-divider">|</span>
+                <span class="store-settings-item">Cửa hàng: <strong id="lblStore">Chưa thiết lập</strong></span>
+                <span class="store-settings-divider">|</span>
+                <span class="store-settings-item">CHT: <strong id="lblCht">Chưa thiết lập</strong></span>
+              </div>
             </div>
             <button type="button" class="btn-settings-edit"
               onclick="event.stopPropagation(); toggleStoreSettingsEdit(true);">
