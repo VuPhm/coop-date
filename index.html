@@ -1021,18 +1021,16 @@
   <div id="resultModal" class="apple-modal" onclick="closeResultModal()">
     <div class="apple-modal-content result-modal-content" onclick="event.stopPropagation()">
       <div class="result-modal-header" id="resultModalHeader">
-        <h3 class="apple-modal-title" style="color: white;" id="resultModalTitle">Kết quả tra cứu</h3>
-        <button class="apple-modal-close-btn" onclick="closeResultModal()"
-          style="color: white; font-size: 24px; opacity: 0.85; border: none; background: transparent; cursor: pointer;">&times;</button>
+        <h3 class="apple-modal-title" id="resultModalTitle">Kết quả tra cứu</h3>
+        <button class="apple-modal-close-btn" onclick="closeResultModal()">&times;</button>
       </div>
       <div class="result-modal-body" id="resultModalBody">
         <div class="result-modal-icon-container" id="resultModalIcon"></div>
         <div class="result-modal-main-text" id="resultModalMainText"></div>
         <div class="result-modal-sub-text" id="resultModalSubText"></div>
       </div>
-      <div class="result-modal-footer">
-        <button class="btn-action" onclick="closeResultModal()" id="btnResultModalClose"
-          style="width: 100%; margin: 0;">Đồng ý</button>
+      <div class="kph-form-actions" style="margin-top: 0; padding: 16px 20px; border-top: 1px solid #f2f2f7; background: var(--surface);">
+        <button class="btn-action" onclick="closeResultModal()" id="btnResultModalClose" style="margin: 0; width: 100%;">Đồng ý</button>
       </div>
     </div>
   </div>

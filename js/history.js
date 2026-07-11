@@ -123,7 +123,20 @@ export function clearAllHistory() {
     if (historyData.length === 0) return;
     showAppleConfirm({
         title: "Xóa toàn bộ lịch sử",
-        message: "Bạn có chắc chắn muốn xóa toàn bộ lịch sử tra cứu?",
+        htmlContent: `
+            <div style="text-align: center; padding: 10px 0;">
+                <div style="width: 52px; height: 52px; border-radius: 50%; background-color: var(--status-red-bg); color: var(--brand-accent-red); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 24px; height: 24px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                </div>
+                <p style="font-size: 15px; font-weight: 600; color: var(--text-main); margin-bottom: 8px;">Bạn có chắc chắn muốn xóa toàn bộ lịch sử tra cứu?</p>
+                <p style="font-size: 13px; color: var(--text-sub); margin-bottom: 16px;">Hành động này không thể hoàn tác.</p>
+                
+                <div style="background-color: var(--bg-base); border-radius: 12px; padding: 16px; text-align: center; border: 1px solid var(--status-red-border);">
+                    <div style="font-size: 28px; font-weight: 800; color: var(--brand-accent-red);">${historyData.length}</div>
+                    <div style="font-size: 12px; font-weight: 600; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px;">Lượt tra cứu sẽ bị xóa sạch</div>
+                </div>
+            </div>
+        `,
         confirmText: "Xóa sạch",
         cancelText: "Hủy",
         isDanger: true
@@ -302,8 +315,23 @@ export async function exportHistoryToExcel() {
     const count = displayData.length;
     const confirmExport = await showAppleConfirm({
         title: "Xác nhận xuất Excel",
-        message: `Bạn có chắc chắn muốn xuất file Excel cho nhóm lọc "${groupText}" gồm ${count} dòng?`,
-        confirmText: "Xuất file",
+        htmlContent: `
+            <div style="text-align: center; padding: 10px 0;">
+                <div style="width: 52px; height: 52px; border-radius: 50%; background-color: var(--status-green-bg); color: var(--brand-primary); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 24px; height: 24px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                </div>
+                <p style="font-size: 15px; font-weight: 600; color: var(--text-main); margin-bottom: 8px;">Bạn có chắc chắn muốn xuất dữ liệu ra file Excel?</p>
+                <p style="font-size: 13px; color: var(--text-sub); margin-bottom: 16px;">Tệp Excel (.xlsx) chứa lịch sử tra cứu của bạn sẽ được tải xuống.</p>
+                
+                <div style="background-color: var(--bg-base); border-radius: 12px; padding: 12px 16px; text-align: left; border: 1px solid var(--status-green-border); font-size: 13px; line-height: 1.6;">
+                    <div style="margin-bottom: 4px; display: flex;"><span style="color: var(--text-sub); width: 125px; flex-shrink: 0; font-weight: 500;">Nhóm lọc đang chọn:</span><span style="color: var(--text-main); font-weight: 600;">${groupText}</span></div>
+                    <div style="margin-bottom: 4px; display: flex;"><span style="color: var(--text-sub); width: 125px; flex-shrink: 0; font-weight: 500;">Số lượng bản ghi:</span><span style="color: var(--brand-primary); font-weight: 700;">${count} dòng</span></div>
+                    <div style="margin-bottom: 4px; display: flex;"><span style="color: var(--text-sub); width: 125px; flex-shrink: 0; font-weight: 500;">Định dạng file:</span><span style="color: var(--text-main); font-weight: 600;">Microsoft Excel (.xlsx)</span></div>
+                    <div style="display: flex;"><span style="color: var(--text-sub); width: 125px; flex-shrink: 0; font-weight: 500;">Nội dung xuất:</span><span style="color: var(--text-main); font-weight: 600;">Lịch sử tra cứu HSD</span></div>
+                </div>
+            </div>
+        `,
+        confirmText: "Xuất Excel",
         cancelText: "Hủy",
         isPrimary: true
     });

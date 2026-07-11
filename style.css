@@ -487,6 +487,16 @@
         background-color: #d1d1d6;
     }
 
+    .btn-danger {
+        color: white;
+        background-color: var(--brand-accent-red);
+    }
+
+    .btn-danger:hover {
+        background-color: #bd0410;
+    }
+
+
     /* --- Component: Apple Switch & Barcode Selector --- */
     .apple-toggle-switch-container {
         display: flex;
@@ -777,7 +787,10 @@
     .result-modal-content {
         max-width: 380px;
         text-align: center;
-        border: none;
+        border-radius: var(--radius-box);
+        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        overflow: hidden;
     }
 
     .result-modal-header {
@@ -785,7 +798,8 @@
         justify-content: space-between;
         align-items: center;
         padding: 14px 20px;
-        transition: background-color 0.3s ease;
+        border-bottom: 1px solid #f2f2f7;
+        background-color: var(--surface);
     }
 
     .result-modal-body {
@@ -836,8 +850,8 @@
     }
 
     /* Theme colors */
-    .result-theme-safe .result-modal-header {
-        background-color: var(--brand-primary);
+    .result-modal-content.result-theme-safe {
+        border-top: 5px solid var(--brand-primary) !important;
     }
 
     .result-theme-safe .result-modal-icon-container {
@@ -857,8 +871,8 @@
         background-color: var(--brand-primary);
     }
 
-    .result-theme-warning .result-modal-header {
-        background-color: var(--brand-accent-orange);
+    .result-modal-content.result-theme-warning {
+        border-top: 5px solid var(--brand-accent-orange) !important;
     }
 
     .result-theme-warning .result-modal-icon-container {
@@ -878,8 +892,8 @@
         background-color: var(--brand-accent-orange);
     }
 
-    .result-theme-danger .result-modal-header {
-        background-color: var(--brand-accent-red);
+    .result-modal-content.result-theme-danger {
+        border-top: 5px solid var(--brand-accent-red) !important;
     }
 
     .result-theme-danger .result-modal-icon-container {
@@ -899,8 +913,8 @@
         background-color: var(--brand-accent-red);
     }
 
-    .result-theme-other .result-modal-header {
-        background-color: #667366;
+    .result-modal-content.result-theme-other {
+        border-top: 5px solid #667366 !important;
     }
 
     .result-theme-other .result-modal-icon-container {
@@ -920,8 +934,8 @@
         background-color: #667366;
     }
 
-    .result-theme-expired .result-modal-header {
-        background-color: #555555;
+    .result-modal-content.result-theme-expired {
+        border-top: 5px solid #555555 !important;
     }
 
     .result-theme-expired .result-modal-icon-container {

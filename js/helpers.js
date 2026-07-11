@@ -88,65 +88,106 @@ export function isValidDateStr(str) {
 }
 
 // Custom Apple-style Confirmation Dialog
-export function showAppleConfirm({ title, message, confirmText = 'Xác nhận', cancelText = 'Hủy', isDanger = false, isPrimary = false }) {
+export function showAppleConfirm({ title, message, htmlContent = null, confirmText = 'Xác nhận', cancelText = 'Hủy', isDanger = false, isPrimary = false }) {
     return new Promise((resolve) => {
-        // Create elements
+        // Create elements using the standard Apple Modal System
         const overlay = document.createElement('div');
-        overlay.className = 'apple-confirm-overlay';
+        overlay.className = 'apple-modal';
         
         const box = document.createElement('div');
-        box.className = 'apple-confirm-box';
+        box.className = 'apple-modal-content';
+        box.style.maxWidth = '420px';
+        box.style.maxHeight = '90vh';
+        box.style.overflowY = 'auto';
+        box.style.transform = 'translateY(30px) scale(0.95)';
+        box.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)';
         
-        const body = document.createElement('div');
-        body.className = 'apple-confirm-body';
+        // Header
+        const header = document.createElement('div');
+        header.className = 'apple-modal-header';
+        header.style.position = 'sticky';
+        header.style.top = '0';
+        header.style.zIndex = '100';
+        header.style.backgroundColor = 'var(--surface)';
         
-        const titleEl = document.createElement('h4');
-        titleEl.className = 'apple-confirm-title';
+        const titleEl = document.createElement('h3');
+        titleEl.className = 'apple-modal-title';
         titleEl.textContent = title;
         
-        const messageEl = document.createElement('p');
-        messageEl.className = 'apple-confirm-message';
-        messageEl.textContent = message;
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'apple-modal-close-btn';
+        closeBtn.innerHTML = '&times;';
         
-        body.appendChild(titleEl);
+        header.appendChild(titleEl);
+        header.appendChild(closeBtn);
+        box.appendChild(header);
+        
+        // Body
+        const body = document.createElement('div');
+        body.style.padding = '20px';
+        
+        const messageEl = document.createElement('div');
+        messageEl.style.fontSize = '14px';
+        messageEl.style.lineHeight = '1.5';
+        messageEl.style.color = 'var(--text-main)';
+        
+        if (htmlContent) {
+            messageEl.innerHTML = htmlContent;
+        } else {
+            messageEl.textContent = message;
+        }
         body.appendChild(messageEl);
         
+        // Actions
         const actions = document.createElement('div');
-        actions.className = 'apple-confirm-actions';
-        
-        const cancelBtn = document.createElement('button');
-        cancelBtn.className = 'apple-confirm-btn';
-        cancelBtn.textContent = cancelText;
+        actions.className = 'kph-form-actions';
+        actions.style.marginTop = '24px';
+        actions.style.paddingTop = '16px';
+        actions.style.borderTop = '1px solid #f2f2f7';
         
         const confirmBtn = document.createElement('button');
-        confirmBtn.className = 'apple-confirm-btn';
+        confirmBtn.className = 'btn-action';
         if (isDanger) {
-            confirmBtn.classList.add('apple-confirm-btn--danger');
-        } else if (isPrimary) {
-            confirmBtn.classList.add('apple-confirm-btn--primary');
+            confirmBtn.classList.add('btn-danger');
         }
         confirmBtn.textContent = confirmText;
+        confirmBtn.type = 'button';
         
-        actions.appendChild(cancelBtn);
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'btn-secondary';
+        cancelBtn.textContent = cancelText;
+        cancelBtn.type = 'button';
+        
         actions.appendChild(confirmBtn);
+        actions.appendChild(cancelBtn);
+        body.appendChild(actions);
         
         box.appendChild(body);
-        box.appendChild(actions);
         overlay.appendChild(box);
         document.body.appendChild(overlay);
         
         // Trigger reflow for transition
         overlay.offsetHeight;
         overlay.classList.add('active');
+        // Trigger scale up
+        setTimeout(() => {
+            box.style.transform = 'translateY(0) scale(1)';
+        }, 10);
         
         const cleanUp = () => {
+            box.style.transform = 'translateY(30px) scale(0.95)';
             overlay.classList.remove('active');
             setTimeout(() => {
                 if (overlay.parentNode) {
                     overlay.parentNode.removeChild(overlay);
                 }
-            }, 300);
+            }, 350);
         };
+        
+        closeBtn.addEventListener('click', () => {
+            cleanUp();
+            resolve(false);
+        });
         
         cancelBtn.addEventListener('click', () => {
             cleanUp();
@@ -156,6 +197,14 @@ export function showAppleConfirm({ title, message, confirmText = 'Xác nhận', 
         confirmBtn.addEventListener('click', () => {
             cleanUp();
             resolve(true);
+        });
+        
+        // Close modal when clicking on overlay background (outside box)
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                cleanUp();
+                resolve(false);
+            }
         });
     });
 }
