@@ -872,8 +872,21 @@ export function clearActiveImageUrls() {
     activeImageUrls = [];
 }
 
+// Debounce bằng microtask để gộp nhiều lần gọi liên tiếp thành 1 lần render duy nhất
+let _kphUIUpdateScheduled = false;
+
 // Cập nhật render bảng giao diện
 export function updateKphLogsUI() {
+    if (!_kphUIUpdateScheduled) {
+        _kphUIUpdateScheduled = true;
+        queueMicrotask(() => {
+            _kphUIUpdateScheduled = false;
+            _doUpdateKphLogsUI();
+        });
+    }
+}
+
+function _doUpdateKphLogsUI() {
     // Thu hồi toàn bộ Object URL cũ để giải phóng RAM lập tức
     clearActiveImageUrls();
 
