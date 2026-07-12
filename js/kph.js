@@ -846,6 +846,37 @@ export function updateKphLogsUI() {
 
     const filteredLogs = getFilteredKphLogs();
 
+    // Cập nhật số lượng phiếu của từng sub-tab phụ thuộc bộ lọc ngày
+    const tuStr = document.getElementById('kphFilterTuNgay') ? document.getElementById('kphFilterTuNgay').value.trim() : '';
+    const denStr = document.getElementById('kphFilterDenNgay') ? document.getElementById('kphFilterDenNgay').value.trim() : '';
+    
+    const getSubTabCount = (subTabId) => {
+        return kphLogs.filter(item => {
+            const itemType = item.loaiKph || 'TPCN';
+            if (itemType !== subTabId) return false;
+
+            if (tuStr && isValidDateStr(tuStr)) {
+                const itemDate = parseLocalDate(item.ngayPhatHien);
+                const tuDate = parseLocalDate(tuStr);
+                if (itemDate < tuDate) return false;
+            }
+            if (denStr && isValidDateStr(denStr)) {
+                const itemDate = parseLocalDate(item.ngayPhatHien);
+                const denDate = parseLocalDate(denStr);
+                if (itemDate > denDate) return false;
+            }
+            return true;
+        }).length;
+    };
+
+    const tpcnCount = getSubTabCount('TPCN');
+    const tptsCount = getSubTabCount('TPTS');
+
+    const btnTpcn = document.getElementById('sub-tab-btn-tpcn');
+    const btnTpts = document.getElementById('sub-tab-btn-tpts');
+    if (btnTpcn) btnTpcn.innerText = `TPCN (${tpcnCount})`;
+    if (btnTpts) btnTpts.innerText = `TPTS (${tptsCount})`;
+
     // Cập nhật số lượng hiển thị bộ lọc
     const countText = document.getElementById('kphCountText');
     if (countText) countText.innerText = filteredLogs.length;
