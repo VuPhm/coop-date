@@ -224,7 +224,7 @@ export function updateHistoryUI() {
         const isSelected = item.id === selectedHistoryId;
         
         return `
-            <li class="history-item ${item.alertClass} ${isSelected ? 'is-selected' : ''}" onclick="window.loadHistoryItem('${item.nsx}', '${item.formattedHsd}', '${item.rawHsdDays}', '${item.barcode || ''}', '${qtyLabel}', '${dvtLabel}', '${(item.tenHang || '').replace(/'/g, "\\'")}', '${item.id}')">
+            <li id="history-item-${item.id}" class="history-item ${item.alertClass} ${isSelected ? 'is-selected' : ''}" onclick="window.loadHistoryItem('${item.nsx}', '${item.formattedHsd}', '${item.rawHsdDays}', '${item.barcode || ''}', '${qtyLabel}', '${dvtLabel}', '${(item.tenHang || '').replace(/'/g, "\\'")}', '${item.id}')">
                 <div class="history-item__indicator"></div>
                 <div class="history-item__content">
                     <div class="history-item__header-row">
@@ -256,6 +256,10 @@ export function updateHistoryUI() {
             </li>
         `;
     }).join('');
+
+    if (typeof window.updateNotificationStats === 'function') {
+        window.updateNotificationStats();
+    }
 } 
 
 export function loadHistoryItem(nsx, hsdDate, hsdDays, barcode = "", quantity = 1, dvt = "EA", tenHang = "", id = null) { 

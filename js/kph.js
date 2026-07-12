@@ -1136,6 +1136,10 @@ export function updateKphLogsUI() {
             `;
         }).join('');
     }
+
+    if (typeof window.updateNotificationStats === 'function') {
+        window.updateNotificationStats();
+    }
 }
 
 

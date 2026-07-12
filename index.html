@@ -85,13 +85,13 @@
           <span class="chrono-line__value desktop-only" id="widgetFullDate">---</span>
           <span class="chrono-line__value mobile-only" id="widgetShortDate">---</span>
         </div>
-        <button class="header-action-btn notification-btn" id="btnNotification" aria-label="Thông báo" type="button">
+        <button class="header-action-btn notification-btn" id="btnNotification" aria-label="Thông báo" type="button" onclick="window.openNotificationModal()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
             stroke-linejoin="round">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
           </svg>
-          <span class="notification-badge">3</span>
+          <span class="notification-badge" style="display: none;">0</span>
         </button>
         <button class="header-action-btn menu-personal-btn" id="btnOpenSidebar" aria-label="Cá nhân và cấu hình"
           type="button">
@@ -1135,6 +1135,19 @@
     </div>
   </div>
 
+  <!-- Modal Thông báo việc cần xử lý -->
+  <div id="notificationModal" class="apple-modal" onclick="window.closeNotificationModal()">
+    <div class="apple-modal-content" style="max-width: 480px; max-height: 90vh;" onclick="event.stopPropagation()">
+      <div class="apple-modal-header" style="position: sticky; top: 0; z-index: 100; background: var(--surface);">
+        <h3 class="apple-modal-title">Việc cần xử lý</h3>
+        <button class="apple-modal-close-btn" onclick="window.closeNotificationModal()">&times;</button>
+      </div>
+      <div class="apple-modal-body" id="notificationModalBody" style="padding: 16px; overflow-y: auto;">
+        <!-- Nội dung thống kê được render tự động -->
+      </div>
+    </div>
+  </div>
+
   <!-- Sidebar cấu hình và thông tin -->
   <div id="sidebarOverlay" class="sidebar-overlay"></div>
   <div id="appSidebar" class="app-sidebar">
@@ -1165,6 +1178,42 @@
           <div class="form-input-wrapper">
             <input class="form-input" type="text" id="sidebarCht" placeholder="Tên CHT (Cho phép trống)">
           </div>
+        </div>
+      </div>
+
+      <!-- Mục Thống kê việc cần xử lý -->
+      <div class="sidebar-section" style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-color, rgba(0,0,0,0.08));">
+        <h4 class="sidebar-section-title" style="margin-bottom: 12px;">Thống kê việc cần xử lý</h4>
+        <div class="sidebar-stats-container">
+          <div class="sidebar-stat-group">
+            <div class="sidebar-stat-group-title">Phiếu KPH chờ duyệt</div>
+            <div class="sidebar-stat-row">
+              <span class="sidebar-stat-label">TPCN:</span>
+              <span class="sidebar-stat-val val-kph-tpcn">0</span>
+            </div>
+            <div class="sidebar-stat-row">
+              <span class="sidebar-stat-label">TPTS:</span>
+              <span class="sidebar-stat-val val-kph-tpts">0</span>
+            </div>
+          </div>
+          <div class="sidebar-stat-group" style="margin-top: 12px;">
+            <div class="sidebar-stat-group-title">Tra cứu đã lưu</div>
+            <div class="sidebar-stat-row">
+              <span class="sidebar-stat-label">Sắp đến hạn:</span>
+              <span class="sidebar-stat-val val-tracuu-warning" style="color: var(--brand-accent-orange);">0</span>
+            </div>
+            <div class="sidebar-stat-row">
+              <span class="sidebar-stat-label">Quá hạn lùi:</span>
+              <span class="sidebar-stat-val val-tracuu-danger" style="color: var(--brand-accent-red);">0</span>
+            </div>
+            <div class="sidebar-stat-row">
+              <span class="sidebar-stat-label">Quá hạn SD:</span>
+              <span class="sidebar-stat-val val-tracuu-expired" style="color: #8e8e93;">0</span>
+            </div>
+          </div>
+          <button type="button" class="btn-action" style="margin-top: 14px; width: 100%; font-size: 13px; height: 36px; padding: 0;" onclick="window.openNotificationModal(); window.closeSidebar();">
+            Xem chi tiết việc cần xử lý
+          </button>
         </div>
       </div>
 

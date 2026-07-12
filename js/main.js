@@ -38,6 +38,8 @@ import {
     exportHistoryToExcel
 } from './history.js';
 
+import './notifications.js';
+
 import {
     switchTab,
     openKphNgayPicker,
