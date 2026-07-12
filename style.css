@@ -177,9 +177,8 @@
     }
 
     .app-header.app-header--compact .brand-apple-logo {
-        width: 24px;
-        height: 24px;
-        border-radius: 6px;
+        height: 28px;
+        width: auto;
     }
 
     .app-header.app-header--compact .brand-apple-title {
@@ -201,9 +200,7 @@
 
         @keyframes shrink-logo {
             to {
-                width: 24px;
-                height: 24px;
-                border-radius: 6px;
+                height: 28px;
             }
         }
 
@@ -264,11 +261,9 @@
     }
 
     .brand-apple-logo {
-        width: 32px;
-        height: 32px;
-        border-radius: 8px;
-        object-fit: cover;
-        border: 1px solid rgba(255, 255, 255, 0.25);
+        height: 38px;
+        width: auto;
+        object-fit: contain;
         flex-shrink: 0;
         transition: all 0.25s ease;
     }
