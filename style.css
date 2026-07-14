@@ -829,6 +829,52 @@
         color: var(--brand-accent-red);
     }
 
+    .app-update-modal-content {
+        max-width: 400px;
+    }
+
+    .app-update-modal-body {
+        padding: 22px 20px 20px;
+    }
+
+    .app-update-modal-body > p {
+        margin: 0 0 18px;
+        color: var(--text-sub);
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    .app-update-details {
+        display: grid;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .app-update-details > div {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: rgba(0, 102, 51, 0.08);
+    }
+
+    .app-update-details span {
+        color: var(--text-sub);
+        font-size: 13px;
+    }
+
+    .app-update-details strong {
+        color: var(--brand-primary);
+        font-size: 14px;
+    }
+
+    .app-update-modal-body .btn-action {
+        width: 100%;
+        margin: 0;
+    }
+
     /* --- Component: Result Modal Dialog Custom Themes --- */
     .result-modal-content {
         max-width: 380px;
@@ -2208,6 +2254,10 @@
         padding: 10px 16px !important;
         font-size: 13px !important;
         height: 42px !important;
+    }
+
+    .kph-form-actions.sticky-compact .btn-action:only-child {
+        flex-basis: 100% !important;
     }
 
     .kph-form-actions.sticky-compact.sticky-hidden {

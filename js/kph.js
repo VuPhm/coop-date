@@ -2006,6 +2006,9 @@ export function openKphApproveModal(id) {
         modal.classList.add('active');
         const modalContent = modal.querySelector('.apple-modal-content');
         if (modalContent) modalContent.scrollTop = 0;
+
+        const actions = modal.querySelector('.kph-form-actions');
+        if (actions) actions.classList.remove('sticky-compact', 'sticky-hidden');
     }
 }
 

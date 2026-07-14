@@ -5,6 +5,8 @@ import {
     getCleanToday,
     MS_PER_DAY,
     initAppVersion,
+    notifyAppVersionUpdate,
+    closeAppUpdateModal,
     showAppleConfirm,
     showAppleToast
 } from './helpers.js';
@@ -584,11 +586,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Scroll listener for sticky actions in kphCreateModal
+    // Scroll listener for sticky actions in the KPH create and approval modals
     (function initKphModalScroll() {
-        const modalContent = document.querySelector('#kphCreateModal .apple-modal-content');
-        const actions = document.querySelector('#kphCreateModal .kph-form-actions');
-        if (modalContent && actions) {
+        document.querySelectorAll('#kphCreateModal, #kphApproveModal').forEach(modal => {
+            const modalContent = modal.querySelector('.apple-modal-content');
+            const actions = modal.querySelector('.kph-form-actions');
+            if (!modalContent || !actions) return;
+
             let lastScrollTop = 0;
             modalContent.addEventListener('scroll', () => {
                 const scrollTop = modalContent.scrollTop;
@@ -627,7 +631,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
             }, { passive: true });
-        }
+        });
     })();
 
     // 4. Lắng nghe mask tự động date nhập tay
@@ -758,6 +762,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Khởi tạo app versioning & offline
     initAppVersion();
+    notifyAppVersionUpdate();
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') closeAppUpdateModal();
+    });
 
     // 5. Khởi tạo Sidebar Cấu hình & Cá nhân
     (function initSidebar() {
@@ -842,6 +851,7 @@ window.toggleKphSort = toggleKphSort;
 window.deleteSelectedKphLogs = deleteSelectedKphLogs;
 window.showAppleToast = showAppleToast;
 window.showAppleConfirm = showAppleConfirm;
+window.closeAppUpdateModal = closeAppUpdateModal;
 window.openKphCreateModal = openKphCreateModal;
 window.closeKphCreateModal = closeKphCreateModal;
 window.toggleStoreSettingsEdit = toggleStoreSettingsEdit;
@@ -927,4 +937,3 @@ export function createKphFromCalculation() {
     }
 }
 window.createKphFromCalculation = createKphFromCalculation;
-

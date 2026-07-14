@@ -4,6 +4,8 @@ export const APP_VERSION_CONFIG = {
     lastUpdated: "14/07/2026"
 };
 
+const APP_VERSION_STORAGE_KEY = 'coopfood:last-seen-app-version';
+
 export const MS_PER_DAY = 1000 * 60 * 60 * 24; 
 
 // Bíp bíp giả lập phần cứng
@@ -55,6 +57,37 @@ export function initAppVersion() {
     
     window.addEventListener('online', updateUI);
     window.addEventListener('offline', updateUI);
+}
+
+/**
+ * Hiển thị thông báo một lần khi phiên bản hiện tại khác với phiên bản
+ * người dùng đã mở gần nhất. Lần dùng ứng dụng đầu tiên chỉ ghi nhận phiên bản.
+ */
+export function notifyAppVersionUpdate() {
+    const modal = document.getElementById('appUpdateModal');
+    const versionEl = document.getElementById('appUpdateVersion');
+    const timeEl = document.getElementById('appUpdateTime');
+    const { currentVersion, lastUpdated } = APP_VERSION_CONFIG;
+    let previousVersion = null;
+
+    if (versionEl) versionEl.textContent = `v${currentVersion}`;
+    if (timeEl) timeEl.textContent = lastUpdated;
+
+    try {
+        previousVersion = localStorage.getItem(APP_VERSION_STORAGE_KEY);
+        localStorage.setItem(APP_VERSION_STORAGE_KEY, currentVersion);
+    } catch (error) {
+        console.warn('Không thể lưu trạng thái phiên bản ứng dụng.', error);
+    }
+
+    if (!previousVersion || previousVersion === currentVersion || !modal) return;
+
+    requestAnimationFrame(() => modal.classList.add('active'));
+}
+
+export function closeAppUpdateModal() {
+    const modal = document.getElementById('appUpdateModal');
+    if (modal) modal.classList.remove('active');
 }
 
 export function parseLocalDate(dateString) { 

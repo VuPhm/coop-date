@@ -1182,6 +1182,24 @@
     </div>
   </div>
 
+  <!-- Modal thông báo cập nhật phiên bản -->
+  <div id="appUpdateModal" class="apple-modal" onclick="window.closeAppUpdateModal()" role="dialog" aria-modal="true" aria-labelledby="appUpdateModalTitle">
+    <div class="apple-modal-content app-update-modal-content" onclick="event.stopPropagation()">
+      <div class="apple-modal-header">
+        <h3 class="apple-modal-title" id="appUpdateModalTitle">Ứng dụng đã được cập nhật</h3>
+        <button class="apple-modal-close-btn" type="button" aria-label="Đóng thông báo" onclick="window.closeAppUpdateModal()">&times;</button>
+      </div>
+      <div class="app-update-modal-body">
+        <p>Chào mừng bạn đến với phiên bản mới của ứng dụng.</p>
+        <div class="app-update-details" aria-label="Thông tin phiên bản cập nhật">
+          <div><span>Phiên bản</span><strong id="appUpdateVersion">Đang tải...</strong></div>
+          <div><span>Thời gian cập nhật</span><strong id="appUpdateTime">Đang tải...</strong></div>
+        </div>
+        <button class="btn-action" type="button" onclick="window.closeAppUpdateModal()">Đã hiểu</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Sidebar cấu hình và thông tin -->
   <div id="sidebarOverlay" class="sidebar-overlay"></div>
   <div id="appSidebar" class="app-sidebar">
