@@ -1068,7 +1068,7 @@ export function toggleKphSort(field) {
         kphSortDirection = 'desc';
     }
 
-    const fields = ['ngayPhatHien', 'soLuong', 'ngayXuLy', 'trangThaiDuyet'];
+    const fields = ['ngayPhatHien', 'trangThaiDuyet', 'skuTenHang', 'ncc', 'soLuong', 'tinhTrang', 'ngayXuLy', 'imageCount'];
     fields.forEach(f => {
         const icon = document.getElementById(`sort-icon-${f}`);
         if (icon) {
@@ -1106,6 +1106,12 @@ export function sortKphLogs(logs) {
         } else if (kphSortField === 'trangThaiDuyet') {
             valA = a.trangThaiDuyet || 'cho_duyet';
             valB = b.trangThaiDuyet || 'cho_duyet';
+        } else if (kphSortField === 'skuTenHang') {
+            valA = `${a.sku || ''}\u0000${a.tenHang || ''}`.toLocaleLowerCase('vi-VN');
+            valB = `${b.sku || ''}\u0000${b.tenHang || ''}`.toLocaleLowerCase('vi-VN');
+        } else if (kphSortField === 'imageCount') {
+            valA = getKphLogImages(a).length;
+            valB = getKphLogImages(b).length;
         } else {
             valA = a[kphSortField] || '';
             valB = b[kphSortField] || '';
@@ -1263,7 +1269,7 @@ function _doUpdateKphLogsUI() {
         if (listContainer) {
             listContainer.innerHTML = `
                 <tr>
-                    <td colspan="11" class="kph-empty-row">Chưa có dữ liệu khai báo hoặc không khớp bộ lọc</td>
+                    <td colspan="10" class="kph-empty-row">Chưa có dữ liệu khai báo hoặc không khớp bộ lọc</td>
                 </tr>
             `;
         }
@@ -1352,7 +1358,10 @@ function _doUpdateKphLogsUI() {
                     <td data-label="" style="text-align: center;">
                         <input type="checkbox" class="kph-checkbox" ${isChecked} onchange="window.toggleSelectRowKph('${item.id}')">
                     </td>
-                    <td data-label="Ngày PH" style="text-align: center;">${item.ngayPhatHien}</td>
+                    <td data-label="Phát hiện" style="text-align: center;">
+                        <div style="font-weight: 600;">${item.ngayPhatHien}</div>
+                        <div class="kph-cell-meta">${item.nguoiPhatHien || '-'}</div>
+                    </td>
                     <td data-label="Duyệt" style="text-align: center;">
                         ${approvalBtnHtml}
                         <div class="kph-cell-meta">${approvalTimeHtml}</div>
@@ -1369,7 +1378,6 @@ function _doUpdateKphLogsUI() {
                         ${xlText}
                         <div class="kph-cell-meta">${ngayXlText}</div>
                     </td>
-                    <td data-label="Người PH">${item.nguoiPhatHien || '-'}</td>
                     <td data-label="Ảnh" style="text-align: center;">${imgHtml}</td>
                     <td data-label="">
                         <button class="kph-cell-btn-delete" onclick="window.removeKphLog('${item.id}')" aria-label="Xóa">

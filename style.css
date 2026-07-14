@@ -1889,9 +1889,14 @@
         color: #ff3b30;
     }
 
-    .kph-card-radio-label.mua-tang span,
-    .kph-card-radio-label.mua-tang .kph-card-radio-icon svg {
+    .kph-card-radio-label.can-date span,
+    .kph-card-radio-label.can-date .kph-card-radio-icon svg {
         color: #ff9500;
+    }
+
+    .kph-card-radio-label.het-hsd span,
+    .kph-card-radio-label.het-hsd .kph-card-radio-icon svg {
+        color: #ff3b30;
     }
 
     .kph-card-radio-label.doi span,
@@ -1928,14 +1933,24 @@
         color: #ff3b30;
     }
 
-    #kphTinhTrangMuaTang:checked+.mua-tang {
+    #kphTinhTrangCanDate:checked+.can-date {
         border-color: #ff9500;
         background-color: #fff4e6;
     }
 
-    #kphTinhTrangMuaTang:checked+.mua-tang span,
-    #kphTinhTrangMuaTang:checked+.mua-tang .kph-card-radio-icon svg {
+    #kphTinhTrangCanDate:checked+.can-date span,
+    #kphTinhTrangCanDate:checked+.can-date .kph-card-radio-icon svg {
         color: #ff9500;
+    }
+
+    #kphTinhTrangHetHsd:checked+.het-hsd {
+        border-color: #ff3b30;
+        background-color: #ffeef0;
+    }
+
+    #kphTinhTrangHetHsd:checked+.het-hsd span,
+    #kphTinhTrangHetHsd:checked+.het-hsd .kph-card-radio-icon svg {
+        color: #ff3b30;
     }
 
     #kphTinhTrangKhac:checked+.khac {
@@ -2220,7 +2235,7 @@
         table-layout: fixed;
         font-size: 12px;
         text-align: left;
-        min-width: 1260px;
+        min-width: 1210px;
     }
 
     .kph-table th {
@@ -2243,15 +2258,14 @@
 
     /* Phân bổ chiều rộng cố định để các cột ngắn không lấn phần mô tả. */
     .kph-col-select { width: 36px; }
-    .kph-col-date { width: 90px; }
+    .kph-col-date { width: 140px; }
     .kph-col-approval { width: 128px; }
     .kph-col-sku { width: 220px; }
     .kph-col-supplier { width: 130px; }
     .kph-col-quantity { width: 80px; }
-    .kph-col-condition { width: 175px; }
+    .kph-col-condition { width: 130px; }
     .kph-col-resolution { width: 140px; }
-    .kph-col-reporter { width: 122px; }
-    .kph-col-image { width: 84px; }
+    .kph-col-image { width: 112px; }
     .kph-col-delete { width: 42px; }
 
     .kph-header-line {
@@ -2320,11 +2334,11 @@
     }
 
     .kph-thumbnail-list {
-        display: flex;
+        display: grid;
+        grid-template-columns: repeat(2, 38px);
         justify-content: center;
         gap: 4px;
-        flex-wrap: wrap;
-        min-width: 64px;
+        min-width: 80px;
     }
 
     .kph-thumbnail-list .kph-thumbnail {
@@ -2506,19 +2520,31 @@
     }
 
     .sortable-header {
+        position: relative;
+        padding-right: 24px !important;
         user-select: none;
         transition: background-color 0.2s ease;
+    }
+
+    /* Cân phần đệm với icon bên phải để tiêu đề Phát hiện trùng tâm với dữ liệu. */
+    .kph-table th.kph-col-date.sortable-header {
+        padding-left: 24px !important;
     }
 
     .sortable-header:hover {
         background-color: #e5e5ea !important;
     }
 
-    .sort-icon {
-        margin-left: 4px;
+    .sortable-header .sort-icon {
+        position: absolute;
+        top: 50%;
+        right: 8px;
+        margin: 0;
+        transform: translateY(-50%);
         font-size: 11px;
         color: #8e8e93;
         display: inline-block;
+        line-height: 1;
         transition: color 0.2s;
     }
 
