@@ -11,7 +11,7 @@
 | **Tên** | Check Date CoopFood |
 | **Loại** | Progressive Web App (PWA) |
 | **Production URL** | https://vuphm.github.io/coop-date/ |
-| **Phiên bản** | `2.18.6` (15/07/2026) |
+| **Phiên bản** | `2.18.7` (15/07/2026) |
 | **Nền tảng** | HTML5 + Vanilla CSS + Vanilla JS (ES6 Modules) |
 | **Framework** | Không dùng (React/Vue/Angular) |
 | **CSS Framework** | Không dùng (Tailwind/Bootstrap) — Vanilla CSS theo Apple HIG |
@@ -295,4 +295,4 @@ Hãy review [tên_file].js với trọng tâm:
 
 ---
 
-> **Lưu ý:** Tài liệu này được đối chiếu với code lần cuối ngày **15/07/2026** tại phiên bản **2.18.6**. Khi dự án có thay đổi lớn, hãy cập nhật lại file này.
+> **Lưu ý:** Tài liệu này được đối chiếu với code lần cuối ngày **15/07/2026** tại phiên bản **2.18.7**. Khi dự án có thay đổi lớn, hãy cập nhật lại file này.

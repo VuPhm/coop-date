@@ -1,4 +1,6 @@
 const DB_NAME = 'coop_kph_db';
+// Chỉ tăng khi thay đổi schema IndexedDB. Cập nhật giao diện hoặc version app
+// phải giữ nguyên giá trị này để dữ liệu người dùng được bảo toàn.
 const DB_VERSION = 2;
 const STORE_NAME = 'kph_logs';
 const HISTORY_STORE_NAME = 'history_logs';

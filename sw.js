@@ -1,4 +1,4 @@
-const CACHE_NAME = 'app-cache-v2.18.6';
+const CACHE_NAME = 'app-cache-v2.18.7';
 const ASSETS = [
     './',
     './index.html',
@@ -35,7 +35,8 @@ self.addEventListener('install', (e) => {
     );
 });
 
-// Kích hoạt: Quét sạch bộ nhớ đệm lỗi thời
+// Kích hoạt: chỉ làm mới Cache Storage của tài nguyên tĩnh.
+// Dữ liệu KPH và lịch sử nằm trong IndexedDB nên không bị tác động khi cập nhật app.
 self.addEventListener('activate', (e) => {
     e.waitUntil(
         caches.keys().then((keys) => {

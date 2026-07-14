@@ -1,6 +1,6 @@
 // --- HỆ THỐNG KIỂM SOÁT PHIÊN BẢN VÀ GIAO THỨC CHUYỂN GIAO PWA ---
 export const APP_VERSION_CONFIG = { 
-    currentVersion: "2.18.6",
+    currentVersion: "2.18.7",
     lastUpdated: "15/07/2026"
 };
 
@@ -95,6 +95,36 @@ function isAppRunningStandalone() {
     return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 }
 
+function isIOS() {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent)
+        || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
+function getIOSInstallSteps() {
+    return [
+        {
+            icon: '🧭',
+            title: 'Mở bằng Safari',
+            detail: 'Nếu đang ở Zalo, Facebook hoặc trình duyệt khác, hãy chọn Mở bằng Safari.'
+        },
+        {
+            icon: '⇧',
+            title: 'Nhấn nút Chia sẻ',
+            detail: 'Tìm biểu tượng hình vuông có mũi tên hướng lên trên thanh công cụ Safari.'
+        },
+        {
+            icon: '+',
+            title: 'Thêm vào Màn hình chính',
+            detail: 'Cuộn danh sách hành động xuống và chọn “Thêm vào Màn hình chính”.'
+        },
+        {
+            icon: '✓',
+            title: 'Xác nhận Thêm',
+            detail: 'Giữ “Mở dưới dạng ứng dụng web”, sau đó nhấn “Thêm” ở góc trên.'
+        }
+    ];
+}
+
 function setInstallStatus(message, isInstalled = false) {
     const statusEl = document.getElementById('appInstallStatus');
     const button = document.getElementById('btnInstallApp');
@@ -124,9 +154,28 @@ function getInstallHelp() {
     }
 
     if (isInAppBrowser) {
+        if (isIOS()) {
+            return {
+                title: 'Cài ứng dụng trên iPhone/iPad',
+                platformLabel: 'iPhone/iPad • Cần mở Safari',
+                message: 'Bạn đang mở ứng dụng trong trình duyệt tích hợp. Hãy chuyển sang Safari rồi làm theo 4 bước sau:',
+                steps: getIOSInstallSteps(),
+                tip: 'Không thấy “Mở bằng Safari”? Hãy sao chép liên kết này, mở Safari và dán vào thanh địa chỉ.'
+            };
+        }
         return {
             title: 'Mở bằng trình duyệt',
             message: 'Trình duyệt bên trong Zalo, Facebook hoặc Instagram thường không hỗ trợ cài đặt. Hãy chọn “Mở bằng Chrome” rồi thử lại.'
+        };
+    }
+
+    if (isIOS()) {
+        return {
+            title: 'Cài ứng dụng trên iPhone/iPad',
+            platformLabel: 'iPhone/iPad • Safari',
+            message: 'iOS cần thêm ứng dụng thủ công từ Safari. Chỉ mất khoảng 15 giây:',
+            steps: getIOSInstallSteps(),
+            tip: 'Không thấy “Thêm vào Màn hình chính”? Cuộn xuống cuối danh sách, chọn “Sửa tác vụ” rồi thêm mục này.'
         };
     }
 
@@ -150,7 +199,56 @@ export function openInstallHelpModal() {
     const help = getInstallHelp();
 
     if (titleEl) titleEl.textContent = help.title;
-    if (messageEl) messageEl.textContent = help.message;
+    if (messageEl) {
+        messageEl.replaceChildren();
+
+        if (help.platformLabel) {
+            const platform = document.createElement('div');
+            platform.className = 'app-install-platform';
+            platform.textContent = help.platformLabel;
+            messageEl.appendChild(platform);
+        }
+
+        const message = document.createElement('p');
+        message.className = 'app-install-help-intro';
+        message.textContent = help.message;
+        messageEl.appendChild(message);
+
+        if (help.steps) {
+            const steps = document.createElement('div');
+            steps.className = 'app-install-help-steps';
+            help.steps.forEach((step, index) => {
+                const item = document.createElement('div');
+                item.className = 'app-install-help-step';
+
+                const icon = document.createElement('div');
+                icon.className = 'app-install-help-step__icon';
+                icon.setAttribute('aria-hidden', 'true');
+                icon.textContent = step.icon;
+
+                const content = document.createElement('div');
+                content.className = 'app-install-help-step__content';
+
+                const title = document.createElement('strong');
+                title.textContent = `${index + 1}. ${step.title}`;
+
+                const detail = document.createElement('span');
+                detail.textContent = step.detail;
+
+                content.append(title, detail);
+                item.append(icon, content);
+                steps.appendChild(item);
+            });
+            messageEl.appendChild(steps);
+        }
+
+        if (help.tip) {
+            const tip = document.createElement('div');
+            tip.className = 'app-install-help-tip';
+            tip.textContent = `Mẹo: ${help.tip}`;
+            messageEl.appendChild(tip);
+        }
+    }
     if (modal) modal.classList.add('active');
 }
 
@@ -167,6 +265,11 @@ export function initPwaInstall() {
     if (isAppRunningStandalone()) {
         setInstallStatus('Ứng dụng đã ở trên màn hình chính.', true);
         return;
+    }
+
+    if (isIOS()) {
+        setInstallStatus('Trên iPhone/iPad, ứng dụng được thêm thủ công qua Safari.');
+        installButton.textContent = 'Xem hướng dẫn trên iPhone/iPad';
     }
 
     window.addEventListener('beforeinstallprompt', (event) => {

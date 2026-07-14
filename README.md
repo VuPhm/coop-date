@@ -4,7 +4,7 @@
 
 * **Bản chạy trực tuyến (Production Build):** [vuphm.github.io/coop-date](https://vuphm.github.io/coop-date/)
 * **Nền tảng phát triển:** HTML5, Vanilla CSS (Apple HIG Design), Vanilla JavaScript (ES6 Modules), Flatpickr.
-* **Phiên bản hiện tại:** `2.18.6` (15/07/2026)
+* **Phiên bản hiện tại:** `2.18.7` (15/07/2026)
 
 ---
 
