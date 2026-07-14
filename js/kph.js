@@ -7,6 +7,11 @@ export let kphCurrentType = 'TPCN';
 export const kphLogs = [];
 export let kphImageBlob = null;
 export let kphImagePreviewUrl = null;
+export const kphImageBlobs = [];
+export const kphImagePreviewUrls = [];
+const MAX_KPH_IMAGES = 3;
+let kphImageUploadQueue = Promise.resolve();
+let kphImageGeneration = 0;
 export let kphNgayPicker, kphNgayXuLyPicker, kphApproveNgayXuLyPicker;
 export let kphFilterTuNgayPicker, kphFilterDenNgayPicker;
 
@@ -31,6 +36,15 @@ export const kphSelectedIds = new Set();
 
 export function setKphImageBlob(val) {
     kphImageBlob = val;
+    kphImageBlobs.length = 0;
+    if (val) kphImageBlobs.push(val);
+}
+
+function getKphLogImages(log) {
+    if (Array.isArray(log.images) && log.images.length > 0) {
+        return log.images.slice(0, MAX_KPH_IMAGES);
+    }
+    return log.image ? [log.image] : [];
 }
 
 // Điều hướng Tab
@@ -317,74 +331,343 @@ export function saveSidebarSettings() {
     updateStoreSettingsLabels(cf, store, cht);
 }
 
-// Xử lý nén ảnh minh chứng trên Canvas
-export function handleKphImageUpload(input) {
-    const file = input.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function (e) {
-        const img = new Image();
-        img.onload = function () {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-
-            const MAX_WIDTH = 1024;
-            const MAX_HEIGHT = 1024;
-            let width = img.width;
-            let height = img.height;
-
-            if (width > height) {
-                if (width > MAX_WIDTH) {
-                    height *= MAX_WIDTH / width;
-                    width = MAX_WIDTH;
-                }
-            } else {
-                if (height > MAX_HEIGHT) {
-                    width *= MAX_HEIGHT / height;
-                    height = MAX_HEIGHT;
-                }
-            }
-
-            canvas.width = width;
-            canvas.height = height;
-            ctx.drawImage(img, 0, 0, width, height);
-
-            // Nén JPEG chất lượng 0.7 để bảo vệ bộ nhớ IndexedDB
-            canvas.toBlob(function (blob) {
-                if (kphImagePreviewUrl) {
-                    URL.revokeObjectURL(kphImagePreviewUrl);
-                }
-                kphImageBlob = blob;
-                kphImagePreviewUrl = URL.createObjectURL(blob);
-
-                const previewImg = document.getElementById('kphImagePreview');
-                const previewContainer = document.getElementById('kphPreviewContainer');
-                if (previewImg) previewImg.src = kphImagePreviewUrl;
-                if (previewContainer) previewContainer.style.display = 'block';
-            }, 'image/jpeg', 0.7);
+function readImageFile(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            const image = new Image();
+            image.onload = () => resolve(image);
+            image.onerror = () => reject(new Error(`Không thể đọc ảnh ${file.name || ''}`));
+            image.src = reader.result;
         };
-        img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
+        reader.onerror = () => reject(reader.error || new Error('Không thể đọc tệp ảnh'));
+        reader.readAsDataURL(file);
+    });
 }
 
-export function clearKphImage() {
-    if (kphImagePreviewUrl) {
-        URL.revokeObjectURL(kphImagePreviewUrl);
-        kphImagePreviewUrl = null;
+function parseExifDateString(value) {
+    const match = /^(\d{4}):(\d{2}):(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/.exec(value || '');
+    if (!match) return null;
+    const [, year, month, day, hour, minute, second] = match.map(Number);
+    const date = new Date(year, month - 1, day, hour, minute, second);
+    if (
+        date.getFullYear() !== year ||
+        date.getMonth() !== month - 1 ||
+        date.getDate() !== day ||
+        date.getHours() !== hour ||
+        date.getMinutes() !== minute ||
+        date.getSeconds() !== second
+    ) return null;
+    return date;
+}
+
+// Đọc DateTimeOriginal từ EXIF JPEG mà không cần thêm thư viện ngoài.
+export function readExifCapturedAt(arrayBuffer) {
+    try {
+        const view = new DataView(arrayBuffer);
+        if (view.byteLength < 4 || view.getUint16(0, false) !== 0xffd8) return null;
+
+        let offset = 2;
+        while (offset + 4 <= view.byteLength) {
+            if (view.getUint8(offset) !== 0xff) break;
+            const marker = view.getUint8(offset + 1);
+            if (marker === 0xda || marker === 0xd9) break;
+            const segmentLength = view.getUint16(offset + 2, false);
+            if (segmentLength < 2 || offset + 2 + segmentLength > view.byteLength) break;
+
+            const segmentStart = offset + 4;
+            if (
+                marker === 0xe1 &&
+                segmentLength >= 8 &&
+                view.getUint32(segmentStart, false) === 0x45786966 &&
+                view.getUint16(segmentStart + 4, false) === 0
+            ) {
+                const tiffStart = segmentStart + 6;
+                const byteOrder = view.getUint16(tiffStart, false);
+                const littleEndian = byteOrder === 0x4949;
+                if (!littleEndian && byteOrder !== 0x4d4d) return null;
+                if (view.getUint16(tiffStart + 2, littleEndian) !== 42) return null;
+
+                const readAsciiEntry = (entryOffset) => {
+                    const type = view.getUint16(entryOffset + 2, littleEndian);
+                    const count = view.getUint32(entryOffset + 4, littleEndian);
+                    if (type !== 2 || count < 2) return '';
+                    const valueOffset = count <= 4
+                        ? entryOffset + 8
+                        : tiffStart + view.getUint32(entryOffset + 8, littleEndian);
+                    if (valueOffset < 0 || valueOffset + count > view.byteLength) return '';
+                    let value = '';
+                    for (let index = 0; index < count; index += 1) {
+                        const charCode = view.getUint8(valueOffset + index);
+                        if (charCode === 0) break;
+                        value += String.fromCharCode(charCode);
+                    }
+                    return value;
+                };
+
+                const readIfd = (ifdOffset) => {
+                    if (ifdOffset < 0 || ifdOffset + 2 > view.byteLength) return [];
+                    const entryCount = view.getUint16(ifdOffset, littleEndian);
+                    const entries = [];
+                    for (let index = 0; index < entryCount; index += 1) {
+                        const entryOffset = ifdOffset + 2 + index * 12;
+                        if (entryOffset + 12 > view.byteLength) break;
+                        entries.push({
+                            tag: view.getUint16(entryOffset, littleEndian),
+                            offset: entryOffset
+                        });
+                    }
+                    return entries;
+                };
+
+                const ifd0Offset = tiffStart + view.getUint32(tiffStart + 4, littleEndian);
+                const ifd0Entries = readIfd(ifd0Offset);
+                const fallbackEntry = ifd0Entries.find(entry => entry.tag === 0x0132);
+                const exifPointerEntry = ifd0Entries.find(entry => entry.tag === 0x8769);
+                let originalValue = '';
+                let digitizedValue = '';
+
+                if (exifPointerEntry) {
+                    const exifOffset = tiffStart + view.getUint32(exifPointerEntry.offset + 8, littleEndian);
+                    const exifEntries = readIfd(exifOffset);
+                    const originalEntry = exifEntries.find(entry => entry.tag === 0x9003);
+                    const digitizedEntry = exifEntries.find(entry => entry.tag === 0x9004);
+                    if (originalEntry) originalValue = readAsciiEntry(originalEntry.offset);
+                    if (digitizedEntry) digitizedValue = readAsciiEntry(digitizedEntry.offset);
+                }
+
+                return parseExifDateString(
+                    originalValue || digitizedValue || (fallbackEntry ? readAsciiEntry(fallbackEntry.offset) : '')
+                );
+            }
+
+            offset += 2 + segmentLength;
+        }
+    } catch (error) {
+        console.warn('Không thể đọc thời gian EXIF của ảnh.', error);
     }
-    kphImageBlob = null;
+    return null;
+}
+
+function readBlobAsArrayBuffer(blob) {
+    if (typeof blob.arrayBuffer === 'function') return blob.arrayBuffer();
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(reader.error || new Error('Không thể đọc metadata ảnh'));
+        reader.readAsArrayBuffer(blob);
+    });
+}
+
+async function getPreferredImageCapturedAt(file, fallbackDate) {
+    try {
+        const headerBuffer = await readBlobAsArrayBuffer(file.slice(0, 512 * 1024));
+        const exifDate = readExifCapturedAt(headerBuffer);
+        if (exifDate) return exifDate;
+    } catch (error) {
+        console.warn('Không thể đọc metadata ảnh, dùng thời gian dự phòng.', error);
+    }
+
+    if (Number.isFinite(file.lastModified) && file.lastModified > 0) {
+        const modifiedDate = new Date(file.lastModified);
+        if (!Number.isNaN(modifiedDate.getTime())) return modifiedDate;
+    }
+    return fallbackDate;
+}
+
+function formatImageStamp(date) {
+    const hh = String(date.getHours()).padStart(2, '0');
+    const mm = String(date.getMinutes()).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const weekdays = ['Chủ Nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+    return {
+        time: `${hh}:${mm}`,
+        date: `${dd}/${month}/${date.getFullYear()}`,
+        weekday: weekdays[date.getDay()]
+    };
+}
+
+async function createStampedKphImage(file, capturedAt) {
+    const image = await readImageFile(file);
+    if (document.fonts && document.fonts.load) {
+        try {
+            await document.fonts.load('700 32px Montserrat');
+        } catch (error) {
+            console.warn('Không thể tải Montserrat cho tem ảnh, sử dụng font dự phòng.', error);
+        }
+    }
+    const MAX_WIDTH = 1024;
+    const MAX_HEIGHT = 1024;
+    const scale = Math.min(1, MAX_WIDTH / image.naturalWidth, MAX_HEIGHT / image.naturalHeight);
+    const width = Math.max(1, Math.round(image.naturalWidth * scale));
+    const height = Math.max(1, Math.round(image.naturalHeight * scale));
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Trình duyệt không hỗ trợ xử lý ảnh');
+
+    canvas.width = width;
+    canvas.height = height;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(image, 0, 0, width, height);
+
+    // Kích thước dựa trên cạnh ngắn để tem đồng đều giữa ảnh ngang và ảnh dọc.
+    const shortEdge = Math.min(width, height);
+    const margin = Math.max(8, Math.round(shortEdge * 0.018));
+    const stampWidth = Math.max(1, Math.min(width - margin * 2, Math.max(240, shortEdge * 0.56)));
+    const columnGap = Math.max(12, Math.round(shortEdge * 0.022));
+    const leftWidth = (stampWidth - columnGap) * 0.45;
+    const rightWidth = stampWidth - columnGap - leftWidth;
+    const detailFontSize = Math.max(14, Math.round(shortEdge * 0.034));
+    const timeFontSize = Math.max(30, Math.round(detailFontSize * 2.4));
+    const storeFontSize = Math.max(13, Math.round(shortEdge * 0.03));
+    const rowHeight = Math.round(detailFontSize * 1.28);
+    const mainHeight = rowHeight * 2;
+    const storeGap = Math.max(4, Math.round(shortEdge * 0.008));
+    const storeLineHeight = Math.round(storeFontSize * 1.3);
+    const stampHeight = mainHeight + storeGap + storeLineHeight;
+    const stampX = margin;
+    const stampY = Math.max(margin, height - margin - stampHeight);
+    const leftTextX = stampX;
+    const rightTextX = stampX + leftWidth + columnGap;
+    const dividerX = stampX + leftWidth + columnGap / 2;
+    const leftCenterY = stampY + mainHeight / 2;
+    const firstRowY = stampY + rowHeight / 2;
+    const secondRowY = firstRowY + rowHeight;
+    const storeRowY = stampY + mainHeight + storeGap + storeLineHeight / 2;
+    const stamp = formatImageStamp(capturedAt);
+    const coopFoodName = (localStorage.getItem('kph_coop_food') || 'CO.OP FOOD').trim() || 'CO.OP FOOD';
+
+    // Không dùng nền hộp; viền và bóng đen mảnh giữ chữ rõ trên ảnh.
+    ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.9)';
+    ctx.lineWidth = Math.max(1, shortEdge * 0.0015);
+    ctx.lineJoin = 'round';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.72)';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = Math.max(0.5, shortEdge * 0.0008);
+    ctx.shadowOffsetY = Math.max(0.5, shortEdge * 0.0008);
+
+    const drawFittedText = (text, centerX, centerY, maxWidth, preferredSize, fontFamily, fontWeight = 700) => {
+        let fontSize = preferredSize;
+        do {
+            ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+            if (ctx.measureText(text).width <= maxWidth || fontSize <= 12) break;
+            fontSize -= 1;
+        } while (fontSize > 12);
+        ctx.strokeText(text, centerX, centerY);
+        ctx.fillText(text, centerX, centerY);
+    };
+
+    const stampFont = '"Montserrat", Arial, sans-serif';
+    drawFittedText(stamp.time, leftTextX, leftCenterY, leftWidth, timeFontSize, stampFont);
+    drawFittedText(stamp.date, rightTextX, firstRowY, rightWidth, detailFontSize, stampFont);
+    drawFittedText(stamp.weekday, rightTextX, secondRowY, rightWidth, detailFontSize, stampFont);
+    drawFittedText(coopFoodName, stampX, storeRowY, stampWidth, storeFontSize, stampFont);
+
+    // Vạch ngăn gọn giữa giờ và cột ngày/thứ.
+    ctx.save();
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
+    ctx.lineWidth = Math.max(1, shortEdge * 0.0015);
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = Math.max(0.5, shortEdge * 0.0008);
+    ctx.shadowOffsetY = 0;
+    ctx.moveTo(dividerX, stampY + 1);
+    ctx.lineTo(dividerX, stampY + mainHeight - 1);
+    ctx.stroke();
+    ctx.restore();
+
+    return new Promise((resolve, reject) => {
+        canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Không thể nén ảnh')), 'image/jpeg', 0.82);
+    });
+}
+
+function renderKphImagePreviews() {
+    const previewContainer = document.getElementById('kphPreviewContainer');
+    const count = document.getElementById('kphImageCount');
+    if (count) count.textContent = `${kphImageBlobs.length}/${MAX_KPH_IMAGES}`;
+    if (previewContainer) {
+        previewContainer.style.display = kphImageBlobs.length ? 'flex' : 'none';
+        previewContainer.innerHTML = kphImagePreviewUrls.map((url, index) => `
+            <div class="kph-preview-item">
+                <img src="${url}" alt="Ảnh minh chứng ${index + 1}" onclick="window.zoomImage('${url}')">
+                <button type="button" class="kph-delete-image-btn-new" onclick="window.clearKphImage(${index})" aria-label="Xóa ảnh ${index + 1}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+        `).join('');
+    }
+    const isFull = kphImageBlobs.length >= MAX_KPH_IMAGES;
+    ['kphCameraInput', 'kphLibraryInput'].forEach(id => {
+        const input = document.getElementById(id);
+        if (input) input.disabled = isFull;
+    });
+    document.querySelectorAll('.kph-upload-card-btn').forEach(label => label.classList.toggle('disabled', isFull));
+    kphImageBlob = kphImageBlobs[0] || null;
+    kphImagePreviewUrl = kphImagePreviewUrls[0] || null;
+}
+
+// Xử lý tối đa 3 ảnh, nén và đóng dấu trước khi lưu vào IndexedDB.
+export function handleKphImageUpload(input) {
+    const files = Array.from(input.files || []);
+    input.value = '';
+    if (!files.length) return;
+
+    const selectedAt = new Date();
+    const uploadGeneration = kphImageGeneration;
+    kphImageUploadQueue = kphImageUploadQueue.then(async () => {
+        if (uploadGeneration !== kphImageGeneration) return;
+        const availableSlots = MAX_KPH_IMAGES - kphImageBlobs.length;
+        if (availableSlots <= 0) {
+            showAppleToast(`⚠️ Mỗi phiếu chỉ được tải tối đa ${MAX_KPH_IMAGES} ảnh.`, 'warning');
+            return;
+        }
+        if (files.length > availableSlots) {
+            showAppleToast(`⚠️ Chỉ thêm ${availableSlots} ảnh để không vượt quá ${MAX_KPH_IMAGES} ảnh/phiếu.`, 'warning');
+        }
+        for (const file of files.slice(0, availableSlots)) {
+            try {
+                const capturedAt = await getPreferredImageCapturedAt(file, selectedAt);
+                const blob = await createStampedKphImage(file, capturedAt);
+                if (uploadGeneration !== kphImageGeneration) return;
+                kphImageBlobs.push(blob);
+                kphImagePreviewUrls.push(URL.createObjectURL(blob));
+                renderKphImagePreviews();
+            } catch (error) {
+                console.error('KPH image processing error:', error);
+                showAppleToast('⚠️ Không thể xử lý một ảnh đã chọn. Vui lòng thử ảnh khác.', 'error');
+            }
+        }
+    });
+    return kphImageUploadQueue;
+}
+
+export function clearKphImage(index) {
+    if (Number.isInteger(index)) {
+        const previewUrl = kphImagePreviewUrls[index];
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+        kphImageBlobs.splice(index, 1);
+        kphImagePreviewUrls.splice(index, 1);
+    } else {
+        kphImageGeneration += 1;
+        kphImagePreviewUrls.forEach(url => URL.revokeObjectURL(url));
+        kphImageBlobs.length = 0;
+        kphImagePreviewUrls.length = 0;
+    }
     const kphImageInput = document.getElementById('kphImageInput');
     if (kphImageInput) kphImageInput.value = '';
     const kphCameraInput = document.getElementById('kphCameraInput');
     if (kphCameraInput) kphCameraInput.value = '';
     const kphLibraryInput = document.getElementById('kphLibraryInput');
     if (kphLibraryInput) kphLibraryInput.value = '';
-    const previewContainer = document.getElementById('kphPreviewContainer');
-    const previewImg = document.getElementById('kphImagePreview');
-    if (previewContainer) previewContainer.style.display = 'none';
-    if (previewImg) previewImg.src = '';
+    renderKphImagePreviews();
 }
 
 // CRUD Phiếu khai báo KPH
@@ -484,7 +767,9 @@ export async function addKphLog() {
         return;
     }
 
-    if (!kphImageBlob) {
+    // Chờ các ảnh đang được xử lý xong trước khi kiểm tra và lưu phiếu.
+    await kphImageUploadQueue;
+    if (kphImageBlobs.length === 0) {
         showAppleToast("⚠️ Ảnh minh chứng là bắt buộc. Vui lòng chụp hoặc chọn ảnh từ thư viện.", "warning");
         return;
     }
@@ -506,7 +791,7 @@ export async function addKphLog() {
         trangThaiDuyet: 'cho_duyet',
         thoiGianDuyet: '',
         loaiKph: kphCurrentType,
-        image: kphImageBlob // Lưu trữ binary Blob trực tiếp
+        images: [...kphImageBlobs] // Tối đa 3 JPEG đã nén và đóng dấu
     };
 
     try {
@@ -1008,17 +1293,16 @@ function _doUpdateKphLogsUI() {
 
     // Tạo Object URL cho các ảnh hiển thị để tối ưu hóa bộ nhớ
     const sortedLogsWithUrls = sortedLogs.map(item => {
-        let imgUrl = '';
-        if (item.image) {
-            if (item.image instanceof Blob) {
-                imgUrl = URL.createObjectURL(item.image);
-                activeImageUrls.push(imgUrl);
-            } else if (typeof item.image === 'string' && item.image.startsWith('data:')) {
-                imgUrl = item.image; // fallback cho Base64 data URI
+        const imgUrls = getKphLogImages(item).map(image => {
+            if (image instanceof Blob) {
+                const url = URL.createObjectURL(image);
+                activeImageUrls.push(url);
+                return url;
             }
-            // Bỏ qua blob URL cũ đã hết hạn (từ phiên trước)
-        }
-        return { ...item, imgUrl };
+            if (typeof image === 'string' && image.startsWith('data:')) return image;
+            return '';
+        }).filter(Boolean);
+        return { ...item, imgUrls };
     });
 
     // 1. Render giao diện Bảng (Desktop)
@@ -1027,8 +1311,10 @@ function _doUpdateKphLogsUI() {
             const isChecked = kphSelectedIds.has(item.id) ? 'checked' : '';
             const isSelectedClass = kphSelectedIds.has(item.id) ? 'class="selected-row"' : '';
 
-            const imgHtml = item.imgUrl ?
-                `<img class="kph-thumbnail" src="${item.imgUrl}" alt="Evidence" onclick="window.zoomImage('${item.imgUrl}')">` :
+            const imgHtml = item.imgUrls.length ?
+                `<div class="kph-thumbnail-list">${item.imgUrls.map((url, imageIndex) =>
+                    `<img class="kph-thumbnail" src="${url}" alt="Ảnh minh chứng ${imageIndex + 1}" onclick="window.zoomImage('${url}')">`
+                ).join('')}</div>` :
                 `<span style="color: var(--text-sub); font-size: 11px; font-style: italic;">Không có</span>`;
 
             let bienPhapBadge = '';
@@ -1101,9 +1387,11 @@ function _doUpdateKphLogsUI() {
             const isChecked = kphSelectedIds.has(item.id) ? 'checked' : '';
             const isSelectedClass = kphSelectedIds.has(item.id) ? 'selected-card' : '';
 
-            const imgHtml = item.imgUrl ?
-                `<div class="kph-card-img-wrapper" onclick="window.zoomImage('${item.imgUrl}')">
-                    <img src="${item.imgUrl}" alt="Evidence">
+            const imgHtml = item.imgUrls.length ?
+                `<div class="kph-card-images">${item.imgUrls.map((url, imageIndex) => `
+                    <div class="kph-card-img-wrapper" onclick="window.zoomImage('${url}')">
+                        <img src="${url}" alt="Ảnh minh chứng ${imageIndex + 1}">
+                    </div>`).join('')}
                  </div>` : '';
 
             let bienPhapBadge = '';
@@ -1240,7 +1528,7 @@ export async function exportKphToExcel() {
     }
 
     // 1. Kiểm soát số lượng hàng chứa ảnh (tối đa 200 dòng có ảnh)
-    const logsWithImages = selectedLogs.filter(item => item.image);
+    const logsWithImages = selectedLogs.filter(item => getKphLogImages(item).length > 0);
     if (logsWithImages.length > 200) {
         showAppleToast("⚠️ Để đảm bảo bộ nhớ, bạn chỉ được chọn tối đa 200 dòng có ảnh minh chứng cho mỗi file Excel.", "warning");
         return;
@@ -1413,39 +1701,34 @@ export async function exportKphToExcel() {
 
             worksheet.getCell(`N${currentRow}`).value = item.ngayXuLy;
 
-            if (item.image) {
+            const itemImages = getKphLogImages(item);
+            if (itemImages.length > 0) {
                 try {
-                    let arrayBuffer;
-                    if (item.image instanceof Blob) {
-                        // Đọc ảnh dạng Blob -> Chuyển thành ArrayBuffer
-                        arrayBuffer = await item.image.arrayBuffer();
-                    } else if (typeof item.image === 'string' && item.image.startsWith('data:')) {
-                        // Hỗ trợ ảnh Base64 cũ
-                        const base64Data = item.image.split(',')[1];
-                        const binStr = atob(base64Data);
-                        const len = binStr.length;
-                        const arr = new Uint8Array(len);
-                        for (let i = 0; i < len; i++) {
-                            arr[i] = binStr.charCodeAt(i);
+                    for (let imageIndex = 0; imageIndex < itemImages.length; imageIndex++) {
+                        const image = itemImages[imageIndex];
+                        let arrayBuffer;
+                        if (image instanceof Blob) {
+                            arrayBuffer = await image.arrayBuffer();
+                        } else if (typeof image === 'string' && image.startsWith('data:')) {
+                            const base64Data = image.split(',')[1];
+                            const binStr = atob(base64Data);
+                            const arr = new Uint8Array(binStr.length);
+                            for (let i = 0; i < binStr.length; i++) {
+                                arr[i] = binStr.charCodeAt(i);
+                            }
+                            arrayBuffer = arr.buffer;
                         }
-                        arrayBuffer = arr.buffer;
-                    }
 
-                    if (arrayBuffer) {
-                        // Nạp ArrayBuffer trực tiếp vào ExcelJS
-                        const imageId = workbook.addImage({
-                            buffer: arrayBuffer,
-                            extension: 'jpeg',
-                        });
-                        worksheet.addImage(imageId, {
-                            tl: { col: 14, row: currentRow - 1 },
-                            ext: { width: 85, height: 85 },
-                            editAs: 'oneCell'
-                        });
-                        worksheet.getCell(`O${currentRow}`).value = '';
-                    } else {
-                        worksheet.getCell(`O${currentRow}`).value = '[Lỗi ảnh]';
+                        if (arrayBuffer) {
+                            const imageId = workbook.addImage({ buffer: arrayBuffer, extension: 'jpeg' });
+                            worksheet.addImage(imageId, {
+                                tl: { col: 14 + imageIndex * 0.32, row: currentRow - 0.96 },
+                                ext: { width: 40, height: 82 },
+                                editAs: 'oneCell'
+                            });
+                        }
                     }
+                    worksheet.getCell(`O${currentRow}`).value = '';
                 } catch (err) {
                     console.error("Error inserting image to Excel cell", err);
                     worksheet.getCell(`O${currentRow}`).value = '[Lỗi tải ảnh]';

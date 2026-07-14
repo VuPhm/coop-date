@@ -1,5 +1,13 @@
 @layer reset, base, components, layouts, utilities;
 
+@font-face {
+    font-family: 'Montserrat';
+    src: url('./assets/fonts/montserrat-latin-700-normal.woff2') format('woff2');
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+}
+
 @layer reset {
 
     /* ====================================================================
@@ -769,6 +777,23 @@
 
     .apple-modal.active .apple-modal-content {
         transform: translateY(0) scale(1);
+    }
+
+    /* Giữ nguyên tỷ lệ gốc khi xem ảnh, đặc biệt trên màn hình desktop. */
+    #imageModal .apple-modal-content {
+        width: fit-content;
+        max-width: calc(100vw - 32px) !important;
+        align-items: center;
+    }
+
+    #modalImg {
+        display: block;
+        width: auto;
+        height: auto;
+        max-width: calc(100vw - 32px) !important;
+        max-height: 80vh;
+        object-fit: contain;
+        flex: 0 1 auto;
     }
 
     .apple-modal-header {
@@ -2031,6 +2056,20 @@
         transform: translateY(0);
     }
 
+    .kph-upload-card-btn.disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        pointer-events: none;
+        transform: none;
+    }
+
+    .kph-image-limit {
+        color: var(--text-sub);
+        font-size: 11px;
+        font-weight: 500;
+        margin-left: 4px;
+    }
+
     .kph-upload-btn-icon {
         width: 24px;
         height: 24px;
@@ -2066,6 +2105,7 @@
         height: 100%;
         object-fit: cover;
         border-radius: 6px;
+        cursor: zoom-in;
     }
 
     .kph-delete-image-btn-new {
@@ -2224,6 +2264,19 @@
         border: 1px solid #e5e5ea;
         display: block;
         margin: 0 auto;
+    }
+
+    .kph-thumbnail-list {
+        display: flex;
+        justify-content: center;
+        gap: 4px;
+        flex-wrap: wrap;
+        min-width: 64px;
+    }
+
+    .kph-thumbnail-list .kph-thumbnail {
+        width: 38px;
+        height: 38px;
     }
 
     .kph-thumbnail:hover {
@@ -2578,6 +2631,18 @@
         border: 1px solid #e5e5ea;
         cursor: pointer;
         transition: transform 0.2s ease;
+    }
+
+    .kph-card-images {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .kph-card-images .kph-card-img-wrapper {
+        flex: 1 1 80px;
+        min-width: 70px;
+        max-width: 120px;
     }
 
     .kph-card-img-wrapper:hover {

@@ -4,7 +4,7 @@
 
 * **Bản chạy trực tuyến (Production Build):** [vuphm.github.io/coop-date](https://vuphm.github.io/coop-date/)
 * **Nền tảng phát triển:** HTML5, Vanilla CSS (Apple HIG Design), Vanilla JavaScript (ES6 Modules), Flatpickr.
-* **Phiên bản hiện tại:** `2.17.3` (14/07/2026)
+* **Phiên bản hiện tại:** `2.18.5` (14/07/2026)
 
 ---
 
@@ -47,7 +47,7 @@ Hệ thống hỗ trợ các tính năng nghiệp vụ cốt lõi sau:
   * **TPCN (Thực phẩm Công nghệ):** Hàng công nghiệp đóng gói sẵn, áp dụng đầy đủ quy trình khai báo.
   * **TPTS (Thực phẩm Tươi sống):** Hàng tươi sống, tự động đồng bộ ngày phát hiện = ngày xử lý, giao diện form tùy biến riêng.
 * **Khai báo thông tin chi tiết:** Hỗ trợ nhập liệu Đơn vị (CO.OP FOOD), Cửa hàng (STORE), Người phát hiện, Ngày phát hiện (mặc định hôm nay), SKU/UPC (hỗ trợ quét camera), Tên hàng, Nhà cung cấp (NCC), Đơn vị tính (DVT), Số lượng, Tình trạng (Hư hỏng, Móp méo, Cận hạn, Hết hạn, Khác), Biện pháp xử lý (Hủy, Trả NCC, Giảm giá, Khác), Ngày xử lý thực tế và Ảnh minh chứng.
-* **Nén ảnh tự động (Client-side Compression):** Đọc tệp tin ảnh tải lên, vẽ lại bằng Canvas để giới hạn kích thước tối đa `400x400` pixel và nén định dạng JPEG chất lượng `0.7`. Ảnh mới được lưu trực tiếp dưới dạng `Blob` trong IndexedDB; dữ liệu Base64 cũ vẫn được hỗ trợ khi migration.
+* **Ảnh minh chứng:** Mỗi phiếu hỗ trợ tối đa 3 ảnh từ camera hoặc thư viện. Ảnh được giới hạn trong `1024x1024` pixel và đóng tem không nền, căn trái: giờ cỡ lớn ở cột trái, vạch ngăn dọc, ngày/thứ ở cột phải, tên đơn vị CO.OP FOOD ở dòng dưới. Tem dùng Montserrat 700 với viền/bóng đen gọn không blur, co theo cạnh ngắn để đồng đều trên ảnh ngang/dọc; thời gian ưu tiên EXIF (fallback `lastModified` rồi giờ chọn ảnh). Ảnh được nén JPEG chất lượng `0.82` và lưu dạng `Blob` trong IndexedDB; dữ liệu một ảnh/Base64 cũ vẫn được hỗ trợ.
 * **Quy trình duyệt phiếu KPH (Approval Workflow):**
   * Mỗi phiếu KPH mới được tạo ra có trạng thái mặc định `cho_duyet` (Chờ duyệt).
   * Quản lý cửa hàng có thể mở modal duyệt, nhập thông tin Người duyệt, Biện pháp xử lý cuối cùng, Ngày xử lý thực tế, và xác nhận chuyển trạng thái sang `da_duyet` (Đã duyệt).
@@ -114,7 +114,7 @@ Thuật toán tính toán hạn lùi hàng tuân thủ quy tắc sau:
 
 ### B. Lưu Trữ Dữ Liệu (Data Storage)
 * **IndexedDB (Primary Storage):** Ứng dụng sử dụng IndexedDB (`coop_kph_db`, version 2) với 2 object stores:
-  * `kph_logs`: Lưu trữ toàn bộ phiếu KPH (TPCN & TPTS), bao gồm ảnh minh chứng dạng `Blob` và khả năng đọc dữ liệu Base64 cũ.
+  * `kph_logs`: Lưu trữ toàn bộ phiếu KPH (TPCN & TPTS), bao gồm tối đa 3 ảnh minh chứng dạng `Blob` và khả năng đọc dữ liệu một ảnh/Base64 cũ.
   * `history_logs`: Lưu trữ lịch sử tra cứu hạn lùi hàng.
 * **Ưu điểm so với localStorage:** Không bị giới hạn quota 5-10MB, cho phép lưu trữ hàng trăm phiếu KPH kèm ảnh mà không lo tràn dung lượng.
 
@@ -225,7 +225,7 @@ main.js (Entry Point)
 * **`js/kph.js`**: Quản lý nghiệp vụ Khai Báo Hàng Không Phù Hợp (KPH):
   * Phân chia theo sub-tab TPCN/TPTS, mỗi loại có giao diện form tùy biến riêng.
   * Lưu trữ dữ liệu offline qua IndexedDB (`db.js`).
-  * Nén ảnh minh chứng bằng Canvas/JPEG 0.7 và lưu dưới dạng `Blob` trong IndexedDB.
+  * Đóng tem chữ/thời gian hai cột, nén tối đa 3 ảnh minh chứng bằng Canvas/JPEG 0.82 và lưu dưới dạng `Blob` trong IndexedDB.
   * Quy trình duyệt phiếu: `openKphApproveModal(id)`, `saveKphApproval()`, `closeKphApproveModal()`.
   * Lọc tìm kiếm theo khoảng ngày phát hiện, lọc theo trạng thái duyệt (`toggleKphFilterChoDuyet`).
   * Sắp xếp danh sách phiếu KPH theo các cột thông tin (ngày, số lượng, trạng thái duyệt).

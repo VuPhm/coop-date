@@ -1,8 +1,9 @@
-const CACHE_NAME = 'app-cache-v2.17.3';
+const CACHE_NAME = 'app-cache-v2.18.5';
 const ASSETS = [
     './',
     './index.html',
     './style.css',
+    './assets/fonts/montserrat-latin-700-normal.woff2',
     './js/helpers.js',
     './js/scanner.js',
     './js/business.js',

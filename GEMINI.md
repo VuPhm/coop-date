@@ -11,7 +11,7 @@
 | **Tên** | Check Date CoopFood |
 | **Loại** | Progressive Web App (PWA) |
 | **Production URL** | https://vuphm.github.io/coop-date/ |
-| **Phiên bản** | `2.17.3` (14/07/2026) |
+| **Phiên bản** | `2.18.5` (14/07/2026) |
 | **Nền tảng** | HTML5 + Vanilla CSS + Vanilla JS (ES6 Modules) |
 | **Framework** | Không dùng (React/Vue/Angular) |
 | **CSS Framework** | Không dùng (Tailwind/Bootstrap) — Vanilla CSS theo Apple HIG |
@@ -76,7 +76,7 @@ main.js ──┬── helpers.js
 ### 3. Khai Báo Hàng KPH (Tab "KPH")
 - **2 Sub-tabs:** TPCN (Thực phẩm Công nghệ) và TPTS (Thực phẩm Tươi sống).
 - **Form tạo phiếu:** Modal slide-up, nhập đầy đủ SKU/UPC (quét camera), tên hàng, NCC, DVT, số lượng, tình trạng, biện pháp xử lý, ảnh minh chứng.
-- **Nén ảnh tự động:** Canvas resize tối đa 400×400px + JPEG 0.7 → lưu `Blob` trong IndexedDB; Base64 cũ chỉ được giữ làm fallback/migration.
+- **Xử lý ảnh tự động:** Tối đa 3 ảnh/phiếu, Canvas resize tối đa 1024×1024px, tem Montserrat 700 không nền và căn trái gồm giờ lớn bên trái, vạch ngăn, ngày/thứ bên phải và tên đơn vị ở dòng dưới. Tem dùng viền/bóng đen không blur, co theo cạnh ngắn, ưu tiên thời gian EXIF rồi `lastModified`; JPEG 0.82 được lưu thành các `Blob` trong IndexedDB, có fallback dữ liệu cũ.
 - **Quy trình duyệt:** `cho_duyet` → Mở modal duyệt → Nhập người duyệt + biện pháp → `da_duyet`.
 - **Lọc/Sắp xếp:** Theo khoảng ngày, trạng thái duyệt, cột dữ liệu.
 - **Xuất Excel:** Phân biệt TPCN/TPTS, format chuẩn phiếu.
@@ -166,7 +166,8 @@ Nếu Shelf Life >= 10 ngày (hàng dài ngày):
   bienPhapText: "HỦY",          // Nội dung thực tế nếu chọn KHÁC
   ngayXuLy: "13/07/2026",
   ghiChu: "",
-  image: Blob,                    // JPEG đã nén; dữ liệu cũ có thể là data URI
+  images: Blob[],                 // Tối đa 3 JPEG đã nén/đóng dấu
+  image?: Blob | string,          // Trường một ảnh cũ, chỉ dùng tương thích
   trangThaiDuyet: "cho_duyet" | "da_duyet" | "khong_duyet",
   nguoiDuyet: "",
   thoiGianDuyet: ""              // dd/mm/yyyy hh:mm:ss
@@ -287,10 +288,11 @@ Hãy review [tên_file].js với trọng tâm:
 
 | Version | Ngày | Thay đổi chính |
 |---|---|---|
+| `2.18.x` | 07/2026 | Tối đa 3 ảnh/phiếu KPH, đóng tem thương hiệu và thời gian |
 | `2.17.x` | 07/2026 | Quy trình duyệt phiếu KPH, Notification Center, Sidebar thống kê |
 | `2.16.x` | 07/2026 | Phân chia KPH theo TPCN/TPTS sub-tabs |
 | `2.15.x` | 06/2026 | Chuyển đổi từ localStorage sang IndexedDB (`db.js`), thêm `notifications.js` |
 
 ---
 
-> **Lưu ý:** Tài liệu này được đối chiếu với code lần cuối ngày **14/07/2026** tại phiên bản **2.17.3**. Khi dự án có thay đổi lớn, hãy cập nhật lại file này.
+> **Lưu ý:** Tài liệu này được đối chiếu với code lần cuối ngày **14/07/2026** tại phiên bản **2.18.5**. Khi dự án có thay đổi lớn, hãy cập nhật lại file này.
